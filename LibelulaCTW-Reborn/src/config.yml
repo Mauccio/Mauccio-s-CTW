@@ -1,0 +1,24 @@
+lang-file: spanish.yml
+signs:
+    first-line-text: "ctw"
+    first-line-text-replacement: "&4CaptureTheWool"
+    on-invalid-room-replacement: "&4Sala Inválida"
+    on-invalid-map-replacement: "&4Mapa Inválido"
+    on-disabled-map: "&4Deshabilitado"
+implement-spawn-cmd: true
+ingame:
+    allowed-commands:
+        - spawn
+        - tell
+        - m
+        - msg
+        - t
+        - whisper
+        - w
+        - helpop
+        - report
+        - salir
+
+message-decorator: ""
+user-fireworks-on-win: true
+keep-teams-on-win: true
