@@ -5,5 +5,5 @@ Plugin poco modificado de LibelulaUltimateCaptureTheWool, con el paso del tiempo
 - [Plugin](https://github.com/Mauccio/LibelulaCTW-Reborn/releases/tag/1.0)
 - Contacto: Mauccio#8037
 
-###Actualizaciones: 
+### Actualizaciones: 
 - LCTWR v.1.0.1 | 24 de Diciembre del 2021
