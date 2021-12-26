@@ -1,8 +1,8 @@
-name: MauccioCTW-Reborn
-version: "1.0.0"
+name: LibelulaCTW-Reborn
+version: "1.0.1"
 main: me.libelula.capturethewool.Main
 description: Libelula Ultimate Capture The Wool
-author: Diego Lucio D'Onofrio <ddonofrio@member.fsf.org>
+author: Diego Lucio D'Onofrio 
 website: http://libelula.me
 depend: [WorldEdit]
 softdepend: [TagAPI]
