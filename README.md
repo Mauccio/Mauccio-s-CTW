@@ -2,7 +2,7 @@
 Plugin poco modificado de LibelulaUltimateCaptureTheWool, con el paso del tiempo se harán más actualizaciones.
 ## Links
 - [Wiki](https://lovesaura1170.gitbook.io/libelulactw-reborn/)
-- [Plugin](https://github.com/Mauccio/LibelulaCTW-Reborn/releases/tag/1.0)
+- [Plugin](https://www.spigotmc.org/resources/libelulactw-reborn.101094/)
 - Discord: Mauccio#8037
 
 ### Actualizaciones: 
@@ -14,7 +14,7 @@ ENGLISH
 Modified plugin of the original LibelulaUltimateCaptureTheWool, with the passage of time more updates will be made.
 ## Links
 - [Wiki](https://lovesaura1170.gitbook.io/libelulactw-reborn/)
-- [Plugin](https://github.com/Mauccio/LibelulaCTW-Reborn/releases/tag/1.0)
+- [Plugin](https://www.spigotmc.org/resources/libelulactw-reborn.101094/)
 - Discord: Mauccio#8037
 
 ### Updates:
