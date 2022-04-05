@@ -22,10 +22,10 @@ public class DBManager {
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
         this.plugin = plugin;
         if (dbType == DBType.MySQL) {
-            plugin.getLogger().info("Activating MySQL engine.");
+            plugin.getLogger().info("Activando motor de MySQL.");
             MySQLConnection(database, user, password);
         } else {
-            plugin.getLogger().info("Activating SQLite engine.");
+            plugin.getLogger().info("Activando motor de SQLite.");
             SQLiteConnection();
         }
         createTables();
