@@ -62,7 +62,7 @@ public class Main extends JavaPlugin {
         pm = new PlayerManager(this);
 
         removeAllItems();
-
+        
         cm = new CommandManager(this);
         em = new EventManager(this);
         mm = new MapManager(this);
@@ -152,7 +152,7 @@ public class Main extends JavaPlugin {
         String prefix = ChatColor.GRAY + "["
                 + ChatColor.DARK_RED + ChatColor.BOLD + this.getName()
                 + ChatColor.GRAY + "]";
-        String prefixedMessage = prefix + " " + ChatColor.RED + "(alert) " + message;
+        String prefixedMessage = prefix + " " + ChatColor.RED + "(Alerta) " + message;
         getServer().getConsoleSender().sendMessage(prefixedMessage);
         for (Player player : getServer().getOnlinePlayers()) {
             if (hasPermission(player, "receive-alerts")) {
