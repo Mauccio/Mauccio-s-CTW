@@ -25,6 +25,7 @@ public final class LangManager {
 
     public LangManager(Main plugin) {
         this.plugin = plugin;
+        
         lang = new YamlConfiguration();
         File langFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("lang-file"));
         if (!langFile.exists()) {
@@ -83,6 +84,10 @@ public final class LangManager {
 
     public String getMessage(String label) {
         return messagePrefix + " " + getText(label);
+    }
+    
+    public String getTitleMessage(String label) {
+        return getText(label);
     }
 
     public void sendMessage(String label, Player player) {
