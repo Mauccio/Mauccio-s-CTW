@@ -16,9 +16,9 @@ public class Tools {
 
     public static class Chars {
 
-        public static String check = "\u2714";
-        public static String cross = "\u2715";
-        public static String wool = "\u2B1B"; // Old: \u2752
+        public static String check = "\u2B1B";
+        public static String cross = "\u2B1C";
+        public static String wool = "\u2B05"; // Old: \u2752
         public static String invisible = "\u200B";
     }
 
