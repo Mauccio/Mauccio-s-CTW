@@ -2,223 +2,170 @@ package me.libelula.capturethewool;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 
-public final class LangManager {
+public final class SignManager {
 
     private final Main plugin;
-    private final YamlConfiguration lang;
-    private final String messagePrefix;
-    private final int minVersion = 4;
+    private final YamlConfiguration signConfig;
+    private final File signFile;
+    private final TreeMap<String, Location> signs;
+    private final Lock _signs_mutex;
+    private String joinSignText;
 
-    public LangManager(Main plugin) {
+    public SignManager(Main plugin) {
         this.plugin = plugin;
-        
-        lang = new YamlConfiguration();
-        File langFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("lang-file"));
-        if (!langFile.exists()) {
-            saveDefaultLangFiles();
-        }
-        if (langFile.exists()) {
+        signFile = new File(plugin.getDataFolder(), "signs.yml");
+        signConfig = new YamlConfiguration();
+        signs = new TreeMap<>();
+        _signs_mutex = new ReentrantLock(true);
+        load();
+    }
+
+    public void load() {
+        if (signFile.exists()) {
             try {
-                lang.load(langFile);
+                signConfig.load(signFile);
             } catch (IOException | InvalidConfigurationException ex) {
                 plugin.getLogger().severe(ex.toString());
             }
-            int langVersion = lang.getInt("version", 0);
-            if (langVersion < minVersion && (langFile.getName().equals("spanish.yml")
-                    || langFile.getName().equals("english.yml"))
-                    || langFile.getName().equals("italian.yml")) { // Texts must be updated.
-                File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
-                langFile.renameTo(backUpFile);
-                plugin.saveResource(langFile.getName(), true);
+        }
+        for (String roomName : signConfig.getKeys(false)) {
+            String worldName = signConfig.getString(roomName + ".world");
+            if (worldName == null) {
+                continue;
+            }
+            World world = plugin.wm.loadWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            Location loc = new Location(world, signConfig.getInt(roomName + ".x"),
+                    signConfig.getInt(roomName + ".y"),
+                    signConfig.getInt(roomName + ".z"));
+            if (loc.getBlock().getType() == Material.WALL_SIGN
+                    || loc.getBlock().getType() == Material.SIGN_POST) {
+                _signs_mutex.lock();
                 try {
-                    lang.load(langFile);
-                } catch (IOException | InvalidConfigurationException ex) {
-                    plugin.getLogger().severe(ex.toString());
+                    signs.put(roomName, loc);
+                } finally {
+                    _signs_mutex.unlock();
+                }
+                updateSign(loc);
+            }
+        }
+        joinSignText = ChatColor.translateAlternateColorCodes('&', plugin.cf.getSignFirstLineReplacement());
+    }
+
+    public void persists() {
+        _signs_mutex.lock();
+        try {
+            for (String roomName : signs.keySet()) {
+                Location loc = signs.get(roomName);
+                signConfig.set(roomName + ".x", loc.getBlockX());
+                signConfig.set(roomName + ".y", loc.getBlockY());
+                signConfig.set(roomName + ".z", loc.getBlockZ());
+                signConfig.set(roomName + ".world", loc.getWorld().getName());
+            }
+        } finally {
+            _signs_mutex.unlock();
+        }
+        try {
+            signConfig.save(signFile);
+        } catch (IOException ex) {
+            plugin.getLogger().severe(ex.toString());
+        }
+    }
+
+    public void updateSigns(String roomName) {
+        Location loc = signs.get(roomName);
+        if (loc != null) {
+            updateSign(loc);
+        }
+    }
+
+    private void updateSign(Location loc) {
+        if (loc.getBlock().getType() == Material.WALL_SIGN
+                || loc.getBlock().getType() == Material.SIGN_POST) {
+            updateSign((Sign) loc.getBlock().getState());
+        }
+    }
+
+    private void updateSign(Sign sign) {
+        String roomName = sign.getLine(1);
+        if (plugin.rm.exists(roomName)) {
+            if (plugin.rm.isEnabled(roomName)) {
+                String mapName = plugin.rm.getCurrentMap(roomName);
+                if (mapName != null && plugin.mm.exists(mapName)) {
+                    sign.setLine(2, mapName);
+                    int maxPlayers = plugin.mm.getMaxPlayers(mapName);
+                    int currentPlayers = plugin.gm.getPlayersIn(roomName);
+                    String nowPlaying;
+                    if (currentPlayers < maxPlayers) {
+                        nowPlaying = ChatColor.GREEN + "" + currentPlayers;
+                    } else {
+                        nowPlaying = ChatColor.RED + "" + currentPlayers;
+                    }
+                    nowPlaying = nowPlaying + ChatColor.BLACK + " / "
+                            + ChatColor.AQUA + maxPlayers;
+                    sign.setLine(3, nowPlaying);
+                    _signs_mutex.lock();
+                    try {
+                        signs.put(roomName, sign.getLocation());
+                    } finally {
+                        _signs_mutex.unlock();
+                    }
+                } else {
+                    sign.setLine(0, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForInvalidMaps()));
+                }
+            } else {
+                sign.setLine(2, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForDisabledMaps()));
+                _signs_mutex.lock();
+                try {
+                    signs.put(roomName, sign.getLocation());
+                } finally {
+                    _signs_mutex.unlock();
                 }
             }
         } else {
-            plugin.getLogger().severe("Configured language file does not exists: ".concat(langFile.getAbsolutePath()));
+            sign.setLine(0, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForInvalidRooms()));
         }
-        messagePrefix = ChatColor.translateAlternateColorCodes('&', lang.getString("message-prefix"));
-    }
-    
-    public void saveDefaultLangFiles() {
-        File defaultLangFile;
-        defaultLangFile = new File(plugin.getDataFolder(), "spanish.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
-        }
-        defaultLangFile = new File(plugin.getDataFolder(), "english.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
-        }
-        defaultLangFile = new File(plugin.getDataFolder(), "italian.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
-        }
+        sign.update();
     }
 
-    public String getText(String label) {
-        String text = lang.getString(label);
-        if (text == null) {
-            text = label;
-        } else {
-            text = ChatColor.translateAlternateColorCodes('&', text);
-        }
-        return text;
-    }
-
-    public String getMessage(String label) {
-        return messagePrefix + " " + getText(label);
-    }
-    
-    public String getTitleMessage(String label) {
-        return getText(label);
-    }
-
-    public void sendMessage(String label, Player player) {
-        player.sendMessage(getMessage(label));
-    }
-
-    public void sendMessage(String label, CommandSender cs) {
-        cs.sendMessage(getMessage(label));
-    }
-
-    public String getMessagePrefix() {
-        return messagePrefix;
-    }
-
-    public void sendText(String baseLabel, Player player) {
-        if (lang.getString(baseLabel) == null) {
-            sendMessage(baseLabel, player);
-            return;
-        }
-        for (String label : lang.getConfigurationSection(baseLabel).getKeys(false)) {
-            sendMessage(baseLabel + "." + label, player);
-        }
-    }
-
-    public ItemStack getHelpBook() {
-        List<String> bookPages = new ArrayList<>();
-        for (String page : lang.getConfigurationSection("help-book.pages").getKeys(false)) {
-            try {
-                Integer.parseInt(page);
-            } catch (NumberFormatException ex) {
-                continue;
+    public void checkForPlayerJoin(PlayerInteractEvent e) {
+        Sign sign = (Sign) e.getClickedBlock().getState();
+        if (sign.getLine(0).equals(joinSignText)) {
+            e.setCancelled(true);
+            if (plugin.rm.isEnabled(sign.getLine(1))) {
+                plugin.gm.movePlayerToRoom(e.getPlayer(), sign.getLine(1));
+            } else {
+                plugin.lm.sendMessage("room-is-disabled", e.getPlayer());
             }
-            String textPage = "";
-            for (String line : lang.getConfigurationSection("help-book.pages." + page).getKeys(false)) {
-                if (line != null) {
-                    String text = ChatColor.translateAlternateColorCodes('&', lang.getString("help-book.pages." + page + "." + line));
-                    textPage = textPage.concat(text).concat("\n");
+        }
+    }
+
+    public void checkForGameInPost(SignChangeEvent e) {
+        if (e.getLine(0).toLowerCase().equalsIgnoreCase(plugin.cf.getSignFirstLine())) {
+            e.setLine(0, joinSignText);
+            final Location loc = e.getBlock().getLocation();
+            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    updateSign(loc);
                 }
-            }
-            bookPages.add(textPage);
-        }
-        ItemStack book = new ItemStack(Material.WRITTEN_BOOK, 1);
-        BookMeta bm = (BookMeta) book.getItemMeta();
-        bm.setDisplayName(ChatColor.translateAlternateColorCodes('&', lang.getString("help-book.title")));
-        bm.setAuthor(ChatColor.translateAlternateColorCodes('&', lang.getString("help-book.author")));
-        bm.setTitle(ChatColor.translateAlternateColorCodes('&', lang.getString("help-book.title")));
-        bm.setPages(bookPages);
-        bm.addEnchant(Enchantment.LUCK, 1, true);
-        book.setItemMeta(bm);
-        return book;
-    }
-
-    public void sendVerbatimTextToWorld(String text, World world, Player filter) {
-        for (Player receiver : world.getPlayers()) {
-            if (filter != null && receiver.getName().equals(filter.getName())) {
-                continue;
-            }
-            receiver.sendMessage(messagePrefix + " " + text);
+            }, 10);
         }
     }
-
-    public void sendMessageToWorld(String label, World world, Player filter) {
-        String text = getText(label);
-        for (Player receiver : world.getPlayers()) {
-            if (filter != null && receiver.getName().equals(filter.getName())) {
-                continue;
-            }
-            receiver.sendMessage(messagePrefix + " " + text);
-        }
-    }
-
-    public void sendMessageToTeam(String label, Player player) {
-        sendVerbatimMessageToTeam(getText(label), player);
-    }
-
-    public void sendVerbatimMessageToTeam(String message, Player player) {
-        TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
-        for (Player receiver : player.getWorld().getPlayers()) {
-            if (playerTeam == plugin.pm.getTeamId(receiver)) {
-                receiver.sendMessage(messagePrefix + " " + message);
-            }
-        }
-    }
-
-    public String getMurderText(Player player, Player killer, ItemStack is) {
-        String ret = ChatColor.translateAlternateColorCodes('&',
-                lang.getString("death-events.by-player.message"));
-        ret = ret.replace("%KILLER%", killer.getName());
-        ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLER_COLOR%", plugin.pm.getChatColor(killer) + "");
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
-        String how;
-        if (is != null) {
-            how = lang.getString("death-events.by-player.melee.".concat(is.getType().name()));
-            if (how == null) {
-                how = lang.getString("death-events.by-player.melee._OTHER_");
-            }
-        } else {
-            how = lang.getString("death-events.by-player.melee.PULL");
-        }
-        ret = ret.replace("%HOW%", how);
-        return ret;
-    }
-
-    public String getRangeMurderText(Player player, Player killer, int distance, boolean headshoot) {
-        String ret = ChatColor.translateAlternateColorCodes('&',
-                lang.getString("death-events.by-player.message"));
-        ret = ret.replace("%KILLER%", killer.getName());
-        ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLER_COLOR%", plugin.pm.getChatColor(killer) + "");
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
-        if (headshoot) {
-            ret = ret.replace("%HOW%", lang.getString("death-events.by-player.range.HEADSHOT"));
-        } else {
-            ret = ret.replace("%HOW%", lang.getString("death-events.by-player.range.BODYSHOT"));
-        }
-        ret = ret.replace("%DISTANCE%", distance + "");
-        return ret;
-    }
-
-    public String getNaturalDeathText(Player player, EntityDamageEvent.DamageCause cause) {
-        String ret = ChatColor.translateAlternateColorCodes('&',
-                lang.getString("death-events.natural.message"));
-        ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
-        String how = lang.getString("death-events.natural.cause.".concat(cause.name()));
-        if (how == null) {
-            how = lang.getString("death-events.natural.cause._OTHER_");
-        }
-        ret = ret.replace("%HOW%", how);
-        return ret;
-    }
-
 }
