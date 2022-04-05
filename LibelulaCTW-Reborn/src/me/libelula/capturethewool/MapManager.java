@@ -1083,12 +1083,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "Zona inaccesible para Azules "
+                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "Zona inaccesible para Azules "
+                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 }
@@ -1102,12 +1102,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.RED + direction + "Zona inaccesible para Rojos "
+                    plugin.lm.sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.RED + direction + "Zona inaccesible para Rojos "
+                    plugin.lm.sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 }
@@ -1120,12 +1120,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "Zona Protegida "
+                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "Zona Protegida "
+                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                 }
@@ -1143,7 +1143,7 @@ public final class MapManager {
             for (Selection sel : mapData.blueInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.blueInaccessibleAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.BLUE + "Zona inaccesible para Azules "
+                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.BLUE + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                     break;
@@ -1155,7 +1155,7 @@ public final class MapManager {
             for (Selection sel : mapData.redInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.redInaccessibleAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.RED + "Zona inaccesible para Rojos "
+                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.RED + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                     break;
@@ -1167,7 +1167,7 @@ public final class MapManager {
             for (Selection sel : mapData.protectedAreas) {
                 if (sel.contains(loc)) {
                     mapData.protectedAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.YELLOW + "Zona Protegida "
+                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.YELLOW + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Tools.toString(sel) + ")", player);
                     break;
