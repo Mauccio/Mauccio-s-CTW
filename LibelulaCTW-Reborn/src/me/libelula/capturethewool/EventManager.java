@@ -3,6 +3,7 @@ package me.libelula.capturethewool;
 import java.util.TreeMap;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -37,11 +38,14 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 import org.kitteh.tag.AsyncPlayerReceiveNameTagEvent;
+
+import com.connorlinfoot.titleapi.TitleAPI;
 
 public final class EventManager {
 
@@ -64,6 +68,27 @@ public final class EventManager {
         public SetupListeners(SetUpAction action) {
             this.action = action;
         }
+        
+        @EventHandler(priority=EventPriority.HIGHEST)
+        public void onThunderChange(ThunderChangeEvent event) {
+         
+            boolean storm = event.toThunderState();
+            if(storm) {
+            	event.setCancelled(true);
+            	event.getWorld().setThundering(false);
+            }
+      
+        }
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+        public void onVoid(PlayerMoveEvent e) {
+        if (plugin.getConfig().getBoolean("instakill-on-void")) {
+        	if (e.getTo().getBlockY() < -1) {
+                e.getPlayer().setHealth(0.0D); 
+                return;
+            } 
+          } 
+        }
+
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onBlockBreakEvent(BlockBreakEvent e) {
@@ -71,7 +96,7 @@ public final class EventManager {
                 return;
             }
             Location currLoc;
-            if (e.getBlock().getType() != Material.WOOL) {
+            
                 if (e.getBlock().getType() == Material.MOB_SPAWNER) {
                     @SuppressWarnings("deprecation")
 					Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
@@ -81,11 +106,12 @@ public final class EventManager {
                         plugin.lm.sendMessage("spawner-deleted", e.getPlayer());
                         return;
                     }
+                } else {
+                	plugin.lm.sendMessage("not-a-spawner", e.getPlayer());
+                    e.setCancelled(true);
+                    return;
                 }
-                plugin.lm.sendMessage("not-a-wool", e.getPlayer());
-                e.setCancelled(true);
-                return;
-            }
+                            
 
             @SuppressWarnings("deprecation")
 			Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
@@ -179,6 +205,8 @@ public final class EventManager {
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onWeatherChange(WeatherChangeEvent e) {
             plugin.gm.ajustWeather(e);
+            e.setCancelled(true);
+            e.getWorld().setThundering(false);
         }
 
         @EventHandler(priority = EventPriority.HIGHEST)
@@ -191,7 +219,8 @@ public final class EventManager {
             }
         }
 
-        @EventHandler(priority = EventPriority.HIGHEST)
+        @SuppressWarnings("deprecation")
+		@EventHandler(priority = EventPriority.HIGHEST)
         public void onRespawn(PlayerRespawnEvent e) {
             String roomName = plugin.rm.getRoom(e.getPlayer().getWorld());
             if (roomName != null) {
@@ -203,10 +232,12 @@ public final class EventManager {
                     case RED:
                         e.setRespawnLocation(plugin.gm.getRedSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.RED);
+                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, "&7", "&c&l¡HAS MUERTO!");
                         break;
-                    case BLUE:
+				case BLUE:
                         e.setRespawnLocation(plugin.gm.getBlueSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.BLUE);
+                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, "&7", "&c&l¡HAS MUERTO!");
                         break;
                     default:
                         return;
@@ -226,9 +257,11 @@ public final class EventManager {
             }
         }
 
-        @EventHandler(priority = EventPriority.HIGHEST)
+        @SuppressWarnings("deprecation")
+		@EventHandler(priority = EventPriority.HIGHEST)
         public void onDeath(PlayerDeathEvent e) {
             plugin.tm.manageDeath(e);
+            TitleAPI.sendFullTitle(e.getEntity(), 0, 0, 0, null, "&c&l¡HAS MUERTO!");
         }
 
         @EventHandler(priority = EventPriority.HIGHEST)
@@ -367,14 +400,18 @@ public final class EventManager {
                 }
             }
         }
-
+        
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onPlayerQuit(PlayerQuitEvent e) {
             if (plugin.rm.isInGame(e.getPlayer().getWorld())) {
                 e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
+                e.getPlayer().setDisplayName(e.getPlayer().getName());
+                e.getPlayer().setPlayerListName(e.getPlayer().getName());
             }
             e.setQuitMessage("");
             e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
+            e.getPlayer().setDisplayName(e.getPlayer().getName());
+            e.getPlayer().setPlayerListName(e.getPlayer().getName());
             String leftMessage = plugin.lm.getText("left-message")
                     .replace("%PLAYER%", e.getPlayer().getDisplayName());
             for (Player player : plugin.wm.getLobbyWorld().getPlayers()) {
@@ -426,7 +463,18 @@ public final class EventManager {
                 plugin.gm.checkTarget(e);
             }
         }
-
+        
+        @EventHandler
+        public void bloodEffect(EntityDamageEvent event) {
+          if (!(event.getEntity() instanceof Player))
+            return; 
+          Player player = (Player)event.getEntity();
+          Location loc = player.getLocation();
+          World world = loc.getWorld();
+          world.playEffect(loc, Effect.LAVADRIP, -10);
+          world.playEffect(loc.add(0.0D, 0.8D, 0.0D), Effect.STEP_SOUND, Material.REDSTONE_BLOCK);
+        }
+        
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onBlockBreakEvent(BlockBreakEvent e) {
             plugin.tm.cancelSpectator(e);
@@ -529,4 +577,5 @@ public final class EventManager {
             HandlerList.unregisterAll(sl);
         }
     }
+    
 }
