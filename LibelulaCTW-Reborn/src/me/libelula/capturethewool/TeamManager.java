@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -40,7 +41,7 @@ public class TeamManager {
     private final TreeMap<TeamId, TeamInfo> teams;
     public final String armourBrandName;
     private final String bTeamText;
-    private final Inventory joinMenuInventory;
+    public static Inventory joinMenuInventory;
 
     /**
      * Name of the team
@@ -49,7 +50,7 @@ public class TeamManager {
 
         RED, BLUE, SPECTATOR;
     }
-
+    
     private class TeamInfo {
 
         @SuppressWarnings("unused")
@@ -83,13 +84,13 @@ public class TeamManager {
         teams.put(TeamId.RED, teamInfo);
         teamInfo = new TeamInfo(TeamId.BLUE, Color.BLUE, DyeColor.BLUE, ChatColor.BLUE);
         teams.put(TeamId.BLUE, teamInfo);
-        teamInfo = new TeamInfo(TeamId.SPECTATOR, Color.SILVER, null, ChatColor.GRAY);
+        teamInfo = new TeamInfo(TeamId.SPECTATOR, Color.SILVER, null, ChatColor.ITALIC);
         teams.put(TeamId.SPECTATOR, teamInfo);
         armourBrandName = plugin.lm.getText("armour-brand");
         bTeamText = plugin.lm.getText("brackets-team");
         joinMenuInventory = getTeamInventoryMenu();
     }
-
+    
     @SuppressWarnings("deprecation")
 	public void addToTeam(Player player, TeamId teamId) {
         teams.get(teamId).team.addPlayer(player);
@@ -130,7 +131,7 @@ public class TeamManager {
         e.setCancelled(true);
 
         if (senderTi == null) { // The player is not in game.
-            String message = "<" + e.getPlayer().getDisplayName() + "> " + e.getMessage();
+            String message = "" + e.getPlayer().getDisplayName() + ": " + e.getMessage();
             for (Player receiver : e.getPlayer().getWorld().getPlayers()) {
                 receiver.sendMessage(message);
             }
@@ -152,7 +153,7 @@ public class TeamManager {
         }
     }
 
-    @SuppressWarnings("incomplete-switch")
+	@SuppressWarnings("incomplete-switch")
 	public void cancelSpectator(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player == false) {
             return;
@@ -170,18 +171,19 @@ public class TeamManager {
                             player.closeInventory();
                             plugin.gm.movePlayerTo(player, null);
                             break;
-                        case EYE_OF_ENDER:
-                            player.closeInventory();
-                            break;
                         case WOOL:
                             player.closeInventory();
                             Wool wool = (Wool) e.getCurrentItem().getData();
                             switch (wool.getColor()) {
                                 case RED:
                                     plugin.gm.joinInTeam(player, TeamId.RED);
+                                    // TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.join-red-title"), plugin.lm.getTitleMessage("titles.join-red-subtitle"));
+                                    // player.playSound(player.getLocation(), Sound.LEVEL_UP, 10.0F, 1);
                                     break;
                                 case BLUE:
                                     plugin.gm.joinInTeam(player, TeamId.BLUE);
+                                    // TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.join-blue-title"), plugin.lm.getTitleMessage("titles.join-blue-subtitle"));
+                                    // player.playSound(player.getLocation(), Sound.LEVEL_UP, 10.0F, 1);
                                     break;
                             }
                             break;
@@ -270,59 +272,44 @@ public class TeamManager {
         }
     }
 
-    private Inventory getTeamInventoryMenu() {
+    public Inventory getTeamInventoryMenu() {
         Inventory teamMenu;
         teamMenu = Bukkit.createInventory(null, 9, plugin.lm.getText("pick-your-team"));
 
         List<String> ayuda = new ArrayList<>();
 
-        ItemStack option = new ItemStack(Material.EMERALD);
+        ItemStack option = new ItemStack(Material.NETHER_STAR);
         ItemMeta im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("view-tutorial"));
-        ayuda.add(plugin.lm.getText("not-available-yet"));
-        im.setLore(ayuda);
-        option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
-
-        ayuda.clear();
-        option = new ItemStack(Material.NETHER_STAR);
         im = option.getItemMeta();
         im.setDisplayName(plugin.lm.getText("auto-join"));
         ayuda.add(plugin.lm.getText("auto-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(4, option);
 
         ayuda.clear();
-        Wool wool = new Wool(DyeColor.BLUE);
+        Wool wool = new Wool(DyeColor.BLUE); 
         option = wool.toItemStack();
         im = option.getItemMeta();
         im.setDisplayName(plugin.lm.getText("join-blue"));
         ayuda.add(plugin.lm.getText("blue-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(6, option);
 
         ayuda.clear();
-        wool = new Wool(DyeColor.RED);
+        wool = new Wool(DyeColor.RED); 
         option = wool.toItemStack();
         im = option.getItemMeta();
         im.setDisplayName(plugin.lm.getText("join-red"));
         ayuda.add(plugin.lm.getText("red-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
-
-        ayuda.clear();
-        option = new ItemStack(Material.EYE_OF_ENDER);
-        im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("close"));
-        ayuda.add(plugin.lm.getText("close-menu"));
-        im.setLore(ayuda);
-        option.setItemMeta(im);
-        teamMenu.setItem(8, option);
+        teamMenu.setItem(2, option);
+        // teamMenu.addItem(new ItemStack[]{option}); OLD CODE
 
         return teamMenu;
+        
     }
 
     public void cancelSameTeam(PlayerFishEvent e) {
@@ -426,7 +413,7 @@ public class TeamManager {
             if (blockDistance == 0) {
                 ItemStack is = killer.getItemInHand();
                 murderText = plugin.lm.getMurderText(player, killer, is);
-
+                
             } else {
                 murderText = plugin.lm.getRangeMurderText(player, killer, blockDistance, headhoot);
             }
@@ -439,17 +426,22 @@ public class TeamManager {
                         killer = plugin.getServer().getPlayer(killerName);
                         if (killer != null) {
                             murderText = plugin.lm.getMurderText(player, killer, null);
+                            player.playSound(player.getLocation(), Sound.NOTE_PLING, 10.0F, 2);
                         } else {
                             murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                            player.playSound(player.getLocation(), Sound.NOTE_PLING, 10.0F, 2);
                         }
                     } else {
                         murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                        player.playSound(player.getLocation(), Sound.NOTE_PLING, 10.0F, 2);
                     }
                 } else {
                     murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                    player.playSound(player.getLocation(), Sound.NOTE_PLING, 10.0F, 2);
                 }
             } else {
                 murderText = plugin.lm.getNaturalDeathText(player, EntityDamageEvent.DamageCause.SUICIDE);
+                player.playSound(player.getLocation(), Sound.NOTE_PLING, 10.0F, 2);
             }
         }
 
