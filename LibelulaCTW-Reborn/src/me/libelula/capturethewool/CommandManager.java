@@ -8,8 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,13 +21,9 @@ import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.kitteh.tag.TagAPI;
 
-/**
- *
- * @author Diego D'Onofrio <ddonofrio@member.fsf.org>
- * @version 1.0
- *
- */
+
 public class CommandManager implements CommandExecutor {
 
     private final Main plugin;
@@ -87,7 +85,7 @@ public class CommandManager implements CommandExecutor {
         }
     }
 
-    @Override
+	@Override
     public boolean onCommand(CommandSender cs, Command cmnd, String string, String[] args) {
         Player player;
         if (cs instanceof Player) {
@@ -133,6 +131,9 @@ public class CommandManager implements CommandExecutor {
                     return true;
                 }
                 player.teleport(plugin.wm.getNextLobbySpawn());
+                player.setPlayerListName(player.getName());
+                player.setDisplayName(player.getName());
+                
                 break;
             case "ctwsetup":
                 if (player == null) {
@@ -202,7 +203,7 @@ public class CommandManager implements CommandExecutor {
                             String senderName = player.getDisplayName().replace(player.getName(),
                                     cc + player.getName());
                             for (Player receiver : player.getWorld().getPlayers()) {
-                                receiver.sendMessage("<" + senderName + ChatColor.RESET + ">: " + message);
+                                receiver.sendMessage("" + senderName + ChatColor.RESET + ": " + message);
                             }
 
                         } else {
@@ -233,13 +234,6 @@ public class CommandManager implements CommandExecutor {
                                     } else {
                                         plugin.lm.sendMessage("dms-false", player);
                                     }
-                                    break;
-                                case "blood":
-                                    player.sendMessage(ChatColor.RED + "No implementado aún.");
-                                    break;
-                                default:
-                                    plugin.lm.sendText("commands.toggle", player);
-                                    break;
                             }
                         } else {
                             plugin.lm.sendMessage("not-in-room-cmd", player);
@@ -256,6 +250,10 @@ public class CommandManager implements CommandExecutor {
                 if (player != null) {
                     if (plugin.pm.getTeamId(player) != null) {
                         player.teleport(plugin.wm.getNextLobbySpawn());
+                        // NametagEdit.getApi().clearNametag(player);
+                        TagAPI.refreshPlayer(player);
+                        player.setPlayerListName(player.getName());
+                        player.setDisplayName(player.getName());
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
                     }
@@ -274,12 +272,6 @@ public class CommandManager implements CommandExecutor {
                                 desiredTeam = TeamManager.TeamId.SPECTATOR;
                             } else {
                                 switch (teamToJoin) {
-                                    case "blue":
-                                        desiredTeam = TeamManager.TeamId.BLUE;
-                                        break;
-                                    case "red":
-                                        desiredTeam = TeamManager.TeamId.RED;
-                                        break;
                                     case "random":
                                     case "rand":
                                     case "*":
@@ -288,12 +280,12 @@ public class CommandManager implements CommandExecutor {
                                         break;
                                     default:
                                         plugin.lm.sendMessage("incorrect-parameters", player);
-                                        plugin.lm.sendText("commands.join", player);
                                         desiredTeam = null;
+                                        
                                 }
                             }
                             if (desiredTeam != null) {
-                                if (desiredTeam == playerTeam) {
+                                if (desiredTeam == playerTeam | playerTeam == TeamManager.TeamId.BLUE | playerTeam == TeamManager.TeamId.RED) {
                                     plugin.lm.sendMessage("already-in-this-team", player);
                                 } else {
                                     plugin.gm.joinInTeam(player, desiredTeam);
@@ -301,19 +293,41 @@ public class CommandManager implements CommandExecutor {
                             }
                         } else {
                             plugin.lm.sendMessage("not-in-room-cmd", player);
+                            
                         }
+                    } else if(plugin.pm.getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
+                        // plugin.lm.sendText("commands.join", player);
+                        player.openInventory(TeamManager.joinMenuInventory);
+                        player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 2);
                     } else {
-                        plugin.lm.sendText("commands.join", player);
+                    	plugin.lm.sendMessage("join-in-team", player);
                     }
                 } else {
                     plugin.lm.sendMessage("not-in-game-cmd", player);
                 }
 
                 break;
-        }
+            case "alert":
+            	
+                    if (args.length != 0) {
+                    	
+                        String message = "";
+                        for (String word : args) {
+                            message = message.concat(word + " ");
+                        }
+                        for (Player receiver : player.getServer().getOnlinePlayers()) {
+                            receiver.sendMessage(plugin.lm.getText("alert-prefix") + " " + message);
+                        }
 
+                        } else {
+                        	plugin.lm.sendText("commands.g", player);
+                        }           
+        }
+       
         return true;
     }
+
+
 
     private void processCtwSetup(Player player, String[] args) {
         String subCommand = args[0].toLowerCase();
@@ -439,6 +453,9 @@ public class CommandManager implements CommandExecutor {
                     case "spawn":
                         plugin.mm.setSpawn(player.getLocation());
                         plugin.lm.sendMessage("mapspawn-set", player);
+                        player.setPlayerListName(player.getName());
+                        player.setDisplayName(player.getName());
+                        // NametagEdit.getApi().clearNametag(player);
                         break;
                     case "redspawn":
                         plugin.mm.setRedSpawn(player.getLocation());
