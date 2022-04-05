@@ -18,11 +18,14 @@ import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
 import org.kitteh.tag.TagAPI;
+
 
 public class PlayerManager {
 
@@ -55,7 +58,7 @@ public class PlayerManager {
         playerTeam = new TreeMap<>();
         _playerTeam_mutex = new ReentrantLock(true);
         helpBook = plugin.lm.getHelpBook();
-        ItemStack menuItem = new ItemStack(Material.ENCHANTED_BOOK);
+        ItemStack menuItem = new ItemStack(Material.PAPER);
         ItemMeta im = menuItem.getItemMeta();
         im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
         menuItem.setItemMeta(im);
@@ -152,13 +155,14 @@ public class PlayerManager {
         return cc;
     }
 
-    public void addPlayerTo(Player player, TeamManager.TeamId teamId) {
+	public void addPlayerTo(Player player, TeamManager.TeamId teamId) {
         _playerTeam_mutex.lock();
         falseSpectators.remove(player.getName());
         try {
             TeamManager.TeamId previousTeam = playerTeam.put(player.getName(), teamId);
             if (previousTeam != null) {
                 plugin.tm.removeFromTeam(player, previousTeam);
+                
             }
             plugin.tm.addToTeam(player, teamId);
             clearInventory(player);
@@ -169,6 +173,7 @@ public class PlayerManager {
             }
             updatePlayerList(player);
             player.sendMessage(plugin.lm.getMessage("moved-to-" + teamId.name().toLowerCase()));
+           
         } finally {
             _playerTeam_mutex.unlock();
         }
@@ -272,6 +277,7 @@ public class PlayerManager {
         }
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void disguise(Player player, TeamManager.TeamId teamId) {
 
         LeatherArmorMeta leatherMeta;
@@ -312,12 +318,16 @@ public class PlayerManager {
         leatherMeta.setLore(armourBrand);
         helmet.setItemMeta(leatherMeta);
 
-        player.setDisplayName(teamChatColor + player.getName());
+        /*NametagEdit.getApi().setPrefix(player, teamChatColor+"");
+        NametagEdit.getApi().reloadNametag(player); */
+        player.setPlayerListName(teamChatColor+""+player.getName());
+        player.setDisplayName(teamChatColor +""+player.getName());
+        player.setCustomName(teamChatColor +""+player.getName());
+        player.setCustomNameVisible(true);
         player.getInventory().setBoots(boots);
         player.getInventory().setChestplate(tshirt);
         player.getInventory().setLeggings(leggings);
         player.getInventory().setHelmet(helmet);
-
         player.setGameMode(GameMode.SURVIVAL);
         player.setFireTicks(0);
 
@@ -334,10 +344,10 @@ public class PlayerManager {
         player.setHealth(20);
         player.setFoodLevel(20);
         plugin.pm.clearInventory(player);
-        player.setGameMode(GameMode.SPECTATOR);
+        player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlight(true);
         player.getInventory().addItem(helpBook);
-        player.getInventory().addItem(joinMenuItem);
+        // player.getInventory().addItem(joinMenuItem);
         updatePlayerList(player);
     }
 }
