@@ -1,17 +1,16 @@
 # Statistics configuration file
 
-enable: false
+enable: true # Habilitar estadísticas?
 
-database:
+database: # Base de datos
     # Possible values: MySQL, SQLITE
-    type: MySQL
+    type: MySQL # Tipo de Base de Datos
     # Connection information
-    name: lctw
-    user: lctw
-    pass: libelulaPluginsRocks
+    name: libelulactw # Nombre de Base de Datos
+    user: root # Usuario de Base de Datos
+    pass: 1234 # Contraseña de Base de Datos
 
-scores:
-    capture: 5
-    death: -1
-    kill: 1
-    
+scores: # Puntos al...
+    capture: 5 # Capturar
+    death: -1 # Morir
+    kill: 1 # Asesinato

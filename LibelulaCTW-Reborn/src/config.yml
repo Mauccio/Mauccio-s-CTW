@@ -1,10 +1,10 @@
-lang-file: spanish.yml
+lang-file: english.yml
 signs:
     first-line-text: "ctw"
     first-line-text-replacement: "&4CaptureTheWool"
-    on-invalid-room-replacement: "&4Sala Inválida"
-    on-invalid-map-replacement: "&4Mapa Inválido"
-    on-disabled-map: "&4Deshabilitado"
+    on-invalid-room-replacement: "&4Invalid Room"
+    on-invalid-map-replacement: "&4Invalid Map"
+    on-disabled-map: "&4Disabled"
 implement-spawn-cmd: true
 ingame:
     allowed-commands:
@@ -18,7 +18,27 @@ ingame:
         - helpop
         - report
         - salir
+        - leave
+        - jugar
+        - entrar
 
 message-decorator: ""
 user-fireworks-on-win: true
 keep-teams-on-win: true
+instakill-on-void: false
+
+#######################################
+#                                     #
+#      SOUNDS | SONIDOS | SUONI       #
+#                                     #
+#######################################
+
+sounds:
+   win-wool-sound: ENDERDRAGON_GROWL 
+   wool-pickup-sound: AMBIENCE_THUNDER 
+   reversing-sound: NOTE_PLING
+   team-join-sound: LEVEL_UP
+   join-command: CHEST_OPEN
+   map-change: VILLAGER_YES
+   team-win-sound: WITHER_DEATH
+   your-stats: ORB_PICKUP
