@@ -5,9 +5,9 @@ Plugin poco modificado de LibelulaUltimateCaptureTheWool, con el paso del tiempo
 - [Plugin](https://www.spigotmc.org/resources/libelulactw-reborn.101094/)
 - Discord: Mauccio#8037
 
-### Actualizaciones: 
+### Primera Versión: 
 - LCTWR v.1.0.1 | 24 de Diciembre del 2021
-- LCTWR Pre-1.1
+
 ENGLISH
 
 # LibelulaCTW-Reborn
@@ -17,6 +17,5 @@ Modified plugin of the original LibelulaUltimateCaptureTheWool, with the passage
 - [Plugin](https://www.spigotmc.org/resources/libelulactw-reborn.101094/)
 - Discord: Mauccio#8037
 
-### Updates:
+### First Version:
 - LCTWR v.1.0.1 | December 24th, 2021
-- LCTWR Pre-1.1
