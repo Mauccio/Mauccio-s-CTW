@@ -75,5 +75,9 @@ public class ConfigManager {
     public boolean implementSpawnCmd() {
         return config.getBoolean("implement-spawn-cmd", false);
     }
+    
+    public boolean isVoidInstaKill() {
+        return plugin.getConfig().getBoolean("instakill-on-void", false);
+    }
 
 }

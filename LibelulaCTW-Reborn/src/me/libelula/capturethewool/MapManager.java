@@ -1184,7 +1184,7 @@ public final class MapManager {
         mapData.kitInv = Bukkit.createInventory(null, InventoryType.PLAYER);
         mapData.kitInv.setContents(player.getInventory().getContents());
     }
-
+    
     public void setKitarmour(World world, boolean active) {
         MapData mapData = maps.get(world.getName());
         if (mapData == null) {

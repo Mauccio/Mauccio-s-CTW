@@ -76,15 +76,16 @@ public class TeamManager {
     }
 
     public TeamManager(Main plugin) {
+    	
         this.plugin = plugin;
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         teams = new TreeMap<>();
         TeamInfo teamInfo;
-        teamInfo = new TeamInfo(TeamId.RED, Color.RED, DyeColor.RED, ChatColor.RED);
+        teamInfo = new TeamInfo(TeamId.RED, Color.fromRGB(255, 85, 85), DyeColor.RED, ChatColor.RED);
         teams.put(TeamId.RED, teamInfo);
-        teamInfo = new TeamInfo(TeamId.BLUE, Color.BLUE, DyeColor.BLUE, ChatColor.BLUE);
-        teams.put(TeamId.BLUE, teamInfo);
-        teamInfo = new TeamInfo(TeamId.SPECTATOR, Color.SILVER, null, ChatColor.ITALIC);
+        teamInfo = new TeamInfo(TeamId.BLUE, Color.fromRGB(85, 85, 255), DyeColor.BLUE, ChatColor.BLUE);
+        teams.put(TeamId.BLUE, teamInfo);		
+        teamInfo = new TeamInfo(TeamId.SPECTATOR, Color.SILVER, null, ChatColor.GRAY);
         teams.put(TeamId.SPECTATOR, teamInfo);
         armourBrandName = plugin.lm.getText("armour-brand");
         bTeamText = plugin.lm.getText("brackets-team");
@@ -104,7 +105,7 @@ public class TeamManager {
     }
 
     public Color getTshirtColor(TeamId teamId) {
-        return teams.get(teamId).tshirtColor;
+        return teams.get(teamId).tshirtColor;    
     }
 
     public ChatColor getChatColor(TeamId teamId) {
@@ -464,6 +465,7 @@ public class TeamManager {
                     public void run() {
                         plugin.db.addEvent(killerName, playerName, "KILL|" + murderText);
                         plugin.db.incScore(killerName, plugin.scores.kill);
+                        plugin.db.incKill(killerName, 1);
                     }
                 });
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {

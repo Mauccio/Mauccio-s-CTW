@@ -16,6 +16,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+/**
+ *
+ * @author Diego D'Onofrio <ddonofrio@member.fsf.org>
+ * @version 1.0
+ * 
+ */
+
 public final class SignManager {
 
     private final Main plugin;

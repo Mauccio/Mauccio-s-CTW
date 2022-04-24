@@ -43,9 +43,9 @@ import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
-import org.kitteh.tag.AsyncPlayerReceiveNameTagEvent;
 
 import com.connorlinfoot.titleapi.TitleAPI;
+import com.nametagedit.plugin.NametagEdit;
 
 public final class EventManager {
 
@@ -81,7 +81,7 @@ public final class EventManager {
         }
         @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
         public void onVoid(PlayerMoveEvent e) {
-        if (plugin.getConfig().getBoolean("instakill-on-void")) {
+        if (plugin.cf.isVoidInstaKill()) {
         	if (e.getTo().getBlockY() < -1) {
                 e.getPlayer().setHealth(0.0D); 
                 return;
@@ -232,12 +232,13 @@ public final class EventManager {
                     case RED:
                         e.setRespawnLocation(plugin.gm.getRedSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.RED);
-                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, "&7", "&c&l¡HAS MUERTO!");
+                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, plugin.lm.getTitleMessage("titles.death-title"), plugin.lm.getTitleMessage("titles.death-subtitle"));
+                        
                         break;
 				case BLUE:
                         e.setRespawnLocation(plugin.gm.getBlueSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.BLUE);
-                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, "&7", "&c&l¡HAS MUERTO!");
+                        TitleAPI.sendFullTitle(e.getPlayer(), 0, 20, 0, plugin.lm.getTitleMessage("titles.death-title"), plugin.lm.getTitleMessage("titles.death-subtitle"));
                         break;
                     default:
                         return;
@@ -257,11 +258,9 @@ public final class EventManager {
             }
         }
 
-        @SuppressWarnings("deprecation")
 		@EventHandler(priority = EventPriority.HIGHEST)
         public void onDeath(PlayerDeathEvent e) {
             plugin.tm.manageDeath(e);
-            TitleAPI.sendFullTitle(e.getEntity(), 0, 0, 0, null, "&c&l¡HAS MUERTO!");
         }
 
         @EventHandler(priority = EventPriority.HIGHEST)
@@ -269,12 +268,12 @@ public final class EventManager {
             plugin.sm.checkForGameInPost(e);
         }
 
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
+        /* @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
         public void onNameTag(AsyncPlayerReceiveNameTagEvent e) {
             Player player = e.getNamedPlayer();
             e.setTag(plugin.pm.getChatColor(player) + player.getName());
         }
-
+		*/
         @EventHandler(ignoreCancelled = true)
         public void onItemSpawnEvent(ItemSpawnEvent e) {
             plugin.tm.onArmourDrop(e);
@@ -406,6 +405,7 @@ public final class EventManager {
             if (plugin.rm.isInGame(e.getPlayer().getWorld())) {
                 e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
                 e.getPlayer().setDisplayName(e.getPlayer().getName());
+                NametagEdit.getApi().clearNametag(e.getPlayer());
                 e.getPlayer().setPlayerListName(e.getPlayer().getName());
             }
             e.setQuitMessage("");

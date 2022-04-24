@@ -221,7 +221,7 @@ public class GameManager {
             }
         }
     }
-
+    
     @SuppressWarnings("deprecation")
 	public void movePlayerToRoom(Player player, String roomName) {
         World targetWorld = plugin.rm.getCurrentWorld(roomName);
@@ -229,13 +229,14 @@ public class GameManager {
             player.teleport(targetWorld.getSpawnLocation());
             TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.join-room-title"), plugin.lm.getTitleMessage("titles.join-room-subtitle"));
             plugin.lm.sendMessage("use-join", player);
-            
+
         } else {
             plugin.lm.sendMessage("room-has-no-map", player);
         }
     }
 
     public boolean joinInTeam(Player player, TeamManager.TeamId teamId) {
+    	
         if (teamId == TeamManager.TeamId.SPECTATOR || plugin.hasPermission(player, "choseteam")) {
             movePlayerTo(player, teamId);
             
@@ -293,12 +294,12 @@ public class GameManager {
                     game.bluePlayers++;
                     advert = plugin.lm.getText("player-join-blue");
                     TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.join-blue-title"), plugin.lm.getTitleMessage("titles.join-blue-subtitle"));
-                    player.playSound(player.getLocation(), Sound.LEVEL_UP, 10.0F, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.team-join-sound")), 10.0F, 1);
                     break;
                 case RED:
                     advert = plugin.lm.getText("player-join-red");
                     TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.join-red-title"), plugin.lm.getTitleMessage("titles.join-red-subtitle"));
-                    player.playSound(player.getLocation(), Sound.LEVEL_UP, 10.0F, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.team-join-sound")), 10.0F, 1);
                     game.redPlayers++;
                     break;
                 default:
@@ -612,7 +613,7 @@ public class GameManager {
         }
     }
 
-    @SuppressWarnings("incomplete-switch")
+    @SuppressWarnings({ "incomplete-switch", "deprecation" })
 	public void checkTarget(Player player, ItemStack is) {
         Game game = worldGame.get(player.getWorld());
         if (game != null) {
@@ -624,7 +625,6 @@ public class GameManager {
                 return;
             }
             if (is.getType() == Material.WOOL) {
-            	@SuppressWarnings("deprecation")
 				Wool wool = new Wool(is.getTypeId(), is.getData().getData());
                 final String message = plugin.lm.getText("wool-pickup-message")
                         .replace("%PLAYER%", plugin.pm.getChatColor(player) + player.getName())
@@ -634,7 +634,13 @@ public class GameManager {
                         for (String colorName : game.mapData.blueWoolWinPoints.keySet()) {
                             if (colorName.equals(wool.getColor().name())) {
                                 plugin.lm.sendVerbatimMessageToTeam(message, player);
-                                player.playSound(player.getLocation(), Sound.FIREWORK_LAUNCH, 10.0F, 2);
+                                for (Player allPlayers : game.world.getPlayers())
+                                {
+                                	TitleAPI.sendFullTitle(allPlayers, 10, 60, 10,"ง6"+ Tools.Chars.caution , plugin.lm.getTitleMessage("wool-pickup-message")
+                                	 .replace("%PLAYER%", plugin.pm.getChatColor(player) + player.getName())
+                                     .replace("%WOOL%", Tools.toChatColor(wool.getColor()) + wool.getColor().name()));
+                               	    allPlayers.playSound(allPlayers.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.wool-pickup-sound")), 10.0F, 1);
+                                }
                                 break;
                             }
                         }
@@ -643,7 +649,13 @@ public class GameManager {
                         for (String colorName : game.mapData.redWoolWinPoints.keySet()) {
                             if (colorName.equals(wool.getColor().name())) {
                             	plugin.lm.sendVerbatimMessageToTeam(message, player);
-                                player.playSound(player.getLocation(), Sound.FIREWORK_LAUNCH, 10.0F, 2);
+                            	for (Player allPlayers : game.world.getPlayers())
+                                {
+                            		TitleAPI.sendFullTitle(allPlayers, 10, 60, 10,"ง6"+ Tools.Chars.caution , plugin.lm.getTitleMessage("wool-pickup-message")
+                                       	 .replace("%PLAYER%", plugin.pm.getChatColor(player) + player.getName())
+                                         .replace("%WOOL%", Tools.toChatColor(wool.getColor()) + wool.getColor().name()));
+                               	    allPlayers.playSound(allPlayers.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.wool-pickup-sound")), 10.0F, 1);
+                                }
                                 break;
                             }
                         }
@@ -672,14 +684,15 @@ public class GameManager {
         }
     }
 
-    public void checkTarget(BlockPlaceEvent e) {
+    @SuppressWarnings("deprecation")
+	public void checkTarget(BlockPlaceEvent e) {
         final Game game = worldGame.get(e.getBlock().getWorld());
         if (game != null) {
             final Target t = game.targets.get(e.getBlock().getLocation());
 
             if (t != null) {
                 if (e.getBlock().getType() == Material.WOOL) {
-                    @SuppressWarnings("deprecation")
+                    
 					Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
 
                     if (wool.getColor() == t.color && t.team
@@ -697,7 +710,13 @@ public class GameManager {
                                 .replace("%PLAYER%", e.getPlayer().getName())
                                 .replace("%WOOL%", t.color.toString());
                         plugin.lm.sendVerbatimTextToWorld(winText, e.getBlock().getWorld(), null);
-                        e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.VILLAGER_YES, 10.0F, 1);
+                        for (Player allPlayers : game.world.getPlayers())
+                        {
+                        	TitleAPI.sendFullTitle(allPlayers, 10, 60, 10,"งa"+ Tools.Chars.yestitle, plugin.lm.getTitleMessage("win-wool-placed")
+                        			.replace("%PLAYER%", e.getPlayer().getName())
+                                    .replace("%WOOL%", t.color.toString()));
+                       	    allPlayers.playSound(allPlayers.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.win-wool-sound")), 10.0F, 1);
+                        }
                         checkForWin(game);
 
                         if (!decorator.isEmpty()) {
@@ -716,6 +735,8 @@ public class GameManager {
                                 public void run() {
                                     plugin.db.addEvent(playerName, "WOOL-CAPTURE|" + t.color.toString() + "|" + game.roomName + "|" + winText);
                                     plugin.db.incScore(playerName, plugin.scores.capture);
+                                    plugin.db.incWoolCaptured(playerName, 1);
+                                    
                                 }
                             });
                         }
@@ -727,79 +748,63 @@ public class GameManager {
 
     @SuppressWarnings("deprecation")
 	private void updateScoreBoard(Game game) {
-        List<Target> redTarget = new ArrayList<>();
+       List<Target> redTarget = new ArrayList<>();
         Scoreboard newBoard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = newBoard.registerNewObjective("wools", "dummy");
        
         int score = 3 + game.targets.size();
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        objective.setDisplayName(plugin.lm.getText("Wools"));
-        
-        OfflinePlayer op;
-        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("Blue-Team"));
+        objective.setDisplayName(this.plugin.lm.getText("Wools"));
+        OfflinePlayer op = this.plugin.getServer().getOfflinePlayer(this.plugin.lm.getText("Blue-Team"));
         objective.getScore(op).setScore(score--);
         for (Target target : game.targets.values()) {
-            if (target.team == TeamManager.TeamId.RED) {
-                redTarget.add(target);
-            } else {
-                String state;
-                if (target.completed) {
-                    state = Tools.toChatColor(target.color) + Tools.Chars.check;
-                } else {
-                    state = Tools.toChatColor(target.color) + Tools.Chars.cross;
-                }
-                String lineName = state + Tools.toChatColor(target.color) + " "
-                        + Tools.Chars.wool + " " + ChatColor.WHITE
-                        + target.color.toString();
-
-                if (lineName.length() > 16) {
-                    lineName = lineName.substring(0, 15);
-                }
-
-                op = plugin.getServer().getOfflinePlayer(lineName);
-                objective.getScore(op).setScore(score--);
-                
-                op = plugin.getServer().getOfflinePlayer(lineName);
-                objective.getScore(op).setScore(score--);
-                
-                
-            }
-        }
-        op = plugin.getServer().getOfflinePlayer(ChatColor.ITALIC + " ");
+          String state;
+          if (target.team == TeamManager.TeamId.RED) {
+            redTarget.add(target);
+            continue;
+          } 
+          if (target.completed) {
+            state = Tools.toChatColor(target.color) + Tools.Chars.check;
+          } else {
+            state = Tools.toChatColor(target.color) + Tools.Chars.cross;
+          } 
+          String lineName = String.valueOf(state) + Tools.toChatColor(target.color) + " " + 
+            Tools.Chars.wool + " " + ChatColor.WHITE + 
+            target.color.toString();
+          if (lineName.length() > 16)
+            lineName = lineName.substring(0, 15); 
+          op = this.plugin.getServer().getOfflinePlayer(lineName);
+          objective.getScore(op).setScore(score--);
+          op = this.plugin.getServer().getOfflinePlayer(lineName);
+          objective.getScore(op).setScore(score--);
+        } 
+        op = this.plugin.getServer().getOfflinePlayer(ChatColor.ITALIC + " ");
         objective.getScore(op).setScore(score--);
-        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("Red-Team"));
+        op = this.plugin.getServer().getOfflinePlayer(this.plugin.lm.getText("Red-Team"));
         objective.getScore(op).setScore(score--);
-
         for (Target target : redTarget) {
-            String state;
-            if (target.completed) {
-                state = Tools.toChatColor(target.color) + Tools.Chars.check;
-            } else {
-                state = Tools.toChatColor(target.color) + Tools.Chars.cross;
-            }
-            String lineName = state + Tools.toChatColor(target.color) + " "
-                    + Tools.Chars.wool + " " + ChatColor.WHITE
-                    + target.color.toString();
-
-            if (lineName.length() > 16) {
-                lineName = lineName.substring(0, 15);
-               
-            }
-            
-            op = plugin.getServer().getOfflinePlayer(lineName);
-            objective.getScore(op).setScore(score--);
-        }
-        
-        op = plugin.getServer().getOfflinePlayer(ChatColor.ITALIC + " ");
+          String state;
+          if (target.completed) {
+            state = Tools.toChatColor(target.color) + Tools.Chars.check;
+          } else {
+            state = Tools.toChatColor(target.color) + Tools.Chars.cross;
+          } 
+          String lineName = String.valueOf(state) + Tools.toChatColor(target.color) + " " + 
+            Tools.Chars.wool + " " + ChatColor.WHITE + 
+            target.color.toString();
+          if (lineName.length() > 16)
+            lineName = lineName.substring(0, 15); 
+          op = this.plugin.getServer().getOfflinePlayer(lineName);
+          objective.getScore(op).setScore(score--);
+        } 
+        op = this.plugin.getServer().getOfflinePlayer(ChatColor.ITALIC + " ");
         objective.getScore(op).setScore(score--);
-        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("server-ip"));
+        op = this.plugin.getServer().getOfflinePlayer(this.plugin.lm.getText("server-ip"));
         objective.getScore(op).setScore(score--);
-        
         game.board = newBoard;
-        for (Player player : game.world.getPlayers()) {
-            player.setScoreboard(newBoard);
-        }
-    }
+        for (Player player : game.world.getPlayers())
+          player.setScoreboard(newBoard); 
+      }
 
     private void checkForWin(Game game) {
         boolean redComplete = true;
@@ -819,6 +824,9 @@ public class GameManager {
                         + decorator, game.world, null);
             }
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("red-win-game"), game.world, null);
+            for (Player allPlayers : game.world.getPlayers()) {
+            	allPlayers.playSound(allPlayers.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.team-win-sound")), 10.0F, 1);
+            }
             if (!decorator.isEmpty()) {
                 plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
                         + decorator, game.world, null);
@@ -831,6 +839,9 @@ public class GameManager {
                         + decorator, game.world, null);
             }
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("blue-win-game"), game.world, null);
+            for (Player allPlayers : game.world.getPlayers()) {
+            	allPlayers.playSound(allPlayers.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.team-win-sound")), 10.0F, 1);
+            }
             if (!decorator.isEmpty()) {
                 plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
                         + decorator, game.world, null);
@@ -883,56 +894,56 @@ public class GameManager {
                             plugin.lm.sendMessageToWorld("thirty-seconds-to-start", game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.thirty-seconds"), "ยง7"); 
-                           	    player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.thirty-seconds"), "ง7"); 
+                           	    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 30:
                             plugin.lm.sendMessageToWorld("fifteen-seconds-to-start", game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.fifteen-seconds"), "ยง7"); 
-                           	    player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.fifteen-seconds"), "ง7"); 
+                           	    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 66:
                             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("next-game-starts-in-five"), game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.five-seconds"), "ยง7"); 
-                           	    player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.five-seconds"), "ง7"); 
+                           	    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 68:
                             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("four-seconds-to-start"), game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.four-seconds"), "ยง7"); 
-                           	    player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.four-seconds"), "ง7"); 
+                           	    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 70:
                             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("three-seconds-to-start"), game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.three-seconds"), "ยง7"); 
-                           	    player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.three-seconds"), "ง7"); 
+                           	    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 72:
                             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("two-seconds-to-start"), game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.two-seconds"), "ยง7"); 
-                            	player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.two-seconds"), "ง7"); 
+                            	player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 74:
                             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("one-seconds-to-start"), game.world, null);
                             for (Player player : game.world.getPlayers())
                             {
-                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.one-seconds"), "ยง7");
-                                player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 1);
+                            	TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.lm.getTitleMessage("titles.countdown-titles.one-seconds"), "ง7");
+                                player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.reversing-sound")), 10.0F, 1);
                             }
                             break;
                         case 76:
@@ -944,7 +955,7 @@ public class GameManager {
                                 currentTeams.put(player, teamId);
                                 player.teleport(plugin.rm.getCurrentWorld(game.roomName).getSpawnLocation());
                                 TitleAPI.sendFullTitle(player, 10, 30, 10, "", plugin.lm.getTitleMessage("titles.change-map"));
-                                player.playSound(player.getLocation(), Sound.LEVEL_UP, 10.0F, 2);
+                                player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.map-change")), 10.0F, 2);
                             }
 
                             Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {

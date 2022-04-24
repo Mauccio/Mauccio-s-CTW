@@ -165,6 +165,7 @@ public final class WorldManager {
     public boolean unloadWorld(final World world) {
         for (Player player : world.getPlayers()) {
             player.teleport(getNextLobbySpawn());
+            player.setPlayerListName(player.getName());
         }
 
         for (Player player : world.getPlayers()) {

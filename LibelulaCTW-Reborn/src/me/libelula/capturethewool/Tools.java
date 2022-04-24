@@ -20,6 +20,8 @@ public class Tools {
         public static String cross = "\u2B1C";
         public static String wool = "\u2B05"; // Old: \u2752
         public static String invisible = "\u200B";
+        public static String caution = "\u26A0";
+        public static String yestitle = "\u2713";
     }
 
     public static class PlayerComparator implements Comparator<Player> {

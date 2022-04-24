@@ -24,7 +24,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
-import org.kitteh.tag.TagAPI;
+import com.nametagedit.plugin.NametagEdit;
 
 
 public class PlayerManager {
@@ -317,27 +317,110 @@ public class PlayerManager {
         leatherMeta.setDisplayName(teamChatColor + teamName);
         leatherMeta.setLore(armourBrand);
         helmet.setItemMeta(leatherMeta);
+        
+        ItemStack VipBlueHelmet = new ItemStack(Material.LEATHER_HELMET);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(85, 255, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipBlueHelmet.setItemMeta(leatherMeta);
+        
+        ItemStack VipBlueChestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(85, 255, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipBlueChestplate.setItemMeta(leatherMeta);
+        
+        ItemStack VipBlueLeggings = new ItemStack(Material.LEATHER_LEGGINGS);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(85, 255, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipBlueLeggings.setItemMeta(leatherMeta);
+        
+        ItemStack VipBlueBoots = new ItemStack(Material.LEATHER_BOOTS);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(85, 255, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipBlueBoots.setItemMeta(leatherMeta);
+        
+        ItemStack VipRedHelmet = new ItemStack(Material.LEATHER_HELMET);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(255, 85, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipRedHelmet.setItemMeta(leatherMeta);
+        
+        ItemStack VipRedChestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(255, 85, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipRedChestplate.setItemMeta(leatherMeta);
+        
+        ItemStack VipRedLeggings = new ItemStack(Material.LEATHER_LEGGINGS);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(255, 85, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipRedLeggings.setItemMeta(leatherMeta);
+        
+        ItemStack VipRedBoots = new ItemStack(Material.LEATHER_BOOTS);
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
+        leatherMeta.setColor(Color.fromRGB(255, 85, 255));
+        leatherMeta.setDisplayName(teamChatColor + teamName);
+        leatherMeta.setLore(armourBrand);
+        VipRedBoots.setItemMeta(leatherMeta);
+        
 
-        /*NametagEdit.getApi().setPrefix(player, teamChatColor+"");
-        NametagEdit.getApi().reloadNametag(player); */
-        player.setPlayerListName(teamChatColor+""+player.getName());
-        player.setDisplayName(teamChatColor +""+player.getName());
-        player.setCustomName(teamChatColor +""+player.getName());
-        player.setCustomNameVisible(true);
-        player.getInventory().setBoots(boots);
-        player.getInventory().setChestplate(tshirt);
-        player.getInventory().setLeggings(leggings);
-        player.getInventory().setHelmet(helmet);
-        player.setGameMode(GameMode.SURVIVAL);
-        player.setFireTicks(0);
+        if(player.hasPermission("vip-armor")) {
+        	if(plugin.pm.getTeamId(player) == TeamManager.TeamId.BLUE) {
+        		player.setPlayerListName(teamChatColor+""+player.getName());
+        		NametagEdit.getApi().setPrefix(player, teamChatColor+"");
+                player.setCustomName(teamChatColor +""+player.getName());
+                player.setCustomNameVisible(true);
+                player.getInventory().setBoots(VipBlueBoots);
+                player.getInventory().setChestplate(VipBlueChestplate);
+                player.getInventory().setLeggings(VipBlueLeggings);
+                player.getInventory().setHelmet(VipBlueHelmet);
+                player.setGameMode(GameMode.SURVIVAL);
+                player.setFireTicks(0);
+        	} else if(plugin.pm.getTeamId(player) == TeamManager.TeamId.RED) {
+        		player.setPlayerListName(teamChatColor+""+player.getName());
+        		NametagEdit.getApi().setPrefix(player, teamChatColor+"");
+                player.setCustomName(teamChatColor +""+player.getName());
+                player.setCustomNameVisible(true);
+                player.getInventory().setBoots(VipRedBoots);
+                player.getInventory().setChestplate(VipRedChestplate);
+                player.getInventory().setLeggings(VipRedLeggings);
+                player.getInventory().setHelmet(VipRedHelmet);
+                player.setGameMode(GameMode.SURVIVAL);
+                player.setFireTicks(0);
+        	} else {
+        		
+        	}
+        } else {
+        	player.setPlayerListName(teamChatColor+""+player.getName());
+            NametagEdit.getApi().setPrefix(player, teamChatColor+"");
+            player.setCustomName(teamChatColor +""+player.getName());
+            player.setCustomNameVisible(true);
+            player.getInventory().setBoots(boots);
+            player.getInventory().setChestplate(tshirt);
+            player.getInventory().setLeggings(leggings);
+            player.getInventory().setHelmet(helmet);
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setFireTicks(0);
+        }
 
         updatePlayerList(player);
 
         try {
-            TagAPI.refreshPlayer(player);
+        	NametagEdit.getApi().reloadNametag(player);
         } catch (Exception ex) {
             plugin.getLogger().warning(ex.toString());
-        }
+        } 
     }
 
 	private void setSpectator(Player player) { 

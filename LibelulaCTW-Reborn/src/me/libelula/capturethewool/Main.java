@@ -4,6 +4,8 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
@@ -38,7 +40,8 @@ public class Main extends JavaPlugin {
     PlayerManager pm;
     DBManager db;
     Scores scores;
-
+    
+    
     @Override
     public void onEnable() {
     	
@@ -50,7 +53,7 @@ public class Main extends JavaPlugin {
         }
 
         try {
-            Class.forName("org.kitteh.tag.TagAPI");
+            Class.forName("com.nametagedit.plugin.NametagEdit");
         } catch (ClassNotFoundException ex) {
             alert(lm.getText("ta-not-enabled"));
             return;
@@ -99,6 +102,10 @@ public class Main extends JavaPlugin {
         } catch (IOException | InvalidConfigurationException | ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
             alert(ex.getMessage());
             db = null;
+        }
+        
+        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        	new PlaceholderAPILCTWR(this).register();
         }
 
     }

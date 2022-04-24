@@ -1,5 +1,6 @@
 package me.libelula.capturethewool;
 
+import com.nametagedit.plugin.NametagEdit;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,6 @@ import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.kitteh.tag.TagAPI;
 
 
 public class CommandManager implements CommandExecutor {
@@ -92,6 +92,7 @@ public class CommandManager implements CommandExecutor {
             player = (Player) cs;
         } else {
             player = null;
+            plugin.getConsole().sendMessage(ChatColor.RED+"No puedes ejecutar comandos desde la consola.");
         }
         switch (cmnd.getName()) {
             case "ctw":
@@ -124,6 +125,19 @@ public class CommandManager implements CommandExecutor {
                     }
                 }
 
+                break;
+            case "stats":
+            	if (player == null) {
+            		plugin.lm.sendMessage("not-in-game-cmd", player);
+            	} else {
+            		player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.your-stats")), 10.0F, 1);
+            		player.sendMessage(plugin.getConfig().getString("message-decorator"));
+            		player.sendMessage(plugin.lm.getText("stats.title"));
+            		player.sendMessage(plugin.lm.getText("stats.points") + plugin.db.getScore(player.getName()));
+            		player.sendMessage(plugin.lm.getText("stats.kills") + plugin.db.getKill(player.getName()));
+            		player.sendMessage(plugin.lm.getText("stats.placed-wools") + plugin.db.getWoolCaptured(player.getName()));
+            		player.sendMessage(plugin.getConfig().getString("message-decorator"));
+            	}
                 break;
             case "spawn":
                 if (player == null) {
@@ -250,8 +264,8 @@ public class CommandManager implements CommandExecutor {
                 if (player != null) {
                     if (plugin.pm.getTeamId(player) != null) {
                         player.teleport(plugin.wm.getNextLobbySpawn());
-                        // NametagEdit.getApi().clearNametag(player);
-                        TagAPI.refreshPlayer(player);
+                        NametagEdit.getApi().clearNametag(player);
+                        // TagAPI.refreshPlayer(player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
                     } else {
@@ -298,7 +312,7 @@ public class CommandManager implements CommandExecutor {
                     } else if(plugin.pm.getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
                         // plugin.lm.sendText("commands.join", player);
                         player.openInventory(TeamManager.joinMenuInventory);
-                        player.playSound(player.getLocation(), Sound.ORB_PICKUP, 10.0F, 2);
+                        player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.join-command")), 10.0F, 2);
                     } else {
                     	plugin.lm.sendMessage("join-in-team", player);
                     }
@@ -320,7 +334,7 @@ public class CommandManager implements CommandExecutor {
                         }
 
                         } else {
-                        	plugin.lm.sendText("commands.g", player);
+                        	plugin.lm.sendText("commands.alert", player);
                         }           
         }
        
@@ -455,7 +469,7 @@ public class CommandManager implements CommandExecutor {
                         plugin.lm.sendMessage("mapspawn-set", player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
-                        // NametagEdit.getApi().clearNametag(player);
+                        NametagEdit.getApi().clearNametag(player);
                         break;
                     case "redspawn":
                         plugin.mm.setRedSpawn(player.getLocation());
