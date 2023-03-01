@@ -6,7 +6,7 @@ Plugin poco modificado de LibelulaUltimateCaptureTheWool, con el paso del tiempo
 - Discord: Mauccio#8037
 
 ### Primera Versión: 
-- LCTWR v.1.0.1 | 24 de Diciembre del 2021
+- Mauccio's CTW 1.0-SNAPSHOT | 28/02/23
 
 ENGLISH
 
@@ -18,4 +18,4 @@ Modified plugin of the original LibelulaUltimateCaptureTheWool, with the passage
 - Discord: Mauccio#8037
 
 ### First Version:
-- LCTWR v.1.0.1 | December 24th, 2021
+- Mauccio's CTW 1.0-SNAPSHOT | 02/28/23
