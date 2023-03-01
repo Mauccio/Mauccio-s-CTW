@@ -24,7 +24,7 @@ public class PlaceholderAPILCTWR extends PlaceholderExpansion
     }
     
     public String getIdentifier() {
-        return "lctwr";
+        return "mctw";
     }
     
     public String getVersion() {
