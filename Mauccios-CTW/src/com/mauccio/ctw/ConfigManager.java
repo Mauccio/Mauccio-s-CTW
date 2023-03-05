@@ -3,8 +3,7 @@ package com.mauccio.ctw;
 import org.bukkit.configuration.file.*;
 import java.io.*;
 
-public class ConfigManager
-{
+public class ConfigManager {
     private final Main plugin;
     private final FileConfiguration config;
     
@@ -74,6 +73,6 @@ public class ConfigManager
     }
     
     public boolean isFallDamage() {
-        return this.plugin.getConfig().getBoolean("fall-damage", false);
+        return this.plugin.getConfig().getBoolean("disable-fall-damage", false);
     }
 }
