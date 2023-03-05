@@ -2,6 +2,7 @@ package com.mauccio.ctw;
 
 import com.nametagedit.plugin.NametagEdit;
 import com.sk89q.worldedit.bukkit.selections.Selection;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -9,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -86,6 +86,13 @@ public class CommandManager implements CommandExecutor {
         }
     }
 
+    double NPCrange = 100;
+	double NPChealth = 24;
+	double NPCReachEasy = 2.0;
+	double NPCprojectileRange = 50;
+	int NPCattackRate = 2;
+	double NPCspeed = 0.8;
+	
 	@Override
     public boolean onCommand(CommandSender cs, Command cmnd, String string, String[] args) {
         Player player;
@@ -93,7 +100,7 @@ public class CommandManager implements CommandExecutor {
             player = (Player) cs;
         } else {
             player = null;
-            plugin.getConsole().sendMessage(ChatColor.RED+"No puedes ejecutar comandos desde la consola.");
+            plugin.getConsole().sendMessage(plugin.lm.getText("not-a-player"));
         }
         switch (cmnd.getName()) {
             case "ctw":
@@ -130,7 +137,9 @@ public class CommandManager implements CommandExecutor {
             case "stats":
             	if (player == null) {
             		plugin.lm.sendMessage("not-in-game-cmd", player);
-            	} else {
+            	} 
+            	
+            	try {
             		player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.your-stats")), 10.0F, 1);
             		player.sendMessage(plugin.getConfig().getString("message-decorator"));
             		player.sendMessage(plugin.lm.getText("stats.title"));
@@ -138,37 +147,50 @@ public class CommandManager implements CommandExecutor {
             		player.sendMessage(plugin.lm.getText("stats.kills") + plugin.db.getKill(player.getName()));
             		player.sendMessage(plugin.lm.getText("stats.placed-wools") + plugin.db.getWoolCaptured(player.getName()));
             		player.sendMessage(plugin.getConfig().getString("message-decorator"));
+            	} catch (NullPointerException e) {
+            		plugin.lm.sendMessage("stats-not-enabled", player);
             	}
                 break;
+            case "rooms":
+            	if(player == null) {
+            		plugin.lm.sendMessage("not-in-game-cmd", player);
+            	}
+            	if(plugin.pm.getTeamId(player) != null) {
+            		plugin.lm.sendMessage("not-in-lobby-cmd", player);
+            	} else {
+            		player.openInventory(plugin.rm.showRoomsInventory());
+            	}
+            	
+            	break;
             case "saveglobalkit":
             	if (player == null) {
-                    this.plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", player);
             	}
-            	if (this.plugin.pm.getTeamId(player) != null) {
-                    this.plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(this.plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+            	if (plugin.pm.getTeamId(player) != null) {
+                   plugin.lm.sendMessage("not-in-lobby-cmd", player);
+                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
                 }
                 try {
-                    this.plugin.mm.saveGlobalKit(player);
-                    this.plugin.lm.sendMessage("starting-kit-set", player);
+                    plugin.mm.saveGlobalKit(player);
+                    plugin.lm.sendMessage("starting-kit-set", player);
                 }
                 catch (IOException e) {
-                    this.plugin.lm.sendMessage("error-at-save-kit", player);
+                    plugin.lm.sendMessage("error-at-save-kit", player);
                 }
                 break;
             case "kiteditor":
             	if (player == null) {
-                    this.plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", player);
                 }
-                if (this.plugin.pm.getTeamId(player) != null) {
-                    this.plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(this.plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+                if (plugin.pm.getTeamId(player) != null) {
+                    plugin.lm.sendMessage("not-in-lobby-cmd", player);
+                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
                 }
-                ItemStack[] globalKit = this.plugin.mm.getGlobalKit();
+                ItemStack[] globalKit = plugin.mm.getGlobalKit();
                 player.getInventory().clear();
                 player.getInventory().setContents(globalKit);
-                this.plugin.lm.sendMessage("edit-your-kit", player);
-                this.plugin.lm.sendMessage("save-your-kit-with", player);
+                plugin.lm.sendMessage("edit-your-kit", player);
+                plugin.lm.sendMessage("save-your-kit-with", player);
                 break;
             case "spawn":
                 if (player == null) {
@@ -238,21 +260,21 @@ public class CommandManager implements CommandExecutor {
                 break;
             case "savekit":
             	if (player == null) {
-                    this.plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", player);
                     return true;
                 }
-                if (this.plugin.pm.getTeamId(player) != null) {
-                    this.plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(this.plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+                if (plugin.pm.getTeamId(player) != null) {
+                    plugin.lm.sendMessage("not-in-lobby-cmd", player);
+                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
                     return true;
                 }
                 try {
-                    this.plugin.mm.saveKit(player);
-                    this.plugin.lm.sendMessage("saved-kit-success", player);
+                    plugin.mm.saveKit(player);
+                    plugin.lm.sendMessage("saved-kit-success", player);
                     player.getInventory().clear();
                 }
                 catch (IOException e) {
-                    this.plugin.lm.sendMessage("error-saved-kit", player);
+                    plugin.lm.sendMessage("error-saved-kit", player);
                     player.getInventory().clear();
                 }
                 break;
@@ -379,6 +401,19 @@ public class CommandManager implements CommandExecutor {
                 }
 
                 break;
+                /*
+            case "tutorial":
+            	if(!plugin.wm.isOnLobby(player)) {
+            		plugin.lm.sendMessage("not-in-room-cmd", player);
+            	} 
+            	if(plugin.gm.getPlayersIn("Tutorial") == 1) {
+            		plugin.lm.sendMessage("tutorial.full", player);
+            	}
+            	plugin.gm.movePlayerToRoom(player, "Tutorial");
+            	player.sendMessage(plugin.lm.getMessage("tutorial-part1").replace("%PLAYER%", player.getDisplayName()));
+		
+            	break;
+            	*/
             case "alert":
             	
                     if (args.length != 0) {
@@ -454,6 +489,9 @@ public class CommandManager implements CommandExecutor {
                             plugin.lm.sendMessage("lobby-cannot-be-map", player);
                             return;
                         }
+                        if(plugin.wm.getLobbySpawnLocations().isEmpty()) {
+                        	plugin.lm.sendMessage("unconfigured-lobby.error", player);
+                        }
                         if (plugin.mm.add(player.getWorld())) {
                             player.sendMessage(plugin.lm.getMessage("map-successfully-added")
                                     .replace("%MAP%", player.getWorld().getName()));
@@ -506,7 +544,7 @@ public class CommandManager implements CommandExecutor {
                 }
                 switch (args[1].toLowerCase()) {
                     case "kit":
-                    	this.plugin.mm.setGlobalKit(player);
+                    	plugin.mm.setGlobalKit(player);
                         plugin.lm.sendMessage("starting-kit-set", player);
                         break;
                     case "toggleleather":
