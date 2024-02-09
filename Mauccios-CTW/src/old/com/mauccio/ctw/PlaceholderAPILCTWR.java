@@ -3,7 +3,7 @@ package com.mauccio.ctw;
 import me.clip.placeholderapi.expansion.*;
 import org.bukkit.entity.*;
 
-public class PlaceholderAPILCTWR extends PlaceholderExpansion
+public class PlaceholderCextends PlaceholderExpansion
 {
     private final Main plugin;
     
