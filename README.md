@@ -3,7 +3,7 @@ Plugin poco modificado de LibelulaUltimateCaptureTheWool, con el paso del tiempo
 ## Links
 - [Wiki](https://lovesaura1170.gitbook.io/mauccio-ctw)
 - [Plugin](https://www.spigotmc.org/resources/mauccios-ctw-a-capture-the-wool-plugin.108310/)
-- Discord: Mauccio#8037
+- Discord: Mauccio
 
 ENGLISH
 
@@ -12,5 +12,5 @@ Modified plugin of the original LibelulaUltimateCaptureTheWool, with the passage
 ## Links
 - [Wiki](https://lovesaura1170.gitbook.io/mauccio-ctw)
 - [Plugin](https://www.spigotmc.org/resources/mauccios-ctw-a-capture-the-wool-plugin.108310/)
-- Discord: Mauccio#8037
+- Discord: Mauccio
 
