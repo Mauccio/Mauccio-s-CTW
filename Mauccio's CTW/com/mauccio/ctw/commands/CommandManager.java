@@ -336,7 +336,7 @@ public class CommandManager implements CommandExecutor {
                 if (player != null) {
                     if (plugin.pm.getTeamId(player) != null) {
                         player.teleport(plugin.wm.getNextLobbySpawn());
-                        NametagEdit.getApi().clearNametag(player);
+                        // NametagEdit.getApi().clearNametag(player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
                     } else {
@@ -567,6 +567,7 @@ public class CommandManager implements CommandExecutor {
                     case "spawn":
                         plugin.mm.setSpawn(player.getLocation());
                         plugin.lm.sendMessage("mapspawn-set", player);
+                        // NametagEdit.getApi().clearNametag(player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
                         NametagEdit.getApi().clearNametag(player);
