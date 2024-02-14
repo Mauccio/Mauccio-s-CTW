@@ -3,7 +3,7 @@ package com.mauccio.ctw.game;
 import com.mauccio.ctw.CTW;
 import com.mauccio.ctw.game.*;
 import com.mauccio.ctw.utils.Utils;
-import com.nametagedit.plugin.NametagEdit;
+// import com.nametagedit.plugin.NametagEdit;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -390,7 +390,6 @@ public class PlayerManager {
         if (player.hasPermission("ctw.vip-armor")) {
             if (this.plugin.pm.getTeamId(player) == TeamManager.TeamId.BLUE) {
                 player.setPlayerListName(teamChatColor + player.getName());
-                NametagEdit.getApi().setPrefix(player, "" + teamChatColor);
                 player.setCustomName(teamChatColor + player.getName());
                 player.setCustomNameVisible(true);
                 player.getInventory().setBoots(VipBlueBoots);
@@ -401,7 +400,6 @@ public class PlayerManager {
                 player.setFireTicks(0);
             } else if (this.plugin.pm.getTeamId(player) == TeamManager.TeamId.RED) {
                 player.setPlayerListName(teamChatColor + player.getName());
-                NametagEdit.getApi().setPrefix(player, "" + teamChatColor);
                 player.setCustomName(teamChatColor + player.getName());
                 player.setCustomNameVisible(true);
                 player.getInventory().setBoots(VipRedBoots);
@@ -413,7 +411,6 @@ public class PlayerManager {
             }
         } else {
             player.setPlayerListName(teamChatColor + player.getName());
-            NametagEdit.getApi().setPrefix(player, "" + teamChatColor);
             player.setCustomName(teamChatColor + player.getName());
             player.setCustomNameVisible(true);
             player.getInventory().setBoots(boots);
@@ -425,12 +422,13 @@ public class PlayerManager {
         }
 
         this.updatePlayerList(player);
-
+        /*
         try {
             NametagEdit.getApi().reloadNametag(player);
         } catch (Exception var21) {
             this.plugin.getLogger().warning(var21.toString());
         }
+        */
     }
 
     private void setSpectator(Player player) {
