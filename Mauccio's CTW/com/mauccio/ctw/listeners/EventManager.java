@@ -5,7 +5,7 @@ import java.util.TreeMap;
 import com.mauccio.ctw.CTW;
 import com.mauccio.ctw.game.TeamManager;
 import com.mauccio.ctw.utils.Utils;
-import com.nametagedit.plugin.NametagEdit;
+//import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -377,7 +377,7 @@ public final class EventManager {
             if (plugin.rm.isInGame(e.getPlayer().getWorld())) {
                 e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
                 e.getPlayer().setDisplayName(e.getPlayer().getName());
-                NametagEdit.getApi().clearNametag(e.getPlayer());
+                //NametagEdit.getApi().clearNametag(e.getPlayer());
                 e.getPlayer().setPlayerListName(e.getPlayer().getName());
             }
             e.setQuitMessage("");
