@@ -494,6 +494,18 @@ public final class EventManager {
             plugin.tm.cancelSpectator(e);
         }
 
+        @EventHandler(priority = EventPriority.HIGHEST)
+        public void onFallDamage(EntityDamageEvent e) {
+            if(e.getCause() == DamageCause.FALL) {
+                if(e.getEntity() instanceof Player) {
+                    Player plr = (Player) e.getEntity();
+                    if(plugin.pm.getTeamId(plr) != null) {
+                        e.setCancelled(true);
+                    }
+                }
+            }
+        }
+
         @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
         public void onFoodLevelChange(FoodLevelChangeEvent e) {
             plugin.tm.cancelSpectator(e);
