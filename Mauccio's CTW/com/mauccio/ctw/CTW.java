@@ -5,6 +5,8 @@ import com.mauccio.ctw.game.*;
 import com.mauccio.ctw.map.*;
 import com.mauccio.ctw.listeners.*;
 import com.mauccio.ctw.commands.*;
+import com.mauccio.ctw.utils.LobbyManager;
+import com.mauccio.ctw.utils.NametagManager;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -43,6 +45,9 @@ public class CTW extends JavaPlugin {
     public EventManager em;
     public WorldEditPlugin we;
     public Scores scores;
+    public KitManager km;
+    public LobbyManager lb;
+    public NametagManager nm;
 
     @Override
     public void onEnable() {
@@ -60,9 +65,10 @@ public class CTW extends JavaPlugin {
             this.alert(this.lm.getText("ta-not-enabled"));
             return;
         }
+
         this.cf = new ConfigManager(this);
         this.wm = new WorldManager(this);
-        this.tm = new TeamManager(this); //
+        this.tm = new TeamManager(this); 
         this.pm = new PlayerManager(this);
         this.removeAllItems();
         this.cm = new CommandManager(this);
@@ -72,6 +78,9 @@ public class CTW extends JavaPlugin {
         this.gm = new GameManager(this);
         this.rm.init();
         this.sm = new SignManager(this);
+        this.km = new KitManager(this);
+        this.lb = new LobbyManager(this);
+        this.nm = new NametagManager(this, tm);
 
         scores = new Scores();
 
