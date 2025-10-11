@@ -58,13 +58,6 @@ public class CTW extends JavaPlugin {
             alert(lm.getText("we-not-enabled"));
             return;
         }
-        try {
-            Class.forName("com.nametagedit.plugin.NametagEdit");
-        }
-        catch (ClassNotFoundException ex2) {
-            this.alert(this.lm.getText("ta-not-enabled"));
-            return;
-        }
 
         this.cf = new ConfigManager(this);
         this.wm = new WorldManager(this);
@@ -188,3 +181,4 @@ public class CTW extends JavaPlugin {
         }
     }
 }
+
