@@ -53,20 +53,16 @@ public class TeamManager {
 
     private class TeamInfo {
 
-        TeamId id;
         Team team;
         Color tshirtColor;
-        DyeColor dye;
         ChatColor chatColor;
         String name;
 
         public TeamInfo(TeamId id, Color tshirtColor, DyeColor dye, ChatColor chatColor) {
-            this.id = id;
             team = scoreboard.registerNewTeam(id.toString());
             team.setAllowFriendlyFire(false);
             team.setPrefix(chatColor + "");
             this.tshirtColor = tshirtColor;
-            this.dye = dye;
             this.chatColor = chatColor;
             name = plugin.lm.getText(id.toString() + "-TEAM"); //
             team.setDisplayName(chatColor + name);
@@ -89,10 +85,12 @@ public class TeamManager {
         joinMenuInventory = getTeamInventoryMenu();
     }
 
+    @SuppressWarnings("deprecation")
     public void addToTeam(Player player, TeamId teamId) {
         teams.get(teamId).team.addPlayer(player);
     }
 
+    @SuppressWarnings("deprecation")
     public void removeFromTeam(Player player, TeamId teamId) {
         if (teamId != null) {
             teams.get(teamId).team.removePlayer(player);
@@ -149,6 +147,7 @@ public class TeamManager {
         }
     }
 
+    @SuppressWarnings("incomplete-switch")
     public void cancelSpectator(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player == false) {
             return;
@@ -267,7 +266,7 @@ public class TeamManager {
 
     private Inventory getTeamInventoryMenu() {
         Inventory teamMenu;
-        teamMenu = Bukkit.createInventory(null, 9, plugin.lm.getText("pick-your-team"));
+        teamMenu = Bukkit.createInventory(null, 27, plugin.lm.getText("pick-your-team"));
 
         List<String> ayuda = new ArrayList<>();
 
@@ -277,7 +276,7 @@ public class TeamManager {
         ayuda.add(plugin.lm.getText("not-available-yet"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(18, option);
 
         ayuda.clear();
         option = new ItemStack(Material.NETHER_STAR);
@@ -286,7 +285,7 @@ public class TeamManager {
         ayuda.add(plugin.lm.getText("auto-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(13, option);
 
         ayuda.clear();
         Wool wool = new Wool(DyeColor.BLUE);
@@ -296,7 +295,7 @@ public class TeamManager {
         ayuda.add(plugin.lm.getText("blue-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(15, option);
 
         ayuda.clear();
         wool = new Wool(DyeColor.RED);
@@ -306,7 +305,7 @@ public class TeamManager {
         ayuda.add(plugin.lm.getText("red-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.addItem(new ItemStack[]{option});
+        teamMenu.setItem(11, option);
 
         ayuda.clear();
         option = new ItemStack(Material.EYE_OF_ENDER);
@@ -315,7 +314,7 @@ public class TeamManager {
         ayuda.add(plugin.lm.getText("close-menu"));
         im.setLore(ayuda);
         option.setItemMeta(im);
-        teamMenu.setItem(8, option);
+        teamMenu.setItem(26, option);
 
         return teamMenu;
     }
