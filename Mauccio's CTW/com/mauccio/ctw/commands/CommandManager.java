@@ -9,10 +9,7 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -87,14 +84,14 @@ public class CommandManager implements CommandExecutor {
         }
     }
 
-    /*
-    double NPCrange = 100;
-    double NPChealth = 24;
-    double NPCReachEasy = 2.0;
-    double NPCprojectileRange = 50;
-    int NPCattackRate = 2;
-    double NPCspeed = 0.8;
-     */
+    public void errorSound(Player player) {
+        try {
+            player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.error"));
+        }
+    }
+
     @Override
     public boolean onCommand(CommandSender cs, Command cmnd, String string, String[] args) {
         Player player;
@@ -120,7 +117,7 @@ public class CommandManager implements CommandExecutor {
                             break;
                         case "mapcycle":
                             if (player == null) {
-                                plugin.lm.sendMessage("not-in-game-cmd", player);
+                                plugin.lm.sendMessage("not-in-game-cmd", cs);
                             } else {
                                 if (plugin.pm.getTeamId(player) == null) {
                                     plugin.lm.sendMessage("not-in-game-cmd", player);
@@ -138,9 +135,9 @@ public class CommandManager implements CommandExecutor {
                 break;
             case "stats":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs); 
+                    return true;
                 }
-
                 try {
                     player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.your-stats")), 10.0F, 1);
                     player.sendMessage(plugin.getConfig().getString("message-decorator"));
@@ -151,33 +148,51 @@ public class CommandManager implements CommandExecutor {
                     player.sendMessage(plugin.getConfig().getString("message-decorator"));
                 } catch (NullPointerException e) {
                     plugin.lm.sendMessage("stats-not-enabled", player);
+                } catch (IllegalArgumentException ex) {
+                    plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.your-stats"));
                 }
                 break;
-
-            case "saveglobalkit":
+            case "rooms":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+                    errorSound(player);
+                    return true; 
+                }
+                player.openInventory(plugin.lb.getRoomsGUI());
+                break;
+            case "saveglobalkit":
+                if (player == null) {
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
+                }
+                if (plugin.pm.getTeamId(player) != null) {
+                    plugin.lm.sendMessage("not-in-lobby-cmd", player);
+                    errorSound(player);
+                    return true; 
                 }
                 try {
-                    plugin.mm.saveGlobalKit(player);
+                    plugin.km.saveGlobalKitYAML(player.getInventory().getContents());
                     plugin.lm.sendMessage("starting-kit-set", player);
                 } catch (IOException e) {
                     plugin.lm.sendMessage("error-at-save-kit", player);
                 }
                 break;
+
             case "kiteditor":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+                    errorSound(player);
                 }
-                ItemStack[] globalKit = plugin.mm.getGlobalKit();
+                plugin.km.invSaver(player, player.getUniqueId());
+                ItemStack[] globalKit = plugin.km.getGlobalKitYAML();
                 player.getInventory().clear();
                 player.getInventory().setContents(globalKit);
                 plugin.lm.sendMessage("edit-your-kit", player);
@@ -185,7 +200,7 @@ public class CommandManager implements CommandExecutor {
                 break;
             case "spawn":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
                 player.teleport(plugin.wm.getNextLobbySpawn());
@@ -195,7 +210,7 @@ public class CommandManager implements CommandExecutor {
                 break;
             case "ctwsetup":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
                 if (args.length > 1) {
@@ -226,7 +241,7 @@ public class CommandManager implements CommandExecutor {
             case "createworld":
             case "gotoworld":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
                 if (args.length != 1) {
@@ -251,190 +266,182 @@ public class CommandManager implements CommandExecutor {
             break;
             case "savekit":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
+                    errorSound(player);
                     return true;
                 }
                 try {
-                    plugin.mm.saveKit(player);
-                    plugin.lm.sendMessage("saved-kit-success", player);
-                    player.getInventory().clear();
+                    plugin.km.saveKitYAML(player.getUniqueId(), player.getInventory().getContents());
+                } catch (IOException e) {
+                    plugin.lm.sendMessage("error-at-save-player-kit", player);
                 }
-                catch (IOException e) {
-                    plugin.lm.sendMessage("error-saved-kit", player);
-                    player.getInventory().clear();
-                }
+                plugin.lm.sendMessage("saved-kit-success", player);
+                player.getInventory().clear();
+                plugin.km.invRecover(player, player.getUniqueId());
                 break;
             case "g":
-                if (player != null) {
-                    if (args.length != 0) {
-                        if (plugin.pm.getTeamId(player) != null) {
-                            ChatColor cc = plugin.pm.getChatColor(player);
-                            String message = "";
-                            for (String word : args) {
-                                message = message.concat(word + " ");
-                            }
-                            String senderName = player.getDisplayName().replace(player.getName(),
-                                    cc + player.getName());
-                            for (Player receiver : player.getWorld().getPlayers()) {
-                                receiver.sendMessage("" + senderName + ChatColor.RESET + ": " + message);
-                            }
-
-                        } else {
-                            plugin.lm.sendMessage("not-in-room-cmd", player);
+                if (player == null) {
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
+                }
+                if (args.length != 0) {
+                    if (plugin.pm.getTeamId(player) != null) {
+                        ChatColor cc = plugin.pm.getChatColor(player);
+                        String message = String.join(" ", args).trim();
+                        String senderName = player.getDisplayName().replace(player.getName(), cc + player.getName());
+                        for (Player receiver : player.getWorld().getPlayers()) {
+                            receiver.sendMessage(senderName + ChatColor.RESET + ": " + message);
                         }
                     } else {
-                        plugin.lm.sendText("commands.g", player);
+                        plugin.lm.sendMessage("not-in-room-cmd", player);
                     }
                 } else {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendText("commands.g", player);
                 }
                 break;
+
             case "toggle":
-                if (player != null) {
-                    if (args.length == 1) {
-                        if (plugin.pm.getTeamId(player) != null) {
-                            switch (args[0].toLowerCase()) {
-                                case "obs":
-                                    if (plugin.pm.toggleSeeOthersSpectators(player)) {
-                                        plugin.lm.sendMessage("obs-true", player);
-                                    } else {
-                                        plugin.lm.sendMessage("obs-false", player);
-                                    }
-                                    break;
-                                case "dms":
-                                    if (plugin.pm.toogleOthersDeathMessages(player)) {
-                                        plugin.lm.sendMessage("dms-true", player);
-                                    } else {
-                                        plugin.lm.sendMessage("dms-false", player);
-                                    }
-                                    break;
-                                case "blood":
-                                    if (plugin.pm.toggleBloodEffect(player)) {
-                                        plugin.lm.sendMessage("blood-true", player);
-                                    } else {
-                                        plugin.lm.sendMessage("blood-false", player);
-                                    }
-
-                            }
-                        } else {
-                            plugin.lm.sendMessage("not-in-room-cmd", player);
+                if (player == null) {
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
+                }
+                if (args.length == 1) {
+                    if (plugin.pm.getTeamId(player) != null) {
+                        switch (args[0].toLowerCase()) {
+                            case "obs":
+                                if (plugin.pm.toggleSeeOthersSpectators(player)) {
+                                    plugin.lm.sendMessage("obs-true", player);
+                                } else {
+                                    plugin.lm.sendMessage("obs-false", player);
+                                }
+                                break;
+                            case "dms":
+                                if (plugin.pm.toogleOthersDeathMessages(player)) {
+                                    plugin.lm.sendMessage("dms-true", player);
+                                } else {
+                                    plugin.lm.sendMessage("dms-false", player);
+                                }
+                                break;
+                            case "blood":
+                                if (plugin.pm.toggleBloodEffect(player)) {
+                                    plugin.lm.sendMessage("blood-true", player);
+                                } else {
+                                    plugin.lm.sendMessage("blood-false", player);
+                                }
+                                break;
                         }
                     } else {
-                        plugin.lm.sendText("commands.toggle", player);
+                        plugin.lm.sendMessage("not-in-room-cmd", player);
                     }
                 } else {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendText("commands.toggle", player);
                 }
-
                 break;
+
             case "leave":
                 if (player != null) {
                     if (plugin.pm.getTeamId(player) != null) {
                         player.teleport(plugin.wm.getNextLobbySpawn());
-                        // NametagEdit.getApi().clearNametag(player);
+                        if (Bukkit.getPluginManager().getPlugin("NametagEdit") != null &&
+                                Bukkit.getPluginManager().getPlugin("NametagEdit").isEnabled()) {
+                            try {
+                                NametagEdit.getApi().clearNametag(player);
+                            } catch (Exception ex) {
+                                plugin.getLogger().warning("Error clearing nametag in /leave: " + ex.getMessage());
+                            }
+                        }
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
                     }
                 } else {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                 }
                 break;
-            case "join":
-                if (player != null) {
-                    if (args.length == 1) {
-                        TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
-                        if (playerTeam != null) {
-                            String teamToJoin = args[0].toLowerCase();
-                            TeamManager.TeamId desiredTeam;
-                            if (teamToJoin.startsWith("obs") || teamToJoin.startsWith("spect")) {
-                                desiredTeam = TeamManager.TeamId.SPECTATOR;
-                            } else {
-                                switch (teamToJoin) {
-                                    case "red":
-                                        plugin.gm.movePlayerTo(player, TeamManager.TeamId.RED);
-                                        desiredTeam = TeamManager.TeamId.RED;
-                                        break;
-                                    case "blue":
-                                        plugin.gm.movePlayerTo(player, TeamManager.TeamId.BLUE);
-                                        desiredTeam = TeamManager.TeamId.BLUE;
-                                        break;
-                                    case "random":
-                                    case "rand":
-                                    case "*":
-                                        plugin.gm.movePlayerTo(player, null);
-                                        desiredTeam = null;
-                                        break;
-                                    default:
-                                        plugin.lm.sendMessage("incorrect-parameters", player);
-                                        desiredTeam = null;
-                                        break;
-                                }
-                            }
-                            if (desiredTeam != null) {
-                                if (desiredTeam == playerTeam | playerTeam == TeamManager.TeamId.BLUE | playerTeam == TeamManager.TeamId.RED) {
-                                    plugin.lm.sendMessage("already-in-this-team", player);
-                                } else {
-                                    plugin.gm.joinInTeam(player, desiredTeam);
-                                }
-                            }
-                        } else {
-                            plugin.lm.sendMessage("not-in-room-cmd", player);
 
+            case "join":
+                if (player == null) {
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
+                    return true;
+                }
+                if (args.length == 1) {
+                    TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
+                    if (playerTeam != null) {
+                        String teamToJoin = args[0].toLowerCase();
+                        TeamManager.TeamId desiredTeam;
+                        if (teamToJoin.startsWith("obs") || teamToJoin.startsWith("spect")) {
+                            desiredTeam = TeamManager.TeamId.SPECTATOR;
+                        } else {
+                            switch (teamToJoin) {
+                                case "red":
+                                    plugin.gm.movePlayerTo(player, TeamManager.TeamId.RED);
+                                    desiredTeam = TeamManager.TeamId.RED;
+                                    break;
+                                case "blue":
+                                    plugin.gm.movePlayerTo(player, TeamManager.TeamId.BLUE);
+                                    desiredTeam = TeamManager.TeamId.BLUE;
+                                    break;
+                                case "random":
+                                case "rand":
+                                case "*":
+                                    plugin.gm.movePlayerTo(player, null);
+                                    desiredTeam = null;
+                                    break;
+                                default:
+                                    plugin.lm.sendMessage("incorrect-parameters", player);
+                                    desiredTeam = null;
+                                    break;
+                            }
                         }
-                    } else if(plugin.pm.getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
-                        // plugin.lm.sendText("commands.join", player);
-                        player.openInventory(plugin.tm.getMenuInv());
-                        player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.join-command")), 10.0F, 2);
+                        if (desiredTeam != null) {
+                            if (desiredTeam == playerTeam || playerTeam == TeamManager.TeamId.BLUE || playerTeam == TeamManager.TeamId.RED) {
+                                plugin.lm.sendMessage("already-in-this-team", player);
+                            } else {
+                                plugin.gm.joinInTeam(player, desiredTeam);
+                            }
+                        }
                     } else {
-                        plugin.lm.sendMessage("join-in-team", player);
+                        plugin.lm.sendMessage("not-in-room-cmd", player);
+                    }
+                } else if (plugin.pm.getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
+                    player.openInventory(plugin.tm.getMenuInv());
+                    try {
+                        player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.join-command")), 10.0F, 2);
+                    } catch (IllegalArgumentException ex) {
+                        plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.join-command"));
                     }
                 } else {
-                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                    plugin.lm.sendMessage("join-in-team", player);
                 }
-
                 break;
-                /*
-            case "tutorial":
-            	if(!plugin.wm.isOnLobby(player)) {
-            		plugin.lm.sendMessage("not-in-room-cmd", player);
-            	}
-            	if(plugin.gm.getPlayersIn("Tutorial") == 1) {
-            		plugin.lm.sendMessage("tutorial.full", player);
-            	}
-            	plugin.gm.movePlayerToRoom(player, "Tutorial");
-            	player.sendMessage(plugin.lm.getMessage("tutorial-part1").replace("%PLAYER%", player.getDisplayName()));
-
-            	break;
-            	*/
+                
             case "alert":
 
-                if (args.length != 0) {
+                if(player != null) {
+                    if (args.length != 0) {
 
-                    String message = "";
-                    for (String word : args) {
-                        message = message.concat(word + " ");
-                    }
-                    for (Player receiver : player.getServer().getOnlinePlayers()) {
-                        receiver.sendMessage(plugin.lm.getText("alert-prefix") + " " + message);
-                    }
+                        String message = "";
+                        for (String word : args) {
+                            message = message.concat(word + " ");
+                        }
+                        for (Player receiver : player.getServer().getOnlinePlayers()) {
+                            receiver.sendMessage(plugin.lm.getText("alert-prefix") + " " + message);
+                        }
 
-                } else {
-                    plugin.lm.sendText("commands.alert", player);
+                    } else {
+                        plugin.lm.sendText("commands.alert", player);
+                    }
                 }
                 break;
         }
 
         return true;
     }
-
-
 
     private void processCtwSetup(Player player, String[] args) {
         String subCommand = args[0].toLowerCase();
@@ -463,12 +470,16 @@ public class CommandManager implements CommandExecutor {
                         if (plugin.wm.getLobbySpawnLocations().isEmpty()) {
                             plugin.lm.sendMessage("lobby-spawnpoint-empty", player);
                         } else {
-                            player.sendMessage(plugin.lm.getMessage("world") + ": " + plugin.wm.getLobbyWorld().getName());
-                            int pos = 0;
-                            for (Location loc : plugin.wm.getLobbySpawnLocations()) {
-                                player.sendMessage(plugin.lm.getMessagePrefix() + " spawn #:" + pos + " X=" + loc.getBlockX()
-                                        + ", Y=" + loc.getBlockY() + ", Z=" + loc.getBlockZ());
-                                pos++;
+                            try {
+                                player.sendMessage(plugin.lm.getMessage("world") + ": " + Objects.requireNonNull(plugin.wm.getLobbyWorld()).getName());
+                                int pos = 0;
+                                for (Location loc : plugin.wm.getLobbySpawnLocations()) {
+                                    player.sendMessage(plugin.lm.getMessagePrefix() + " spawn #:" + pos + " X=" + loc.getBlockX()
+                                            + ", Y=" + loc.getBlockY() + ", Z=" + loc.getBlockZ());
+                                    pos++;
+                                }
+                            } catch (NullPointerException e) {
+                                player.sendMessage(plugin.lm.getMessage("lobby-spawnpoint-empty"));
                             }
                         }
                     }
@@ -485,9 +496,13 @@ public class CommandManager implements CommandExecutor {
             case "map":
                 switch (args[1].toLowerCase()) {
                     case "add":
-                        if (plugin.wm.isOnLobby(player)) {
-                            plugin.lm.sendMessage("lobby-cannot-be-map", player);
-                            return;
+                        try {
+                            if (plugin.wm.isOnLobby(player)) {
+                                plugin.lm.sendMessage("lobby-cannot-be-map", player);
+                                return;
+                            }
+                        } catch (NullPointerException e) {
+                            plugin.lm.sendMessage("lobby-not-configured", player);
                         }
                         if(plugin.wm.getLobbySpawnLocations().isEmpty()) {
                             plugin.lm.sendMessage("unconfigured-lobby.error", player);
@@ -545,11 +560,11 @@ public class CommandManager implements CommandExecutor {
                 switch (args[1].toLowerCase()) {
                     case "kit":
                         try {
-                            plugin.mm.setGlobalKit(player);
+                            player.getInventory().setContents(plugin.km.getGlobalKitYAML());
                         } catch (NullPointerException e) {
                             plugin.getLogger().info(ChatColor.translateAlternateColorCodes('&', "&4Global Kit is not setted, use &c/saveglobalkit &4to set!"));
                         }
-                        plugin.lm.sendMessage("starting-kit-set", player);
+                        plugin.lm.sendMessage("edit-global-kit", player);
                         break;
                     case "toggleleather":
                         if (plugin.mm.getKitarmour(player.getWorld())) {
@@ -567,10 +582,8 @@ public class CommandManager implements CommandExecutor {
                     case "spawn":
                         plugin.mm.setSpawn(player.getLocation());
                         plugin.lm.sendMessage("mapspawn-set", player);
-                        // NametagEdit.getApi().clearNametag(player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
-                        NametagEdit.getApi().clearNametag(player);
                         break;
                     case "redspawn":
                         plugin.mm.setRedSpawn(player.getLocation());
