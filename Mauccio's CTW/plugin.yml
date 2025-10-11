@@ -5,6 +5,7 @@ description: An updated LibelulaUltimateCaptureTheWool
 author: Mauccio
 depend: [WorldEdit]
 softdepend: [Vault]
+
 commands:
   ctw:
     description: Mauccios CTW main command.
@@ -125,3 +126,4 @@ permissions:
       ctw.admin: true
       ctw.ingame-extra-cmds: true
       ctw.vip-armor: true
+
