@@ -8,6 +8,7 @@ import java.util.List;
 import com.mauccio.ctw.game.*;
 import com.mauccio.ctw.CTW;
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -24,7 +25,6 @@ public final class LangManager {
     private final CTW plugin;
     private final YamlConfiguration lang;
     private final String messagePrefix;
-    private final int minVersion = 4;
 
     public LangManager(CTW plugin) {
         this.plugin = plugin;
@@ -40,11 +40,11 @@ public final class LangManager {
                 plugin.getLogger().severe(ex.toString());
             }
             int langVersion = lang.getInt("version", 0);
+            int minVersion = 4;
             if (langVersion < minVersion && (langFile.getName().equals("spanish.yml")
                     || langFile.getName().equals("english.yml"))
                     || langFile.getName().equals("italian.yml")) { // Texts must be updated.
-                File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
-                langFile.renameTo(backUpFile);
+                //File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
                 plugin.saveResource(langFile.getName(), true);
                 try {
                     lang.load(langFile);
@@ -160,11 +160,7 @@ public final class LangManager {
             receiver.sendMessage(messagePrefix + " " + text);
         }
     }
-
-    public void sendMessageToTeam(String label, Player player) {
-        sendVerbatimMessageToTeam(getText(label), player);
-    }
-
+    
     public void sendVerbatimMessageToTeam(String message, Player player) {
         TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
         for (Player receiver : player.getWorld().getPlayers()) {
@@ -223,4 +219,12 @@ public final class LangManager {
         return ret;
     }
 
+    public String getWoolName(DyeColor color) {
+        String label = "wool-names." + color.name();
+        String woolName = getText(label);
+        if (woolName.equals(label)) {
+            woolName = color.name();
+        }
+        return woolName;
+    }
 }
