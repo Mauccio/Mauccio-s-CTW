@@ -1,9 +1,7 @@
 package com.mauccio.ctw.game;
 
 import com.mauccio.ctw.CTW;
-import com.mauccio.ctw.game.*;
 import com.mauccio.ctw.utils.Utils;
-// import com.nametagedit.plugin.NametagEdit;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -53,9 +51,9 @@ public class PlayerManager {
         this.playersFile = new File(plugin.getDataFolder(), "players.yml");
         this.playersConfig = new YamlConfiguration();
         this.plugin = plugin;
-        this.playerOptions = new TreeMap();
-        this.lastDamager = new TreeMap();
-        this.playerTeam = new TreeMap();
+        playerOptions = new TreeMap<>();
+        lastDamager = new TreeMap<>();
+        playerTeam = new TreeMap<>();
         this._playerTeam_mutex = new ReentrantLock(true);
         this.helpBook = plugin.lm.getHelpBook();
         ItemStack menuItem = new ItemStack(Material.PAPER);
@@ -63,7 +61,7 @@ public class PlayerManager {
         im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
         menuItem.setItemMeta(im);
         this.joinMenuItem = menuItem;
-        this.falseSpectators = new TreeSet();
+        falseSpectators = new TreeSet<>();
     }
 
     public void setFalseSpectator(Player player) {
@@ -78,13 +76,13 @@ public class PlayerManager {
     }
 
     public void setLastDamager(Player player, Player damager) {
-        Map.Entry<Long, String> entry = new AbstractMap.SimpleEntry((new Date()).getTime(), damager.getName());
+        Map.Entry<Long, String> entry = new AbstractMap.SimpleEntry<>((new Date()).getTime(), damager.getName());
         this.lastDamager.put(player.getName(), entry);
     }
 
     public String getLastDamager(Player player) {
         String ret = null;
-        Map.Entry<Long, String> entry = (Map.Entry)this.lastDamager.remove(player.getName());
+        Map.Entry<Long, String> entry = lastDamager.remove(player.getName());
         if (entry != null) {
             long upTo = (new Date()).getTime() - 10000L;
             if ((Long)entry.getKey() > upTo) {
@@ -268,8 +266,9 @@ public class PlayerManager {
     public void updatePlayerList(Player player) {
         boolean playerCanSeeOtherHidden = this.canSeeOthersSpectators(player);
         boolean playerIsSpect = this.isSpectator(player);
-        TreeSet<Player> playersInGame = new TreeSet(new Utils.PlayerComparator());
+        TreeSet<Player> playersInGame = new TreeSet<>(new Utils.PlayerComparator());
         playersInGame.addAll(player.getWorld().getPlayers());
+
         for (Player other : playersInGame) {
             boolean otherIsSpectator = isSpectator(other);
             boolean canSeeOthersSpectators = canSeeOthersSpectators(other);
@@ -302,133 +301,111 @@ public class PlayerManager {
                 }
             }
         }
+
     }
 
-    @EventHandler(
-            ignoreCancelled = true,
-            priority = EventPriority.HIGHEST
-    )
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void disguise(Player player, TeamManager.TeamId teamId) {
-        List<String> armourBrand = new ArrayList();
+        List<String> armourBrand = new ArrayList<>();
         armourBrand.add(this.plugin.tm.armourBrandName);
         Color tshirtColor = this.plugin.tm.getTshirtColor(teamId);
         ChatColor teamChatColor = this.plugin.tm.getChatColor(teamId);
         String teamName = this.plugin.tm.getName(teamId);
+
         this.clearInventory(player);
+
         ItemStack tshirt = new ItemStack(Material.LEATHER_CHESTPLATE);
-        LeatherArmorMeta leatherMeta = (LeatherArmorMeta)tshirt.getItemMeta();
+        LeatherArmorMeta leatherMeta = (LeatherArmorMeta) tshirt.getItemMeta();
         leatherMeta.setColor(tshirtColor);
         leatherMeta.setDisplayName(teamChatColor + teamName);
         leatherMeta.setLore(armourBrand);
         tshirt.setItemMeta(leatherMeta);
+
         ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
-        leatherMeta = (LeatherArmorMeta)boots.getItemMeta();
+        leatherMeta = (LeatherArmorMeta) boots.getItemMeta();
         leatherMeta.setColor(tshirtColor);
         leatherMeta.setDisplayName(teamChatColor + teamName);
         leatherMeta.setLore(armourBrand);
         boots.setItemMeta(leatherMeta);
+
         ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
-        leatherMeta = (LeatherArmorMeta)leggings.getItemMeta();
+        leatherMeta = (LeatherArmorMeta) leggings.getItemMeta();
         leatherMeta.setColor(tshirtColor);
         leatherMeta.setDisplayName(teamChatColor + teamName);
         leatherMeta.setLore(armourBrand);
         leggings.setItemMeta(leatherMeta);
+
         ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
+        leatherMeta = (LeatherArmorMeta) helmet.getItemMeta();
         leatherMeta.setColor(tshirtColor);
         leatherMeta.setDisplayName(teamChatColor + teamName);
         leatherMeta.setLore(armourBrand);
         helmet.setItemMeta(leatherMeta);
-        ItemStack VipBlueHelmet = new ItemStack(Material.LEATHER_HELMET);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.blue.R"), this.plugin.getConfig().getInt("vip-armors.blue.G"), this.plugin.getConfig().getInt("vip-armors.blue.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipBlueHelmet.setItemMeta(leatherMeta);
-        ItemStack VipBlueChestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.blue.R"), this.plugin.getConfig().getInt("vip-armors.blue.G"), this.plugin.getConfig().getInt("vip-armors.blue.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipBlueChestplate.setItemMeta(leatherMeta);
-        ItemStack VipBlueLeggings = new ItemStack(Material.LEATHER_LEGGINGS);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.blue.R"), this.plugin.getConfig().getInt("vip-armors.blue.G"), this.plugin.getConfig().getInt("vip-armors.blue.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipBlueLeggings.setItemMeta(leatherMeta);
-        ItemStack VipBlueBoots = new ItemStack(Material.LEATHER_BOOTS);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.blue.R"), this.plugin.getConfig().getInt("vip-armors.blue.G"), this.plugin.getConfig().getInt("vip-armors.blue.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipBlueBoots.setItemMeta(leatherMeta);
-        ItemStack VipRedHelmet = new ItemStack(Material.LEATHER_HELMET);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.red.R"), this.plugin.getConfig().getInt("vip-armors.red.G"), this.plugin.getConfig().getInt("vip-armors.red.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipRedHelmet.setItemMeta(leatherMeta);
-        ItemStack VipRedChestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.red.R"), this.plugin.getConfig().getInt("vip-armors.red.G"), this.plugin.getConfig().getInt("vip-armors.red.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipRedChestplate.setItemMeta(leatherMeta);
-        ItemStack VipRedLeggings = new ItemStack(Material.LEATHER_LEGGINGS);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.red.R"), this.plugin.getConfig().getInt("vip-armors.red.G"), this.plugin.getConfig().getInt("vip-armors.red.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipRedLeggings.setItemMeta(leatherMeta);
-        ItemStack VipRedBoots = new ItemStack(Material.LEATHER_BOOTS);
-        leatherMeta = (LeatherArmorMeta)helmet.getItemMeta();
-        leatherMeta.setColor(Color.fromRGB(this.plugin.getConfig().getInt("vip-armors.red.R"), this.plugin.getConfig().getInt("vip-armors.red.G"), this.plugin.getConfig().getInt("vip-armors.red.B")));
-        leatherMeta.setDisplayName(teamChatColor + teamName);
-        leatherMeta.setLore(armourBrand);
-        VipRedBoots.setItemMeta(leatherMeta);
+
+        ItemStack vipHelmet = helmet, vipChestplate = tshirt, vipLeggings = leggings, vipBoots = boots;
         if (player.hasPermission("ctw.vip-armor")) {
-            if (this.plugin.pm.getTeamId(player) == TeamManager.TeamId.BLUE) {
-                player.setPlayerListName(teamChatColor + player.getName());
-                player.setCustomName(teamChatColor + player.getName());
-                player.setCustomNameVisible(true);
-                player.getInventory().setBoots(VipBlueBoots);
-                player.getInventory().setChestplate(VipBlueChestplate);
-                player.getInventory().setLeggings(VipBlueLeggings);
-                player.getInventory().setHelmet(VipBlueHelmet);
-                player.setGameMode(GameMode.SURVIVAL);
-                player.setFireTicks(0);
-            } else if (this.plugin.pm.getTeamId(player) == TeamManager.TeamId.RED) {
-                player.setPlayerListName(teamChatColor + player.getName());
-                player.setCustomName(teamChatColor + player.getName());
-                player.setCustomNameVisible(true);
-                player.getInventory().setBoots(VipRedBoots);
-                player.getInventory().setChestplate(VipRedChestplate);
-                player.getInventory().setLeggings(VipRedLeggings);
-                player.getInventory().setHelmet(VipRedHelmet);
-                player.setGameMode(GameMode.SURVIVAL);
-                player.setFireTicks(0);
+            Color vipColor = (teamId == TeamManager.TeamId.BLUE) ?
+                    Color.fromRGB(plugin.getConfig().getInt("vip-armors.blue.R"),
+                            plugin.getConfig().getInt("vip-armors.blue.G"),
+                            plugin.getConfig().getInt("vip-armors.blue.B")) :
+                    Color.fromRGB(plugin.getConfig().getInt("vip-armors.red.R"),
+                            plugin.getConfig().getInt("vip-armors.red.G"),
+                            plugin.getConfig().getInt("vip-armors.red.B"));
+
+            vipHelmet = new ItemStack(Material.LEATHER_HELMET);
+            leatherMeta = (LeatherArmorMeta) vipHelmet.getItemMeta();
+            leatherMeta.setColor(vipColor);
+            leatherMeta.setDisplayName(teamChatColor + teamName);
+            leatherMeta.setLore(armourBrand);
+            vipHelmet.setItemMeta(leatherMeta);
+
+            vipChestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+            leatherMeta = (LeatherArmorMeta) vipChestplate.getItemMeta();
+            leatherMeta.setColor(vipColor);
+            leatherMeta.setDisplayName(teamChatColor + teamName);
+            leatherMeta.setLore(armourBrand);
+            vipChestplate.setItemMeta(leatherMeta);
+
+            vipLeggings = new ItemStack(Material.LEATHER_LEGGINGS);
+            leatherMeta = (LeatherArmorMeta) vipLeggings.getItemMeta();
+            leatherMeta.setColor(vipColor);
+            leatherMeta.setDisplayName(teamChatColor + teamName);
+            leatherMeta.setLore(armourBrand);
+            vipLeggings.setItemMeta(leatherMeta);
+
+            vipBoots = new ItemStack(Material.LEATHER_BOOTS);
+            leatherMeta = (LeatherArmorMeta) vipBoots.getItemMeta();
+            leatherMeta.setColor(vipColor);
+            leatherMeta.setDisplayName(teamChatColor + teamName);
+            leatherMeta.setLore(armourBrand);
+            vipBoots.setItemMeta(leatherMeta);
+        }
+
+        if (player.hasPermission("ctw.vip-armor") && teamId != TeamManager.TeamId.SPECTATOR) {
+            if (teamId == TeamManager.TeamId.BLUE) {
+                player.getInventory().setBoots(vipBoots);
+                player.getInventory().setChestplate(vipChestplate);
+                player.getInventory().setLeggings(vipLeggings);
+                player.getInventory().setHelmet(vipHelmet);
+            } else if (teamId == TeamManager.TeamId.RED) {
+                player.getInventory().setBoots(vipBoots);
+                player.getInventory().setChestplate(vipChestplate);
+                player.getInventory().setLeggings(vipLeggings);
+                player.getInventory().setHelmet(vipHelmet);
             }
         } else {
-            player.setPlayerListName(teamChatColor + player.getName());
-            player.setCustomName(teamChatColor + player.getName());
-            player.setCustomNameVisible(true);
             player.getInventory().setBoots(boots);
             player.getInventory().setChestplate(tshirt);
             player.getInventory().setLeggings(leggings);
             player.getInventory().setHelmet(helmet);
-            player.setGameMode(GameMode.SURVIVAL);
-            player.setFireTicks(0);
         }
 
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setFireTicks(0);
+
+        plugin.nm.updateNametag(player, teamId);
+
         this.updatePlayerList(player);
-        /*
-        try {
-            NametagEdit.getApi().reloadNametag(player);
-        } catch (Exception var21) {
-            this.plugin.getLogger().warning(var21.toString());
-        }
-        */
     }
 
     private void setSpectator(Player player) {
