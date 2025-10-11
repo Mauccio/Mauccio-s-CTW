@@ -1,11 +1,10 @@
 name: Mauccios-CTW
-version: 1.3
+version: 1.4-BETA
 main: com.mauccio.ctw.CTW
 description: An updated LibelulaUltimateCaptureTheWool
 author: Mauccio
 depend: [WorldEdit]
-softdepend: [TitleAPI, NametagEdit, Vault]
-
+softdepend: [Vault]
 commands:
   ctw:
     description: Mauccios CTW main command.
@@ -84,11 +83,16 @@ commands:
     permission-message: You don't have <permission>
     aliases: [sgk, sgkit, guardarkitglobal, ctw-saveglobalkit]
   kiteditor:
-    description: Editr
+    description: Edit your hotbar
     usage: /kiteditor
     permission: ctw.kiteditor
     permission-message: You don't have <permission>
     aliases: [keditor, kite, ctw-kiteditor, ke]
+  rooms:
+    description: View the room list
+    usage: /rooms
+    permission: ctw.rooms
+    permission-message: You don't have <permission>
 permissions:
   ctw.vip:
     description: Gives vip accesories
