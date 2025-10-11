@@ -1,9 +1,11 @@
 package com.mauccio.ctw.listeners;
 
+import java.io.IOException;
 import java.util.TreeMap;
 
 import com.mauccio.ctw.CTW;
 import com.mauccio.ctw.game.TeamManager;
+import com.mauccio.ctw.utils.LobbyItem;
 import com.mauccio.ctw.utils.Utils;
 import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.Bukkit;
@@ -12,10 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
+import org.bukkit.event.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
@@ -23,28 +22,20 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.*;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
 
 public final class EventManager {
@@ -55,9 +46,6 @@ public final class EventManager {
 
     ItemStack[] playerKit;
 
-    /**
-     *
-     */
     public enum SetUpAction {
 
         RED_WIN_WOOL, BLUE_WIN_WOOL, WOOL_SPAWNER
@@ -79,6 +67,7 @@ public final class EventManager {
             Location currLoc;
             if (e.getBlock().getType() != Material.WOOL) {
                 if (e.getBlock().getType() == Material.MOB_SPAWNER) {
+                    @SuppressWarnings("deprecation")
                     Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
                     currLoc = plugin.mm.getWoolSpawnerLocation(e.getBlock().getWorld(), wool.getColor());
                     if (currLoc != null) {
@@ -91,7 +80,7 @@ public final class EventManager {
                 e.setCancelled(true);
                 return;
             }
-
+            @SuppressWarnings("deprecation")
             Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
             currLoc = plugin.mm.getBlueWoolWinLocation(e.getBlock().getWorld(), wool.getColor());
             if (currLoc != null) {
@@ -119,6 +108,7 @@ public final class EventManager {
                 e.setCancelled(true);
                 return;
             }
+            @SuppressWarnings("deprecation")
             Wool wool = new Wool(e.getBlock().getType(), e.getBlock().getData());
             Location currLoc;
             if (action == SetUpAction.BLUE_WIN_WOOL || action == SetUpAction.RED_WIN_WOOL) {
@@ -194,6 +184,31 @@ public final class EventManager {
             }
         }
 
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onVoid(PlayerMoveEvent e) {
+            Player p = e.getPlayer();
+            if (plugin.cf.isVoidInstaKill()) {
+                if (p.getHealth() <= 0) {
+                    return; 
+                }
+
+                if (p.getLocation().getBlockY() <= 0) {
+                    
+                    EntityDamageEvent damageEvent = new EntityDamageEvent(
+                            p,
+                            EntityDamageEvent.DamageCause.VOID,
+                            p.getHealth() + 1.0 
+                    );
+                    Bukkit.getPluginManager().callEvent(damageEvent); 
+                    if (!damageEvent.isCancelled()) {
+                        p.setLastDamageCause(damageEvent);
+                        p.setHealth(0.0); 
+                    }
+                }
+            }
+            
+        }
+
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onRespawn(PlayerRespawnEvent e) {
             String roomName = plugin.rm.getRoom(e.getPlayer().getWorld());
@@ -223,18 +238,19 @@ public final class EventManager {
                     e.getPlayer().getInventory().setLeggings(air);
                 }
                 try {
-                    EventManager.this.playerKit = EventManager.this.plugin.mm.getPlayerKit(e.getPlayer());
-                    e.getPlayer().getInventory().setContents(EventManager.this.playerKit);
+                    playerKit = plugin.km.getKitYAML(e.getPlayer().getUniqueId());
+                    e.getPlayer().getInventory().setContents(playerKit);
                 } catch (NullPointerException error) {
                     try {
-                        ItemStack[] globalKit = EventManager.this.plugin.mm.getGlobalKit();
-                        e.getPlayer().getInventory().setContents(globalKit);
+                        e.getPlayer().getInventory().setContents(plugin.km.getGlobalKitYAML());
                     } catch(NullPointerException error2) {
                         plugin.getLogger().info(ChatColor.translateAlternateColorCodes('&', "&4Global Kit is not setted, use &c/saveglobalkit &4to set!"));
                     }
                 }
             }
         }
+
+
 
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onDeath(PlayerDeathEvent e) {
@@ -340,6 +356,33 @@ public final class EventManager {
             plugin.tm.cancelSpectator(e);
         }
 
+
+        @EventHandler
+        public void onLobbyItemUse(PlayerInteractEvent e) {
+            Player p = e.getPlayer();
+            Action a = e.getAction();
+            if (!(a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK)) return;
+
+            ItemStack item = e.getItem();
+            if (item == null || item.getType() == Material.AIR) return;
+
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null || !meta.hasDisplayName()) return;
+
+            for (LobbyItem lobbyItem : plugin.lb.getAllItems()) {
+                if (meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', lobbyItem.getName()))) {
+
+                    String command = lobbyItem.getCommand();
+                    if (command != null && !command.isEmpty()) {
+                        p.performCommand(command);
+                    }
+                    e.setCancelled(true);
+                    break;
+                }
+            }
+
+        }
+
         @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
         public void onInventoryOpenEvent(InventoryOpenEvent e) {
             plugin.gm.cancelProtectedChest(e);
@@ -353,11 +396,48 @@ public final class EventManager {
             }
         }
 
+        @EventHandler
+        public void onInvClick(InventoryClickEvent event) {
+            if (event.getCurrentItem() == null) return;
+
+            ItemStack clicked = event.getCurrentItem();
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta == null || !meta.hasDisplayName()) return;
+
+            for (LobbyItem item : plugin.lb.getAllItems()) {
+                if (meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', item.getName()))) {
+                    event.setCancelled(true);
+                    break;
+                }
+            }
+        }
+
+        @EventHandler
+        public void onDropItem(PlayerDropItemEvent event) {
+            ItemStack dropped = event.getItemDrop().getItemStack();
+            ItemMeta meta = dropped.getItemMeta();
+            if (meta == null || !meta.hasDisplayName()) return;
+
+            for (LobbyItem item : plugin.lb.getAllItems()) {
+                if (meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', item.getName()))) {
+                    event.setCancelled(true);
+                    break;
+                }
+            }
+        }
+
+        @EventHandler
+        public void onInventoryDrag(InventoryDragEvent event) {
+            if (event.getView().getTitle().equals(plugin.lm.getText("rooms-gui"))) {
+                event.setCancelled(true);
+            }
+        }
+
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onPlayerTeleport(PlayerTeleportEvent e) {
             if (!e.getFrom().getWorld().getName().equals(e.getTo().getWorld().getName())) {
                 if (plugin.rm.isInGame(e.getTo().getWorld())) { // Getting in a game
-                    final Player player = e.getPlayer();
+                    Player player = e.getPlayer();
                     Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                         @Override
                         public void run() {
@@ -372,35 +452,76 @@ public final class EventManager {
             }
         }
 
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onPlayerQuit(PlayerQuitEvent e) {
-            if (plugin.rm.isInGame(e.getPlayer().getWorld())) {
-                e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
-                e.getPlayer().setDisplayName(e.getPlayer().getName());
-                NametagEdit.getApi().clearNametag(e.getPlayer());
-                e.getPlayer().setPlayerListName(e.getPlayer().getName());
-            }
-            e.setQuitMessage("");
-            e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
-            e.getPlayer().setDisplayName(e.getPlayer().getName());
-            e.getPlayer().setPlayerListName(e.getPlayer().getName());
-            String leftMessage = plugin.lm.getText("left-message")
-                    .replace("%PLAYER%", e.getPlayer().getDisplayName());
-            for (Player player : plugin.wm.getLobbyWorld().getPlayers()) {
-                plugin.lm.sendMessage(leftMessage, player);
+        @EventHandler
+        public void onPlayerLobby(PlayerTeleportEvent e) throws IOException {
+            if(e.getTo().getWorld().equals(plugin.wm.getLobbyWorld())) {
+                Player plr = e.getPlayer();
+                PlayerInventory inv = plr.getInventory();
+                inv.clear();
+                for (LobbyItem lobbyItem : plugin.lb.getAllItems()) {
+                    inv.setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
+                }
             }
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onJoinEvent(final PlayerJoinEvent e) {
+        public void onPlayerQuit(PlayerQuitEvent e) {
+            Player player = e.getPlayer();
+            e.setQuitMessage(""); 
+
+            if (plugin.wm.getLobbyWorld() != null) {
+                Location lobbySpawn = plugin.wm.getNextLobbySpawn();
+                if (lobbySpawn != null) {
+                    player.teleport(lobbySpawn);
+                } else {
+                    plugin.getLogger().warning("Lobby spawn not configured for player quit: " + player.getName());
+                }
+            } else {
+                plugin.getLogger().warning("Lobby world not configured for player quit: " + player.getName());
+            }
+            player.setDisplayName(player.getName());
+            player.setPlayerListName(player.getName());
+
+            if (Bukkit.getPluginManager().getPlugin("NametagEdit") != null &&
+                    Bukkit.getPluginManager().getPlugin("NametagEdit").isEnabled()) {
+                try {
+                    NametagEdit.getApi().clearNametag(player);
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Error clearing nametag in onPlayerQuit: " + ex.getMessage());
+                }
+            }
+
+            if (plugin.wm.getLobbyWorld() != null) {
+                String leftMessage = plugin.lm.getText("left-message")
+                        .replace("%PLAYER%", player.getDisplayName());
+                for (Player lobbyPlayer : plugin.wm.getLobbyWorld().getPlayers()) {
+                    plugin.lm.sendMessage(leftMessage, lobbyPlayer);
+                }
+            }
+
+            if (plugin.rm.isInGame(player.getWorld())) {
+                plugin.gm.playerLeftGame(player);
+            }
+            
+        }
+
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+        public void onJoinEvent(PlayerJoinEvent e) {
             World lobbyWorld = plugin.wm.getLobbyWorld();
             if (lobbyWorld == null) {
                 if (plugin.hasPermission(e.getPlayer(), "setup")) {
-                    final Player player = e.getPlayer();
+                    Player player = e.getPlayer();
                     Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                         @Override
                         public void run() {
                             plugin.lm.sendText("unconfigured-lobby", player);
+                            try {
+                                for (LobbyItem lobbyItem : plugin.lb.getAllItems()) {
+                                    player.getInventory().setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
+                                }
+                            } catch (NullPointerException ex) {
+                                player.sendMessage("XD");
+                            }
                         }
                     }, 30);
                 }
@@ -500,7 +621,7 @@ public final class EventManager {
                 if(e.getEntity() instanceof Player) {
                     Player plr = (Player) e.getEntity();
                     if(plugin.pm.getTeamId(plr) != null) {
-                        e.setCancelled(true);
+                        e.setCancelled(plugin.cf.isFallDamage());
                     }
                 }
             }
@@ -509,7 +630,7 @@ public final class EventManager {
         @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
         public void onFoodLevelChange(FoodLevelChangeEvent e) {
             plugin.tm.cancelSpectator(e);
-            if (e.getEntity() instanceof Player == true && !e.isCancelled()) {
+            if (e.getEntity() instanceof Player && !e.isCancelled()) {
                 Player player = (Player) e.getEntity();
                 TeamManager.TeamId ti = plugin.pm.getTeamId(player);
                 if (ti != null && player.getFoodLevel() > e.getFoodLevel()) {
