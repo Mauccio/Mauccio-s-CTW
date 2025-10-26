@@ -84,14 +84,6 @@ public class CommandManager implements CommandExecutor {
         }
     }
 
-    public void errorSound(Player player) {
-        try {
-            player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.error")), 10.0f, 1.0f);
-        } catch (IllegalArgumentException ex) {
-            plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.error"));
-        }
-    }
-
     @Override
     public boolean onCommand(CommandSender cs, Command cmnd, String string, String[] args) {
         Player player;
@@ -105,6 +97,7 @@ public class CommandManager implements CommandExecutor {
             case "ctw":
                 if (args.length != 1) {
                     plugin.lm.sendText("commands.ctw", player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                 } else {
                     switch (args[0].toLowerCase()) {
                         case "reload":
@@ -121,6 +114,7 @@ public class CommandManager implements CommandExecutor {
                             } else {
                                 if (plugin.pm.getTeamId(player) == null) {
                                     plugin.lm.sendMessage("not-in-game-cmd", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                                 } else {
                                     plugin.gm.advanceGame(player.getWorld());
                                 }
@@ -128,18 +122,18 @@ public class CommandManager implements CommandExecutor {
                             break;
                         default:
                             plugin.lm.sendText("commands.ctw", player);
+                            if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                             break;
                     }
                 }
-
                 break;
             case "stats":
                 if (player == null) {
-                    plugin.lm.sendMessage("not-in-game-cmd", cs); 
+                    plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
                 try {
-                    player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.your-stats")), 10.0F, 1);
+                    if(plugin.cf.isSoundsEnabled()) player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.your-stats")), 10.0F, 1);
                     player.sendMessage(plugin.getConfig().getString("message-decorator"));
                     player.sendMessage(plugin.lm.getText("stats.title"));
                     player.sendMessage(plugin.lm.getText("stats.points") + plugin.db.getScore(player.getName()));
@@ -148,6 +142,7 @@ public class CommandManager implements CommandExecutor {
                     player.sendMessage(plugin.getConfig().getString("message-decorator"));
                 } catch (NullPointerException e) {
                     plugin.lm.sendMessage("stats-not-enabled", player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                 } catch (IllegalArgumentException ex) {
                     plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.your-stats"));
                 }
@@ -159,10 +154,11 @@ public class CommandManager implements CommandExecutor {
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    errorSound(player);
-                    return true; 
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
+                    return true;
                 }
                 player.openInventory(plugin.lb.getRoomsGUI());
+                if(plugin.cf.isSoundsEnabled()) plugin.lb.playRoomSound(player);
                 break;
             case "saveglobalkit":
                 if (player == null) {
@@ -171,25 +167,25 @@ public class CommandManager implements CommandExecutor {
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    errorSound(player);
-                    return true; 
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
+                    return true;
                 }
                 try {
                     plugin.km.saveGlobalKitYAML(player.getInventory().getContents());
                     plugin.lm.sendMessage("starting-kit-set", player);
                 } catch (IOException e) {
                     plugin.lm.sendMessage("error-at-save-kit", player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                 }
                 break;
-
             case "kiteditor":
                 if (player == null) {
                     plugin.lm.sendMessage("not-in-game-cmd", cs);
                     return true;
                 }
-                if (plugin.pm.getTeamId(player) != null) {
+                if (!plugin.wm.isOnLobby(player)) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    errorSound(player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                 }
                 plugin.km.invSaver(player, player.getUniqueId());
                 ItemStack[] globalKit = plugin.km.getGlobalKitYAML();
@@ -206,7 +202,6 @@ public class CommandManager implements CommandExecutor {
                 player.teleport(plugin.wm.getNextLobbySpawn());
                 player.setPlayerListName(player.getName());
                 player.setDisplayName(player.getName());
-
                 break;
             case "ctwsetup":
                 if (player == null) {
@@ -218,22 +213,28 @@ public class CommandManager implements CommandExecutor {
                 } else {
                     if (args.length == 0) {
                         plugin.lm.sendText("commands.ctwsetup", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                     } else {
                         switch (args[0].toLowerCase()) {
                             case "lobby":
                                 plugin.lm.sendText("commands.ctwsetup-lobby", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 return true;
                             case "map":
                                 plugin.lm.sendText("commands.ctwsetup-map", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 return true;
                             case "mapconfig":
                                 plugin.lm.sendText("commands.ctwsetup-mapconfig", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 return true;
                             case "room":
                                 plugin.lm.sendText("commands.ctwsetup-room", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 return true;
                             default:
                                 plugin.lm.sendText("commands.ctwsetup", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                         }
                     }
                 }
@@ -246,6 +247,7 @@ public class CommandManager implements CommandExecutor {
                 }
                 if (args.length != 1) {
                     plugin.lm.sendMessage("incorrect-parameters", cs);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     plugin.lm.sendText("commands." + cmnd.getName(), (Player) cs);
                     return true;
                 }
@@ -259,6 +261,7 @@ public class CommandManager implements CommandExecutor {
 
                 if (world == null) {
                     plugin.lm.sendMessage("world-doesnot-exists", cs);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                 } else {
                     player.teleport(world.getSpawnLocation());
                 }
@@ -271,15 +274,10 @@ public class CommandManager implements CommandExecutor {
                 }
                 if (plugin.pm.getTeamId(player) != null) {
                     plugin.lm.sendMessage("not-in-lobby-cmd", player);
-                    errorSound(player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     return true;
                 }
-                try {
-                    plugin.km.saveKitYAML(player.getUniqueId(), player.getInventory().getContents());
-                } catch (IOException e) {
-                    plugin.lm.sendMessage("error-at-save-player-kit", player);
-                }
-                plugin.lm.sendMessage("saved-kit-success", player);
+                plugin.km.saveKit(player, player.getInventory().getContents());
                 player.getInventory().clear();
                 plugin.km.invRecover(player, player.getUniqueId());
                 break;
@@ -298,9 +296,11 @@ public class CommandManager implements CommandExecutor {
                         }
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     }
                 } else {
                     plugin.lm.sendText("commands.g", player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                 }
                 break;
 
@@ -315,30 +315,38 @@ public class CommandManager implements CommandExecutor {
                             case "obs":
                                 if (plugin.pm.toggleSeeOthersSpectators(player)) {
                                     plugin.lm.sendMessage("obs-true", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 } else {
                                     plugin.lm.sendMessage("obs-false", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 }
                                 break;
                             case "dms":
                                 if (plugin.pm.toogleOthersDeathMessages(player)) {
                                     plugin.lm.sendMessage("dms-true", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 } else {
                                     plugin.lm.sendMessage("dms-false", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 }
                                 break;
                             case "blood":
                                 if (plugin.pm.toggleBloodEffect(player)) {
                                     plugin.lm.sendMessage("blood-true", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 } else {
                                     plugin.lm.sendMessage("blood-false", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                                 }
                                 break;
                         }
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     }
                 } else {
                     plugin.lm.sendText("commands.toggle", player);
+                    if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                 }
                 break;
 
@@ -346,24 +354,16 @@ public class CommandManager implements CommandExecutor {
                 if (player != null) {
                     if (plugin.pm.getTeamId(player) != null) {
                         player.teleport(plugin.wm.getNextLobbySpawn());
-                        if (Bukkit.getPluginManager().getPlugin("NametagEdit") != null &&
-                                Bukkit.getPluginManager().getPlugin("NametagEdit").isEnabled()) {
-                            try {
-                                NametagEdit.getApi().clearNametag(player);
-                            } catch (Exception ex) {
-                                plugin.getLogger().warning("Error clearing nametag in /leave: " + ex.getMessage());
-                            }
-                        }
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     }
                 } else {
                     plugin.lm.sendMessage("not-in-game-cmd", cs);
                 }
                 break;
-
             case "join":
                 if (player == null) {
                     plugin.lm.sendMessage("not-in-game-cmd", cs);
@@ -394,6 +394,7 @@ public class CommandManager implements CommandExecutor {
                                     break;
                                 default:
                                     plugin.lm.sendMessage("incorrect-parameters", player);
+                                    if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                                     desiredTeam = null;
                                     break;
                             }
@@ -401,17 +402,19 @@ public class CommandManager implements CommandExecutor {
                         if (desiredTeam != null) {
                             if (desiredTeam == playerTeam || playerTeam == TeamManager.TeamId.BLUE || playerTeam == TeamManager.TeamId.RED) {
                                 plugin.lm.sendMessage("already-in-this-team", player);
+                                if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                             } else {
                                 plugin.gm.joinInTeam(player, desiredTeam);
                             }
                         }
                     } else {
                         plugin.lm.sendMessage("not-in-room-cmd", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.errorSound(player);
                     }
                 } else if (plugin.pm.getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
                     player.openInventory(plugin.tm.getMenuInv());
                     try {
-                        player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.join-command")), 10.0F, 2);
+                        if(plugin.cf.isSoundsEnabled()) player.playSound(player.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.join-command")), 10.0F, 2);
                     } catch (IllegalArgumentException ex) {
                         plugin.getLogger().warning("Invalid sound: " + plugin.getConfig().getString("sounds.join-command"));
                     }
@@ -419,9 +422,7 @@ public class CommandManager implements CommandExecutor {
                     plugin.lm.sendMessage("join-in-team", player);
                 }
                 break;
-                
             case "alert":
-
                 if(player != null) {
                     if (args.length != 0) {
 
@@ -431,10 +432,12 @@ public class CommandManager implements CommandExecutor {
                         }
                         for (Player receiver : player.getServer().getOnlinePlayers()) {
                             receiver.sendMessage(plugin.lm.getText("alert-prefix") + " " + message);
+                            if(plugin.cf.isSoundsEnabled()) receiver.playSound(receiver.getLocation(), Sound.valueOf(plugin.getConfig().getString("sounds.alert")), 10.0F, 1);
                         }
 
                     } else {
                         plugin.lm.sendText("commands.alert", player);
+                        if(plugin.cf.isSoundsEnabled()) plugin.tipSound(player);
                     }
                 }
                 break;
@@ -442,6 +445,8 @@ public class CommandManager implements CommandExecutor {
 
         return true;
     }
+
+
 
     private void processCtwSetup(Player player, String[] args) {
         String subCommand = args[0].toLowerCase();
@@ -584,7 +589,23 @@ public class CommandManager implements CommandExecutor {
                         plugin.lm.sendMessage("mapspawn-set", player);
                         player.setPlayerListName(player.getName());
                         player.setDisplayName(player.getName());
+                        if (Bukkit.getPluginManager().getPlugin("NametagEdit") != null &&
+                                Bukkit.getPluginManager().getPlugin("NametagEdit").isEnabled()) {
+                            try {
+                                NametagEdit.getApi().clearNametag(player);
+                            } catch (Exception ex) {
+                                plugin.getLogger().warning("Error clearing nametag in /mapconfig spawn: " + ex.getMessage());
+                            }
+                        }
                         break;
+                        /*
+                        plugin.mm.setSpawn(player.getLocation());
+                        plugin.lm.sendMessage("mapspawn-set", player);
+                        // NametagEdit.getApi().clearNametag(player);
+                        player.setPlayerListName(player.getName());
+                        player.setDisplayName(player.getName());
+                        NametagEdit.getApi().clearNametag(player);
+                        break;*/
                     case "redspawn":
                         plugin.mm.setRedSpawn(player.getLocation());
                         plugin.lm.sendMessage("redspawn-set", player);
