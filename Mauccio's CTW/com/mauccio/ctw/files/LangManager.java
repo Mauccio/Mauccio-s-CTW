@@ -20,7 +20,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
-public final class LangManager {
+public class LangManager {
 
     private final CTW plugin;
     private final YamlConfiguration lang;
@@ -29,49 +29,55 @@ public final class LangManager {
     public LangManager(CTW plugin) {
         this.plugin = plugin;
         lang = new YamlConfiguration();
-        File langFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("lang-file"));
+        File langFile = new File(plugin.getDataFolder(), "messages.yml");
+
         if (!langFile.exists()) {
-            saveDefaultLangFiles();
+            plugin.saveResource("messages.yml", false);
         }
-        if (langFile.exists()) {
-            try {
-                lang.load(langFile);
-            } catch (IOException | InvalidConfigurationException ex) {
-                plugin.getLogger().severe(ex.toString());
-            }
-            int langVersion = lang.getInt("version", 0);
-            int minVersion = 4;
-            if (langVersion < minVersion && (langFile.getName().equals("spanish.yml")
-                    || langFile.getName().equals("english.yml"))
-                    || langFile.getName().equals("italian.yml")) { // Texts must be updated.
-                //File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
-                plugin.saveResource(langFile.getName(), true);
-                try {
-                    lang.load(langFile);
-                } catch (IOException | InvalidConfigurationException ex) {
-                    plugin.getLogger().severe(ex.toString());
-                }
-            }
-        } else {
-            plugin.getLogger().severe("Configured language file does not exists: ".concat(langFile.getAbsolutePath()));
+
+        try {
+            lang.load(langFile);
+        } catch (IOException | InvalidConfigurationException ex) {
+            plugin.getLogger().severe("Error loading messages.yml: " + ex.getMessage());
         }
-        messagePrefix = ChatColor.translateAlternateColorCodes('&', lang.getString("message-prefix"));
+
+        messagePrefix = ChatColor.translateAlternateColorCodes('&',
+                lang.getString("message-prefix"));
     }
 
-    public void saveDefaultLangFiles() {
-        File defaultLangFile;
-        defaultLangFile = new File(plugin.getDataFolder(), "spanish.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
+    private String translateUnicode(String input) {
+        if (input == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < input.length();) {
+            char c = input.charAt(i);
+            if (c == '\\' && i + 5 < input.length() && input.charAt(i + 1) == 'u') {
+                String hex = input.substring(i + 2, i + 6);
+                try {
+                    int code = Integer.parseInt(hex, 16);
+                    sb.append((char) code);
+                    i += 6;
+                    continue;
+                } catch (NumberFormatException ignored) {}
+            }
+            sb.append(c);
+            i++;
         }
-        defaultLangFile = new File(plugin.getDataFolder(), "english.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
+        return ChatColor.translateAlternateColorCodes('&', sb.toString());
+    }
+
+
+    public String getChar(String path) {
+        String raw = lang.getString(path);
+        return translateUnicode(raw);
+    }
+
+    public List<String> getStringList(String path) {
+        List<String> list = lang.getStringList(path);
+        List<String> colored = new ArrayList<>();
+        for (String line : list) {
+            colored.add(translateUnicode(line));
         }
-        defaultLangFile = new File(plugin.getDataFolder(), "italian.yml");
-        if (!defaultLangFile.exists()) {
-            plugin.saveResource(defaultLangFile.getName(), false);
-        }
+        return colored;
     }
 
     public String getText(String label) {
@@ -121,7 +127,8 @@ public final class LangManager {
             String textPage = "";
             for (String line : lang.getConfigurationSection("help-book.pages." + page).getKeys(false)) {
                 if (line != null) {
-                    String text = ChatColor.translateAlternateColorCodes('&', lang.getString("help-book.pages." + page + "." + line));
+                    String text = ChatColor.translateAlternateColorCodes('&',
+                            lang.getString("help-book.pages." + page + "." + line));
                     textPage = textPage.concat(text).concat("\n");
                 }
             }
@@ -160,11 +167,11 @@ public final class LangManager {
             receiver.sendMessage(messagePrefix + " " + text);
         }
     }
-    
+
     public void sendVerbatimMessageToTeam(String message, Player player) {
-        TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
+        TeamManager.TeamId playerTeam = plugin.getPlayerManager().getTeamId(player);
         for (Player receiver : player.getWorld().getPlayers()) {
-            if (playerTeam == plugin.pm.getTeamId(receiver)) {
+            if (playerTeam == plugin.getPlayerManager().getTeamId(receiver)) {
                 receiver.sendMessage(messagePrefix + " " + message);
             }
         }
@@ -175,8 +182,8 @@ public final class LangManager {
                 lang.getString("death-events.by-player.message"));
         ret = ret.replace("%KILLER%", killer.getName());
         ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLER_COLOR%", plugin.pm.getChatColor(killer) + "");
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
+        ret = ret.replace("%KILLER_COLOR%", plugin.getPlayerManager().getChatColor(killer) + "");
+        ret = ret.replace("%KILLED_COLOR%", plugin.getPlayerManager().getChatColor(player) + "");
         String how;
         if (is != null) {
             how = lang.getString("death-events.by-player.melee.".concat(is.getType().name()));
@@ -195,8 +202,8 @@ public final class LangManager {
                 lang.getString("death-events.by-player.message"));
         ret = ret.replace("%KILLER%", killer.getName());
         ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLER_COLOR%", plugin.pm.getChatColor(killer) + "");
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
+        ret = ret.replace("%KILLER_COLOR%", plugin.getPlayerManager().getChatColor(killer) + "");
+        ret = ret.replace("%KILLED_COLOR%", plugin.getPlayerManager().getChatColor(player) + "");
         if (headshoot) {
             ret = ret.replace("%HOW%", lang.getString("death-events.by-player.range.HEADSHOT"));
         } else {
@@ -210,7 +217,7 @@ public final class LangManager {
         String ret = ChatColor.translateAlternateColorCodes('&',
                 lang.getString("death-events.natural.message"));
         ret = ret.replace("%KILLED%", player.getName());
-        ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
+        ret = ret.replace("%KILLED_COLOR%", plugin.getPlayerManager().getChatColor(player) + "");
         String how = lang.getString("death-events.natural.cause.".concat(cause.name()));
         if (how == null) {
             how = lang.getString("death-events.natural.cause._OTHER_");
@@ -222,9 +229,11 @@ public final class LangManager {
     public String getWoolName(DyeColor color) {
         String label = "wool-names." + color.name();
         String woolName = getText(label);
+
         if (woolName.equals(label)) {
             woolName = color.name();
         }
+
         return woolName;
     }
 }
