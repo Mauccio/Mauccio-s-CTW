@@ -20,7 +20,7 @@ public class PlaceholderCTW extends PlaceholderExpansion {
     }
 
     public String getAuthor() {
-        return "Diego Lucio D'onofrio (Original), Mauccio (LibelulaCTW-Reborn)";
+        return "Diego Lucio D'onofrio (Original), Mauccio (Mauccio's CTW)";
     }
 
     public String getIdentifier() {
@@ -31,18 +31,21 @@ public class PlaceholderCTW extends PlaceholderExpansion {
         return this.plugin.getDescription().getVersion();
     }
 
-    public String onPlaceholderRequest(final Player player, final String identifier) {
+    public String onPlaceholderRequest(Player player, String identifier) {
         if (player == null) {
             return "";
         }
         if (identifier.equals("score")) {
-            return new StringBuilder(String.valueOf(this.plugin.db.getScore(player.getName()))).toString();
+            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getScore(player.getName()))).toString();
         }
         if (identifier.equals("kills")) {
-            return new StringBuilder(String.valueOf(this.plugin.db.getKill(player.getName()))).toString();
+            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getKill(player.getName()))).toString();
         }
         if (identifier.equals("wools_placed")) {
-            return new StringBuilder(String.valueOf(this.plugin.db.getWoolCaptured(player.getName()))).toString();
+            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getWoolCaptured(player.getName()))).toString();
+        }
+        if (identifier.equals("deaths")) {
+            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getDeath(player.getName()))).toString();
         }
         return null;
     }
