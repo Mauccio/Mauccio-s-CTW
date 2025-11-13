@@ -177,6 +177,7 @@ public class LangManager {
         }
     }
 
+
     public String getMurderText(Player player, Player killer, ItemStack is) {
         String ret = ChatColor.translateAlternateColorCodes('&',
                 lang.getString("death-events.by-player.message"));
