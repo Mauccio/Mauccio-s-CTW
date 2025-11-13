@@ -5,11 +5,8 @@ import java.util.List;
 import java.util.TreeMap;
 
 import com.mauccio.ctw.CTW;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.DyeColor;
-import org.bukkit.Material;
+import com.mauccio.ctw.libs.titleapi.TitleAPI;
+import org.bukkit.*;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -48,7 +45,7 @@ public class TeamManager {
      * Name of the team
      */
     public enum TeamId {
-        RED, BLUE, SPECTATOR;
+        RED, BLUE, SPECTATOR
     }
 
     private class TeamInfo {
@@ -64,7 +61,7 @@ public class TeamManager {
             team.setPrefix(chatColor + "");
             this.tshirtColor = tshirtColor;
             this.chatColor = chatColor;
-            name = plugin.lm.getText(id.toString() + "-TEAM"); //
+            name = plugin.getLangManager().getText(id.toString() + "-TEAM");
             team.setDisplayName(chatColor + name);
         }
     }
@@ -74,26 +71,29 @@ public class TeamManager {
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         teams = new TreeMap<>();
         TeamInfo teamInfo;
-        teamInfo = new TeamInfo(TeamId.RED, Color.RED, DyeColor.RED, ChatColor.RED); //
+        teamInfo = new TeamInfo(TeamId.RED, Color.RED, DyeColor.RED, ChatColor.RED);
         teams.put(TeamId.RED, teamInfo);
         teamInfo = new TeamInfo(TeamId.BLUE, Color.BLUE, DyeColor.BLUE, ChatColor.BLUE);
         teams.put(TeamId.BLUE, teamInfo);
         teamInfo = new TeamInfo(TeamId.SPECTATOR, Color.AQUA, null, ChatColor.AQUA);
         teams.put(TeamId.SPECTATOR, teamInfo);
-        armourBrandName = plugin.lm.getText("armour-brand");
-        bTeamText = plugin.lm.getText("brackets-team");
+        armourBrandName = plugin.getLangManager().getText("armour-brand");
+        bTeamText = plugin.getLangManager().getText("brackets-team");
         joinMenuInventory = getTeamInventoryMenu();
     }
 
-    @SuppressWarnings("deprecation")
     public void addToTeam(Player player, TeamId teamId) {
-        teams.get(teamId).team.addPlayer(player);
+        teams.get(teamId).team.addEntry(player.getName());
     }
 
-    @SuppressWarnings("deprecation")
     public void removeFromTeam(Player player, TeamId teamId) {
-        if (teamId != null) {
-            teams.get(teamId).team.removePlayer(player);
+        if (teamId == null) return;
+        Scoreboard sb = plugin.getGameManager().getBoardForWorld(player.getWorld());
+        if (sb != null) {
+            Team team = sb.getTeam(teamId.name());
+            if (team != null) {
+                team.removeEntry(player.getName());
+            }
         }
     }
 
@@ -121,23 +121,23 @@ public class TeamManager {
 
     public void playerChat(AsyncPlayerChatEvent e) {
         Player sender = e.getPlayer();
-        TeamId senderTi = plugin.pm.getTeamId(sender);
+        TeamId senderTi = plugin.getPlayerManager().getTeamId(sender);
         e.setCancelled(true);
 
-        if (senderTi == null) { // The player is not in game.
+        if (senderTi == null) {
             String message = "<" + e.getPlayer().getDisplayName() + "> " + e.getMessage();
             for (Player receiver : e.getPlayer().getWorld().getPlayers()) {
                 receiver.sendMessage(message);
             }
             plugin.getLogger().info(message);
-        } else { // The player is on a game.
+        } else {
             String message = getChatColor(senderTi) + bTeamText + " "
                     + sender.getDisplayName().replace(sender.getName(),
                     getChatColor(senderTi) + sender.getName())
                     + ": " + ChatColor.RESET + e.getMessage();
 
             for (Player receiver : sender.getWorld().getPlayers()) {
-                TeamId receiverTi = plugin.pm.getTeamId(receiver);
+                TeamId receiverTi = plugin.getPlayerManager().getTeamId(receiver);
                 if (receiverTi == null || receiverTi != senderTi) {
                     continue;
                 }
@@ -149,21 +149,21 @@ public class TeamManager {
 
     @SuppressWarnings("incomplete-switch")
     public void cancelSpectator(InventoryClickEvent e) {
-        if (e.getWhoClicked() instanceof Player == false) {
+        if (!(e.getWhoClicked() instanceof Player)) {
             return;
         }
         Player player = (Player) e.getWhoClicked();
-        if (plugin.pm.isSpectator(player)) {
+        if (plugin.getPlayerManager().isSpectator(player)) {
             e.setCancelled(true);
             if (e.getCurrentItem() != null) {
-                if (e.getCurrentItem().equals(plugin.pm.getMenuItem())
+                if (e.getCurrentItem().equals(plugin.getPlayerManager().getMenuItem())
                         && !joinMenuInventory.getViewers().contains(player)) {
                     player.openInventory(joinMenuInventory);
                 } else {
                     switch (e.getCurrentItem().getType()) {
                         case NETHER_STAR:
                             player.closeInventory();
-                            plugin.gm.movePlayerTo(player, null);
+                            plugin.getGameManager().movePlayerTo(player, null);
                             break;
                         case EYE_OF_ENDER:
                             player.closeInventory();
@@ -173,10 +173,22 @@ public class TeamManager {
                             Wool wool = (Wool) e.getCurrentItem().getData();
                             switch (wool.getColor()) {
                                 case RED:
-                                    plugin.gm.joinInTeam(player, TeamId.RED);
+                                    if(player.hasPermission("ctw.choseteam")) {
+                                        plugin.getGameManager().joinInTeam(player, TeamId.RED);
+                                        TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.join-red-title"), plugin.getLangManager().getTitleMessage("titles.join-blue-subtitle"));
+                                        plugin.getSoundManager().playTeamJoinSound(player);
+                                    } else {
+                                        plugin.getLangManager().sendMessage("not-teamselect-perm", player);
+                                    }
                                     break;
                                 case BLUE:
-                                    plugin.gm.joinInTeam(player, TeamId.BLUE);
+                                    if(player.hasPermission("ctw.choseteam")) {
+                                        plugin.getGameManager().joinInTeam(player, TeamId.BLUE);
+                                        TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.join-blue-title"), plugin.getLangManager().getTitleMessage("titles.join-blue-subtitle"));
+                                        plugin.getSoundManager().playTeamJoinSound(player);
+                                    } else {
+                                        plugin.getLangManager().sendMessage("not-teamselect-perm", player);
+                                    }
                                     break;
                             }
                             break;
@@ -187,93 +199,93 @@ public class TeamManager {
     }
 
     public void cancelSpectator(PlayerInteractEvent e) {
-        if (e.getItem() != null && e.getItem().equals(plugin.pm.getMenuItem())) {
+        if (e.getItem() != null && e.getItem().equals(plugin.getPlayerManager().getMenuItem())) {
             e.getPlayer().openInventory(joinMenuInventory);
         }
         if (e.isCancelled()) {
             return;
         }
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(PlayerDropItemEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(BlockPlaceEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(BlockBreakEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(PlayerPickupItemEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(EntityTargetEvent e) {
-        if (e.getTarget() instanceof Player == false) {
+        if (!(e.getTarget() instanceof Player)) {
             return;
         }
         Player player = (Player) e.getTarget();
-        if (plugin.pm.isSpectator(player)) {
+        if (plugin.getPlayerManager().isSpectator(player)) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(BlockDamageEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(EntityDamageEvent e) {
-        if (e.getEntity() instanceof Player == false) {
+        if (!(e.getEntity() instanceof Player)) {
             return;
         }
         Player player = (Player) e.getEntity();
-        if (plugin.pm.isSpectator(player)) {
+        if (plugin.getPlayerManager().isSpectator(player)) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(FoodLevelChangeEvent e) {
-        if (e.getEntity() instanceof Player == false) {
+        if (!(e.getEntity() instanceof Player)) {
             return;
         }
         Player player = (Player) e.getEntity();
-        if (plugin.pm.isSpectator(player)) {
+        if (plugin.getPlayerManager().isSpectator(player)) {
             e.setCancelled(true);
         }
     }
 
     public void cancelSpectator(PlayerInteractEntityEvent e) {
-        if (plugin.pm.isSpectator(e.getPlayer())) {
+        if (plugin.getPlayerManager().isSpectator(e.getPlayer())) {
             e.setCancelled(true);
         }
     }
 
     private Inventory getTeamInventoryMenu() {
         Inventory teamMenu;
-        teamMenu = Bukkit.createInventory(null, 27, plugin.lm.getText("pick-your-team"));
+        teamMenu = Bukkit.createInventory(null, 27, plugin.getLangManager().getText("pick-your-team"));
 
         List<String> ayuda = new ArrayList<>();
 
         ItemStack option = new ItemStack(Material.EMERALD);
         ItemMeta im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("view-tutorial"));
-        ayuda.add(plugin.lm.getText("not-available-yet"));
+        im.setDisplayName(plugin.getLangManager().getText("view-tutorial"));
+        ayuda.add(plugin.getLangManager().getText("not-available-yet"));
         im.setLore(ayuda);
         option.setItemMeta(im);
         teamMenu.setItem(18, option);
@@ -281,8 +293,8 @@ public class TeamManager {
         ayuda.clear();
         option = new ItemStack(Material.NETHER_STAR);
         im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("auto-join"));
-        ayuda.add(plugin.lm.getText("auto-join-help"));
+        im.setDisplayName(plugin.getLangManager().getText("auto-join"));
+        ayuda.add(plugin.getLangManager().getText("auto-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
         teamMenu.setItem(13, option);
@@ -291,8 +303,8 @@ public class TeamManager {
         Wool wool = new Wool(DyeColor.BLUE);
         option = wool.toItemStack();
         im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("join-blue"));
-        ayuda.add(plugin.lm.getText("blue-join-help"));
+        im.setDisplayName(plugin.getLangManager().getText("join-blue"));
+        ayuda.add(plugin.getLangManager().getText("blue-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
         teamMenu.setItem(15, option);
@@ -301,8 +313,8 @@ public class TeamManager {
         wool = new Wool(DyeColor.RED);
         option = wool.toItemStack();
         im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("join-red"));
-        ayuda.add(plugin.lm.getText("red-join-help"));
+        im.setDisplayName(plugin.getLangManager().getText("join-red"));
+        ayuda.add(plugin.getLangManager().getText("red-join-help"));
         im.setLore(ayuda);
         option.setItemMeta(im);
         teamMenu.setItem(11, option);
@@ -310,8 +322,8 @@ public class TeamManager {
         ayuda.clear();
         option = new ItemStack(Material.EYE_OF_ENDER);
         im = option.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("close"));
-        ayuda.add(plugin.lm.getText("close-menu"));
+        im.setDisplayName(plugin.getLangManager().getText("close"));
+        ayuda.add(plugin.getLangManager().getText("close-menu"));
         im.setLore(ayuda);
         option.setItemMeta(im);
         teamMenu.setItem(26, option);
@@ -323,8 +335,8 @@ public class TeamManager {
         if (e.getCaught() instanceof Player) {
             Player damager = e.getPlayer();
             Player player = (Player) e.getCaught();
-            TeamId playerTeam = plugin.pm.getTeamId(player);
-            TeamId damagerTeam = plugin.pm.getTeamId(damager);
+            TeamId playerTeam = plugin.getPlayerManager().getTeamId(player);
+            TeamId damagerTeam = plugin.getPlayerManager().getTeamId(damager);
             if (playerTeam == damagerTeam) {
                 e.setCancelled(true);
             }
@@ -333,24 +345,24 @@ public class TeamManager {
 
     public void cancelSpectatorOrSameTeam(EntityDamageByEntityEvent e) {
         Arrow arrow;
-        if (e.getEntity() instanceof Player == false) {
+        if (!(e.getEntity() instanceof Player)) {
             return;
         }
         final Player player = (Player) e.getEntity();
 
-        if (plugin.pm.isSpectator(player)) {
+        if (plugin.getPlayerManager().isSpectator(player)) {
             e.setCancelled(true);
             return;
         }
 
-        TeamId playerTeam = plugin.pm.getTeamId(player);
+        TeamId playerTeam = plugin.getPlayerManager().getTeamId(player);
 
         if (playerTeam == null) {
             return;
         }
         Player damager;
-        if (e.getDamager() instanceof Player == false) {
-            if (e.getDamager() instanceof Arrow == false) {
+        if (!(e.getDamager() instanceof Player)) {
+            if (!(e.getDamager() instanceof Arrow)) {
                 return;
             } else {
                 arrow = (Arrow) e.getDamager();
@@ -364,12 +376,12 @@ public class TeamManager {
             damager = (Player) e.getDamager();
         }
 
-        if (plugin.pm.isSpectator(damager)) {
+        if (plugin.getPlayerManager().isSpectator(damager)) {
             e.setCancelled(true);
             return;
         }
 
-        TeamId damagerTeam = plugin.pm.getTeamId(damager);
+        TeamId damagerTeam = plugin.getPlayerManager().getTeamId(damager);
 
         if (damagerTeam == null) {
             return;
@@ -378,21 +390,21 @@ public class TeamManager {
             e.setCancelled(true);
             return;
         }
-        plugin.pm.setLastDamager(player, damager);
+        plugin.getPlayerManager().setLastDamager(player, damager);
     }
 
     public void manageDeath(PlayerDeathEvent e) {
-        if (!plugin.rm.isInGame(e.getEntity().getWorld())) {
+        if (!plugin.getRoomManager().isInGame(e.getEntity().getWorld())) {
             return;
         }
 
-        String roomName = plugin.rm.getRoom(e.getEntity().getWorld());
-        if (plugin.gm.getState(roomName) != GameManager.GameState.IN_GAME) {
+        String roomName = plugin.getRoomManager().getRoom(e.getEntity().getWorld());
+        if (plugin.getGameManager().getState(roomName) != GameManager.GameState.IN_GAME) {
             e.getEntity().setHealth(20);
             return;
         }
 
-        e.setDeathMessage("");
+        e.setDeathMessage(null);
 
         Player player = e.getEntity();
         Player killer = null;
@@ -419,36 +431,41 @@ public class TeamManager {
         if (killer != null) {
             if (blockDistance == 0) {
                 ItemStack is = killer.getItemInHand();
-                murderText = plugin.lm.getMurderText(player, killer, is);
-
+                murderText = plugin.getLangManager().getMurderText(player, killer, is);
             } else {
-                murderText = plugin.lm.getRangeMurderText(player, killer, blockDistance, headhoot);
+                murderText = plugin.getLangManager().getRangeMurderText(player, killer, blockDistance, headhoot);
+                if(headhoot) {
+                    plugin.getSoundManager().playHeadshotSound(killer);
+                    TitleAPI.sendFullTitle(killer, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.headshot-title"), plugin.getLangManager().getTitleMessage("titles.headshot-subtitle"));
+                    plugin.getLangManager().sendMessage("", killer);
+                }
             }
         } else {
             EntityDamageEvent ede = e.getEntity().getLastDamageCause();
             if (ede != null) {
                 if (e.getEntity().getLastDamageCause().getCause() == EntityDamageEvent.DamageCause.VOID) {
-                    String killerName = plugin.pm.getLastDamager(player);
+                    String killerName = plugin.getPlayerManager().getLastDamager(player);
                     if (killerName != null) {
                         killer = plugin.getServer().getPlayer(killerName);
                         if (killer != null) {
-                            murderText = plugin.lm.getMurderText(player, killer, null);
+                            murderText = plugin.getLangManager().getMurderText(player, killer, null);
+
                         } else {
-                            murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                            murderText = plugin.getLangManager().getNaturalDeathText(player, ede.getCause());
                         }
                     } else {
-                        murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                        murderText = plugin.getLangManager().getNaturalDeathText(player, ede.getCause());
                     }
                 } else {
-                    murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                    murderText = plugin.getLangManager().getNaturalDeathText(player, ede.getCause());
                 }
             } else {
-                murderText = plugin.lm.getNaturalDeathText(player, EntityDamageEvent.DamageCause.SUICIDE);
+                murderText = plugin.getLangManager().getNaturalDeathText(player, EntityDamageEvent.DamageCause.SUICIDE);
             }
         }
 
         for (Player receiver : player.getWorld().getPlayers()) {
-            if (!plugin.pm.canSeeOthersDeathMessages(receiver)) {
+            if (!plugin.getPlayerManager().canSeeOthersDeathMessages(receiver)) {
                 if (!receiver.getName().equals(player.getName())
                         && (killer == null || !receiver.getName().equals(killer.getName()))) {
                     continue;
@@ -457,30 +474,45 @@ public class TeamManager {
             receiver.sendMessage(murderText);
         }
 
-        if (plugin.db != null) {
+        if (plugin.getDBManager() != null) {
             String playerName = player.getName();
             if (killer != null) {
-                final String killerName = killer.getName();
+                String killerName = killer.getName();
+                Player finalKiller = killer;
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
                     @Override
                     public void run() {
-                        plugin.db.addEvent(killerName, playerName, "KILL|" + murderText);
-                        plugin.db.incScore(killerName, plugin.scores.kill);
+                        plugin.getDBManager().addEvent(killerName, playerName, "KILL|" + murderText);
+                        plugin.getDBManager().incKill(killerName, 1);
+                        plugin.getDBManager().incScore(killerName, plugin.getScores().kill);
+                        String msg = plugin.getLangManager().getText("player-messages.add-points");
+                        finalKiller.sendMessage(msg);
+                        if(plugin.getEconomy() != null) {
+                            plugin.getEconomy().depositPlayer(finalKiller, plugin.getScores().coins_kill);
+                            String msgCoins = plugin.getLangManager().getText("player-messages.add-coins.kill");
+                            finalKiller.sendMessage(msgCoins);
+                        }
                     }
                 });
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
                     @Override
                     public void run() {
-                        plugin.db.addEvent(playerName, killerName, "DEAD|" + murderText);
-                        plugin.db.incScore(playerName, plugin.scores.death);
+                        plugin.getDBManager().addEvent(playerName, killerName, "DEAD|" + murderText);
+                        plugin.getDBManager().incDeath(playerName, 1);
+                        plugin.getDBManager().incScore(playerName, plugin.getScores().death);
+                        String msg = plugin.getLangManager().getText("player-messages.remove-points");
+                        player.sendMessage(msg);
                     }
                 });
             } else {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
                     @Override
                     public void run() {
-                        plugin.db.addEvent(playerName, "SUICIDE|" + murderText);
-                        plugin.db.incScore(playerName, plugin.scores.death);
+                        plugin.getDBManager().addEvent(playerName, "SUICIDE|" + murderText);
+                        plugin.getDBManager().incDeath(playerName, 1);
+                        plugin.getDBManager().incScore(playerName, plugin.getScores().death);
+                        String msg = plugin.getLangManager().getText("player-messages.remove-points");
+                        player.sendMessage(msg);
                     }
                 });
             }
