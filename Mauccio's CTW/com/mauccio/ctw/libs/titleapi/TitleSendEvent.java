@@ -53,5 +53,4 @@ public class TitleSendEvent extends Event {
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
-
 }
