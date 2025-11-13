@@ -1,16 +1,20 @@
 # Statistics configuration file
-
 enable: false
 
 database:
   # Possible values: MySQL, SQLITE
   type: MySQL # Type of Database
   # Connection information
+  host: localhost # Database Host
+  port: 3306 # Database Port
   name: myawesomedatabase # Name of Database
   user: steve # User of Database
   pass: ilovectw # Password of Database
 
 scores: # Points at...
-  capture: 5
+  capture: 10 # At place wool
   death: -1
   kill: 1
+coins: # Coins at...
+  capture: 25 # At place wool
+  kill:  5
