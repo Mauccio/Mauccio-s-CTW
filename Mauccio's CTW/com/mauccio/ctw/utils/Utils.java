@@ -16,12 +16,8 @@ import org.bukkit.entity.Player;
 public class Utils {
 
     public static class Chars {
-        public static String wool = "\u2B05"; // Old: \u2752
+        public static String wool = "⬅"; // Old: \u2752
         public static String invisible = "\u200B";
-        public static String caution = "\u26A0";
-        public static String yestitle = "\u2713";
-        public static String woolPlaced = "\u2B1B";
-        public static String woolNotPlaced = "\u2B1C";
     }
 
     public static class PlayerComparator implements Comparator<Player> {
@@ -173,13 +169,90 @@ public class Utils {
         return result;
     }
 
+    public static DyeColor chatColorToDyeColor(ChatColor chatColor) {
+        if (chatColor == null) {
+            return DyeColor.WHITE; // Valor por defecto
+        }
+
+        switch (chatColor) {
+            case BLACK:
+                return DyeColor.BLACK;
+            case DARK_BLUE:
+            case BLUE:
+                return DyeColor.BLUE;
+            case DARK_GREEN:
+                return DyeColor.GREEN;
+            case DARK_AQUA:
+            case AQUA:
+                return DyeColor.LIGHT_BLUE; // LIGHT_BLUE es un buen mapping para AQUA/DARK_AQUA
+            case DARK_RED:
+            case RED:
+                return DyeColor.RED;
+            case DARK_PURPLE:
+                return DyeColor.PURPLE;
+            case GOLD:
+            case YELLOW:
+                return DyeColor.YELLOW;
+            case GRAY:
+            case DARK_GRAY:
+                return DyeColor.GRAY;
+            case GREEN:
+                return DyeColor.LIME;
+            case LIGHT_PURPLE:
+                return DyeColor.MAGENTA;
+            case WHITE:
+            default:
+                return DyeColor.WHITE;
+        }
+    }
+
+    public static Color chatColorToBukkitColor(ChatColor chatColor) {
+        if (chatColor == null) return Color.WHITE;
+
+        switch (chatColor) {
+            case BLACK:
+                return Color.BLACK;
+            case DARK_BLUE:
+                return Color.NAVY;
+            case DARK_GREEN:
+                return Color.GREEN;
+            case DARK_AQUA:
+                return Color.TEAL;
+            case DARK_RED:
+                return Color.MAROON;
+            case DARK_PURPLE:
+                return Color.PURPLE;
+            case GOLD:
+                return Color.ORANGE;
+            case GRAY:
+                return Color.SILVER;
+            case DARK_GRAY:
+                return Color.GRAY;
+            case BLUE:
+                return Color.BLUE;
+            case GREEN:
+                return Color.LIME;
+            case AQUA:
+                return Color.AQUA;
+            case RED:
+                return Color.RED;
+            case LIGHT_PURPLE:
+                return Color.FUCHSIA;
+            case YELLOW:
+                return Color.YELLOW;
+            case WHITE:
+            default:
+                return Color.WHITE;
+        }
+    }
+
+
     public static String randomIdentifier() {
 
         String lexicon = "ABCDEFGHIJKLMNOPQRSTUVWXYZ12345674890";
 
         java.util.Random rand = new java.util.Random();
 
-// consider using a Map<String,Boolean> to say whether the identifier is being used or not
         Set<String> identifiers = new HashSet<String>();
         StringBuilder builder = new StringBuilder();
         while (builder.toString().length() == 0) {
@@ -202,4 +275,33 @@ public class Utils {
                 + ", Y:" + max.getBlockY() + ", Z:" + max.getBlockZ();
     }
 
+    public static ChatColor parseChatColor(String name) {
+        try { return ChatColor.valueOf(name.toUpperCase()); }
+        catch (IllegalArgumentException e) { return ChatColor.WHITE; }
+    }
+
+    public static org.bukkit.Color parseLeatherColor(String name) {
+        switch(name.toLowerCase()) {
+            case "black": return org.bukkit.Color.fromRGB(10,10,10);
+            case "red": return org.bukkit.Color.fromRGB(255,0,0);
+            case "blue": return org.bukkit.Color.fromRGB(0,0,255);
+            case "cyan": case "aqua": return org.bukkit.Color.fromRGB(0,255,255);
+            case "pink": return org.bukkit.Color.fromRGB(255,128,192);
+            case "green": return org.bukkit.Color.fromRGB(0,170,0);
+            case "yellow": return org.bukkit.Color.fromRGB(255,255,0);
+            case "orange": return org.bukkit.Color.fromRGB(255,128,0);
+            case "purple": return org.bukkit.Color.fromRGB(128,0,255);
+            case "white": return org.bukkit.Color.fromRGB(255,255,255);
+            case "gray": case "grey": return org.bukkit.Color.fromRGB(128,128,128);
+            case "light_gray": case "light_grey": return org.bukkit.Color.fromRGB(192,192,192);
+            case "brown": return org.bukkit.Color.fromRGB(153,76,0);
+            case "lime": return org.bukkit.Color.fromRGB(128,255,0);
+            case "magenta": return org.bukkit.Color.fromRGB(255,0,255);
+            default: return org.bukkit.Color.fromRGB(255,255,255);
+        }
+    }
+
+    public static String normalizeId(String raw) {
+        return raw.trim().toLowerCase().replaceAll("\\s+", "_");
+    }
 }
