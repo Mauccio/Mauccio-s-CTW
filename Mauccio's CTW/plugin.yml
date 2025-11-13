@@ -4,7 +4,7 @@ main: com.mauccio.ctw.CTW
 description: An updated LibelulaUltimateCaptureTheWool
 author: Mauccio
 depend: [WorldEdit]
-softdepend: [Vault]
+softdepend: [Vault, PlaceholderAPI]
 commands:
   ctw:
     description: Mauccios CTW main command.
@@ -64,12 +64,11 @@ commands:
     permission: ctw.stats
     permission-message: You don't have <permission>
     aliases: [est, estadisticas, statistiche, sta]
-  coins:
-    description: View your coins.
-    usage: /coins
-    permission: ctw.coins
+  kit:
+    description: Opens Kits GUI
+    usage: /kit
+    permission: ctw.kit
     permission-message: You don't have <permission>
-    aliases: [bal, money, $, monedas, dollars, dinero]
   savekit:
     description: Save your custom kit.
     usage: /savekit
@@ -98,7 +97,14 @@ permissions:
     description: Gives vip accesories
     children:
       ctw.choseteam: true
+      ctw.override-limit: true
       ctw.vip-armor: true
+      ctw.kiteditor: true
+      ctw:savekit: true
+      ctw.rooms: true
+      ctw.generalchat: true
+      ctw.join: true
+      ctw.stats: true
   ctw.player:
     description: Gives access to player Capture The Wool actions
     children:
@@ -107,6 +113,7 @@ permissions:
       ctw.stats: true
       ctw.kiteditor: true
       ctw:savekit: true
+      ctw.rooms: true
   cts.admin:
     description: Gives access to player admin commmands
     children:
@@ -125,5 +132,3 @@ permissions:
       ctw.admin: true
       ctw.ingame-extra-cmds: true
       ctw.vip-armor: true
-
-
