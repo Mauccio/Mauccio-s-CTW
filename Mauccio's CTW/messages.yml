@@ -245,11 +245,18 @@ titles:
     two-seconds: "&62"
     one-seconds: "&41"
 stats:
-  title: "&b&lYour Stats"
-  points: "&9-> &7Your points are: &a "
-  placed-wools: "&9-> &7Your placed wools are: &d "
-  kills: "&9-> &7Your kills are: &c "
-  coins: "&9-> &7You coins are: &6 "
+  title: "&c&lYour Stats"
+  points: "&5- &7Your points are: &a%SCORE%"
+  placed-wools: "&5- &7Your placed wools are: &d%WOOLS_PLACED%"
+  kills: "&5- &7Your kills are: &c%KILLS%"
+  deaths: "&5- &7Your deaths are: &b%DEATHS%"
+  coins: "&5- &7You coins are: &6%COINS%"
+npcs:
+  name:
+    games: "&cClick to join!"
+    random-join: "&aRandom Join!"
+  skin:
+    games: "Mauzzio"
 commands:
   toggle:
     description: "&7Change your viewing options."
@@ -465,6 +472,13 @@ death-events:
       STARVATION: "has starved"
       POISON: "has been poisoned"
       _OTHER_: "has had a shameful and painful death"
+player-messages:
+  add-points: "&e+1 &7score"
+  add-points-capture: "&6+10 &7score"
+  remove-points: "&c-1 &7score"
+  add-coins:
+    capture: "&a+5 &6coins"
+    kill: "&a+1 &6coins"
 wool-names:
   WHITE: "White"
   RED: "Red"
