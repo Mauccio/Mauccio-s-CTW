@@ -171,7 +171,7 @@ public class Utils {
 
     public static DyeColor chatColorToDyeColor(ChatColor chatColor) {
         if (chatColor == null) {
-            return DyeColor.WHITE; // Valor por defecto
+            return DyeColor.WHITE; 
         }
 
         switch (chatColor) {
@@ -184,7 +184,7 @@ public class Utils {
                 return DyeColor.GREEN;
             case DARK_AQUA:
             case AQUA:
-                return DyeColor.LIGHT_BLUE; // LIGHT_BLUE es un buen mapping para AQUA/DARK_AQUA
+                return DyeColor.LIGHT_BLUE; 
             case DARK_RED:
             case RED:
                 return DyeColor.RED;
