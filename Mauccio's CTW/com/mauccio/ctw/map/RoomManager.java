@@ -17,14 +17,14 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Item;
 
-public final class RoomManager {
+public class RoomManager {
 
     private final CTW plugin;
     private final YamlConfiguration roomsConfig;
     private final File roomsConfigFile;
     private final TreeMap<String, Room> rooms;
 
-    private class Room {
+    private static class Room {
 
         String name;
         List<World> maps;
@@ -39,7 +39,7 @@ public final class RoomManager {
     }
 
     public void removeWools(String mapName, World newWorld) {
-        for (Location loc : plugin.mm.getWoolWinLocations(mapName)) {
+        for (Location loc : plugin.getMapManager().getWoolWinLocations(mapName)) {
             Location capturePoint = new Location(newWorld, loc.getBlockX(),
                     loc.getBlockY(), loc.getBlockZ());
             capturePoint.getBlock().setType(Material.AIR);
@@ -57,10 +57,7 @@ public final class RoomManager {
         if (rooms.isEmpty()) {
             load();
             for (String roomName : getRooms(true)) {
-                Room room = rooms.get(roomName);
-
-
-                plugin.gm.addGame(roomName);
+                plugin.getGameManager().addGame(roomName);
             }
         }
     }
@@ -82,17 +79,17 @@ public final class RoomManager {
                 room.worlds = new ArrayList<>();
                 room.maps = new ArrayList<>();
                 for (String worldName : worldNames) {
-                    World map = plugin.wm.loadWorld(worldName);
+                    World map = plugin.getWorldManager().loadWorld(worldName);
                     if (map != null) {
-                        if (plugin.mm.getRestaurationArea(worldName) == null) {
+                        if (plugin.getMapManager().getRestaurationArea(worldName) == null) {
                             plugin.alert("Ignoring map \"" + worldName + "\": restauration area is not set.");
                             continue;
                         }
                         room.maps.add(map);
-                        plugin.wm.cloneWorld(map, roomName + "_" + worldName);
-                        World world = plugin.wm.loadWorld(roomName + "_" + worldName);
+                        plugin.getWorldManager().cloneWorld(map, roomName + "_" + worldName);
+                        World world = plugin.getWorldManager().loadWorld(roomName + "_" + worldName);
                         room.worlds.add(world);
-                        plugin.wm.restoreMap(plugin.mm.getMapData(worldName), world); // Restore map.
+                        plugin.getWorldManager().restoreMap(plugin.getMapManager().getMapData(worldName), world);
                         removeWools(map.getName(), world);
                     }
                 }
@@ -217,9 +214,9 @@ public final class RoomManager {
         for (Room room : rooms.values()) {
             String entry = ChatColor.AQUA + room.name;
             if (room.enabled) {
-                entry = entry.concat(ChatColor.GREEN + " (" + plugin.lm.getText("enabled") + ") ");
+                entry = entry.concat(ChatColor.GREEN + " (" + plugin.getLangManager().getText("enabled") + ") ");
             } else {
-                entry = entry.concat(ChatColor.RED + " (" + plugin.lm.getText("disabled") + ") ");
+                entry = entry.concat(ChatColor.RED + " (" + plugin.getLangManager().getText("disabled") + ") ");
             }
             String mapList;
             if (room.maps != null) {
@@ -229,10 +226,10 @@ public final class RoomManager {
                 }
                 mapList = mapList.concat("]");
             } else {
-                mapList = ChatColor.RED + "[" + plugin.lm.getText("none") + "]";
+                mapList = ChatColor.RED + "[" + plugin.getLangManager().getText("none") + "]";
             }
 
-            entry = entry.concat(ChatColor.AQUA + plugin.lm.getText("maps") + ": " + mapList);
+            entry = entry.concat(ChatColor.AQUA + plugin.getLangManager().getText("maps") + ": " + mapList);
 
             list.add(entry);
         }
@@ -249,8 +246,8 @@ public final class RoomManager {
         }
         room.enabled = true;
         prepareRoom(room);
-        plugin.gm.addGame(roomName);
-        plugin.sm.updateSigns(roomName);
+        plugin.getGameManager().addGame(roomName);
+        plugin.getSignManager().updateSigns(roomName);
         return true;
     }
 
@@ -265,17 +262,27 @@ public final class RoomManager {
         room.enabled = false;
         if (room.worlds != null) {
             for (World world : room.worlds) {
-                plugin.wm.unloadWorld(world);
+                plugin.getWorldManager().unloadWorld(world);
             }
         }
         room.mapIndex = 0;
-        plugin.gm.removeGame(roomName);
-        plugin.sm.updateSigns(roomName);
+        plugin.getGameManager().removeGame(roomName);
+        plugin.getSignManager().updateSigns(roomName);
         return true;
     }
 
     public Set<String> getRooms() {
         return rooms.keySet();
+    }
+
+    public Set<String> getEnabledRooms() {
+        Set<String> results = new java.util.HashSet<>();
+        for (Room room : rooms.values()) {
+            if (room.enabled) {
+                results.add(room.name);
+            }
+        }
+        return results;
     }
 
     /**
@@ -355,7 +362,7 @@ public final class RoomManager {
             return;
         }
 
-        plugin.wm.restoreMap(plugin.mm.getMapData(room.maps.get(room.mapIndex).getName()),
+        plugin.getWorldManager().restoreMap(plugin.getMapManager().getMapData(room.maps.get(room.mapIndex).getName()),
                 room.worlds.get(room.mapIndex));
 
         if (room.maps.size() <= (room.mapIndex + 1)) {
@@ -379,7 +386,7 @@ public final class RoomManager {
         if (roomName == null) {
             return false;
         }
-        MapManager.MapData data = plugin.mm.getMapData(getCurrentMap(roomName));
+        MapManager.MapData data = plugin.getMapManager().getMapData(getCurrentMap(roomName));
         if (data.noDropOnBreak != null) {
             return data.noDropOnBreak.contains(item.getItemStack().getType());
         }
@@ -401,13 +408,13 @@ public final class RoomManager {
         room.worlds = new ArrayList<>();
         for (World map:room.maps) {
             String worldName = room.name + "_" + map.getName();
-            World world = plugin.wm.loadWorld(worldName);
+            World world = plugin.getWorldManager().loadWorld(worldName);
             if (world == null) {
-                world = plugin.wm.cloneWorld(map, worldName);
+                world = plugin.getWorldManager().cloneWorld(map, worldName);
             }
             removeWools(map.getName(), world);
             room.worlds.add(world);
-            plugin.wm.clearEntities(world);
+            plugin.getWorldManager().clearEntities(world);
         }
     }
 }
