@@ -29,21 +29,21 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.util.FileUtil;
 
-public final class WorldManager {
+public class WorldManager {
 
     private final CTW plugin;
-    private EmptyGenerator eg;
-    private YamlConfiguration worlds;
-    private File worldsConfigFile;
-    private List<Location> lobbySpawnLocations;
+    private final EmptyGenerator eg;
+    private final YamlConfiguration worlds;
+    private final File worldsConfigFile;
+    private final List<Location> lobbySpawnLocations;
     private int currentLobbySpawnPoint;
-    private TreeMap<String, CuboidSelection> restoreAreas;
-    private ReentrantLock _restoreAreas_mutex;
+    private final TreeMap<String, CuboidSelection> restoreAreas;
+    private final ReentrantLock _restoreAreas_mutex;
 
-    public class EmptyGenerator extends ChunkGenerator {
+    public static class EmptyGenerator extends ChunkGenerator {
 
-        private ArrayList<BlockPopulator> populator;
-        private byte[][] blocks;
+        private final ArrayList<BlockPopulator> populator;
+        private final byte[][] blocks;
 
         public EmptyGenerator() {
             super();
@@ -163,7 +163,7 @@ public final class WorldManager {
         }
     }
 
-    public boolean unloadWorld(World world) {
+    public void unloadWorld(World world) {
         for (Player player : world.getPlayers()) {
             player.teleport(getNextLobbySpawn());
             player.setPlayerListName(player.getName());
@@ -180,16 +180,9 @@ public final class WorldManager {
         for (Chunk chunk : world.getLoadedChunks()) {
             world.unloadChunk(chunk);
         }
-        boolean ret = Bukkit.unloadWorld(world, false);
-        return ret;
+        //boolean ret = Bukkit.unloadWorld(world, false);
     }
 
-    /**
-     *
-     * @param world the world to be copied.
-     * @param newWorld the new world name
-     * @return true if done, false on failure.
-     */
     public World cloneWorld(World world, String newWorld) {
         return cloneWorld(world, newWorld, true);
     }
@@ -216,6 +209,7 @@ public final class WorldManager {
         return ret;
     }
 
+    /*
     public boolean cloneRegions(World origin, String destination) {
         File regionDir = new File(destination, "region");
 
@@ -237,10 +231,16 @@ public final class WorldManager {
         return true;
     }
 
+     */
+
+    /*
     public boolean eraseWorld(String worldName) {
         return eraseWorld(worldName, true);
     }
 
+     */
+
+    /*
     public boolean eraseWorld(String worldName, boolean test) {
         if (test) {
             World world = plugin.getServer().getWorld(worldName);
@@ -260,6 +260,9 @@ public final class WorldManager {
         return false;
     }
 
+     */
+
+    /*
     private void delete(File f) throws IOException {
         if (f.isDirectory()) {
             for (File c : f.listFiles()) {
@@ -268,6 +271,8 @@ public final class WorldManager {
         }
         f.delete();
     }
+
+     */
 
     private static void copyFolder(File src, File dest) throws IOException {
         if (src.isDirectory()) {
@@ -362,6 +367,8 @@ public final class WorldManager {
         return getLobbyWorld().getName().equals(player.getWorld().getName());
     }
 
+
+    /*
     public void addModificationPoint(Location loc) {
         CuboidSelection cs = restoreAreas.get(loc.getWorld().getName());
         if (cs == null) {
@@ -397,6 +404,7 @@ public final class WorldManager {
             _restoreAreas_mutex.unlock();
         }
     }
+     */
 
     public void restoreMap(MapManager.MapData map, World roomMap) {
         Location min = map.restaurationArea.getMinimumPoint();
@@ -425,13 +433,12 @@ public final class WorldManager {
         Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                plugin.rm.removeWools(map.world.getName(), roomMap);
+                plugin.getRoomManager().removeWools(map.world.getName(), roomMap);
             }
         }, count);
 
     }
 
-    @SuppressWarnings("deprecation")
     private static void cloneRegion(CTW plugin, World source, World destination, Selection area) {
         Location min = area.getMinimumPoint();
         Location max = area.getMaximumPoint();
@@ -476,7 +483,6 @@ public final class WorldManager {
                 }
             }
         }
-        plugin.wm.clearEntities(destination);
+        plugin.getWorldManager().clearEntities(destination);
     }
-
 }
