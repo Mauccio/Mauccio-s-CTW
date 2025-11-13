@@ -12,24 +12,20 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+
+import org.bukkit.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scoreboard.Scoreboard;
 
 public class PlayerManager {
 
-    private class PlayerOptions {
+    public class PlayerOptions {
 
         boolean viewOthersSpectators;
         boolean viewOthersDeathMessages;
@@ -55,10 +51,10 @@ public class PlayerManager {
         lastDamager = new TreeMap<>();
         playerTeam = new TreeMap<>();
         this._playerTeam_mutex = new ReentrantLock(true);
-        this.helpBook = plugin.lm.getHelpBook();
+        this.helpBook = plugin.getLangManager().getHelpBook();
         ItemStack menuItem = new ItemStack(Material.PAPER);
         ItemMeta im = menuItem.getItemMeta();
-        im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
+        im.setDisplayName(plugin.getLangManager().getText("help-menu-item.title"));
         menuItem.setItemMeta(im);
         this.joinMenuItem = menuItem;
         falseSpectators = new TreeSet<>();
@@ -167,11 +163,37 @@ public class PlayerManager {
         return po == null || po.viewOthersDeathMessages;
     }
 
+    public void updateTablistFor(Player player) {
+        boolean globalTablist = plugin.getConfigManager().isGlobalTablistEnabled();
+
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            boolean sameWorld = player.getWorld().equals(other.getWorld());
+
+            if (getTeamId(other) == TeamManager.TeamId.SPECTATOR) {
+                player.hidePlayer(other);
+                continue;
+            }
+            if (getTeamId(player) == TeamManager.TeamId.SPECTATOR) {
+                other.hidePlayer(player);
+                continue;
+            }
+
+            if (globalTablist || sameWorld) {
+                player.showPlayer(other);
+                other.showPlayer(player);
+            } else {
+                player.hidePlayer(other);
+                other.hidePlayer(player);
+            }
+        }
+    }
+
+
     public ChatColor getChatColor(Player player) {
         ChatColor cc = ChatColor.WHITE;
         TeamManager.TeamId teamId = (TeamManager.TeamId)this.playerTeam.get(player.getName());
         if (teamId != null) {
-            cc = this.plugin.tm.getChatColor(teamId);
+            cc = this.plugin.getTeamManager().getChatColor(teamId);
         }
 
         return cc;
@@ -184,10 +206,10 @@ public class PlayerManager {
         try {
             TeamManager.TeamId previousTeam = (TeamManager.TeamId)this.playerTeam.put(player.getName(), teamId);
             if (previousTeam != null) {
-                this.plugin.tm.removeFromTeam(player, previousTeam);
+                this.plugin.getTeamManager().removeFromTeam(player, previousTeam);
             }
 
-            this.plugin.tm.addToTeam(player, teamId);
+            this.plugin.getTeamManager().addToTeam(player, teamId);
             this.clearInventory(player);
             if (teamId != TeamManager.TeamId.SPECTATOR) {
                 this.disguise(player, teamId);
@@ -196,7 +218,7 @@ public class PlayerManager {
             }
 
             this.updatePlayerList(player);
-            player.sendMessage(this.plugin.lm.getMessage("moved-to-" + teamId.name().toLowerCase()));
+            player.sendMessage(this.plugin.getLangManager().getMessage("moved-to-" + teamId.name().toLowerCase()));
         } finally {
             this._playerTeam_mutex.unlock();
         }
@@ -212,7 +234,7 @@ public class PlayerManager {
             this.clearInventory(player);
             this.dress(player);
             teamId = (TeamManager.TeamId)this.playerTeam.remove(player.getName());
-            this.plugin.tm.removeFromTeam(player, teamId);
+            this.plugin.getTeamManager().removeFromTeam(player, teamId);
         } finally {
             this._playerTeam_mutex.unlock();
         }
@@ -260,7 +282,6 @@ public class PlayerManager {
         player.setFoodLevel(20);
         player.setFireTicks(0);
         this.clearInventory(player);
-        player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
 
     public void updatePlayerList(Player player) {
@@ -272,7 +293,6 @@ public class PlayerManager {
         for (Player other : playersInGame) {
             boolean otherIsSpectator = isSpectator(other);
             boolean canSeeOthersSpectators = canSeeOthersSpectators(other);
-
             if (playerIsSpect) {
                 if (!otherIsSpectator) {
                     other.hidePlayer(player);
@@ -286,7 +306,6 @@ public class PlayerManager {
             } else {
                 other.showPlayer(player);
             }
-
             if (!otherIsSpectator) {
                 player.showPlayer(other);
             } else {
@@ -301,16 +320,14 @@ public class PlayerManager {
                 }
             }
         }
-
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void disguise(Player player, TeamManager.TeamId teamId) {
         List<String> armourBrand = new ArrayList<>();
-        armourBrand.add(this.plugin.tm.armourBrandName);
-        Color tshirtColor = this.plugin.tm.getTshirtColor(teamId);
-        ChatColor teamChatColor = this.plugin.tm.getChatColor(teamId);
-        String teamName = this.plugin.tm.getName(teamId);
+        armourBrand.add(this.plugin.getTeamManager().armourBrandName);
+        Color tshirtColor = this.plugin.getTeamManager().getTshirtColor(teamId);
+        ChatColor teamChatColor = this.plugin.getTeamManager().getChatColor(teamId);
+        String teamName = this.plugin.getTeamManager().getName(teamId);
 
         this.clearInventory(player);
 
@@ -402,16 +419,15 @@ public class PlayerManager {
 
         player.setGameMode(GameMode.SURVIVAL);
         player.setFireTicks(0);
-
-        plugin.nm.updateNametag(player, teamId);
-
+        Scoreboard sb = plugin.getGameManager().getBoardForWorld(player.getWorld());
+        plugin.getNametagManager().updateNametag(player, teamId, sb);
         this.updatePlayerList(player);
     }
 
     private void setSpectator(Player player) {
         player.setHealth(20.0);
         player.setFoodLevel(20);
-        this.plugin.pm.clearInventory(player);
+        this.plugin.getPlayerManager().clearInventory(player);
         player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlight(true);
         player.getInventory().addItem(new ItemStack[]{this.helpBook});
