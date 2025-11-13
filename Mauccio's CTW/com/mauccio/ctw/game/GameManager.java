@@ -792,86 +792,7 @@ public class GameManager {
         Game game = worldGame.get(world);
         return (game != null) ? game.board : null;
     }
-
-    /*private void updateScoreBoard(Game game) {
-        List<Target> redTarget = new ArrayList<>();
-        Scoreboard board = game.board;
-
-        Objective objOld = board.getObjective("wools");
-        if (objOld != null) {
-            objOld.unregister();
-        }
-
-        Objective obj = board.registerNewObjective("wools", "dummy");
-        int score = 5 + game.targets.size();
-        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-        obj.setDisplayName(this.plugin.getLangManager().getText("scoreboard.title"));
-
-        Score s0 = obj.getScore(ChatColor.ITALIC + "  ");
-        s0.setScore(score--);
-        Score s1 = obj.getScore(plugin.getLangManager().getText("scoreboard.blue-team-name"));
-        s1.setScore(score--);
-
-        for(Target target : game.targets.values()) {
-            if (target.team == TeamManager.TeamId.RED) {
-                redTarget.add(target);
-                continue;
-            }
-
-            String state;
-            if (target.completed) {
-                state = Utils.toChatColor(target.color) + plugin.getConfig().getString("chars.wool.placed");
-            } else {
-                state = Utils.toChatColor(target.color) + plugin.getConfig().getString("chars.wool.not-placed");
-            }
-
-            String woolName = plugin.getLangManager().getWoolName(target.color);
-            String lineName = state + " " + ChatColor.WHITE + woolName;
-
-            if (lineName.length() > 16) {
-                lineName = lineName.substring(0, 15);
-            }
-
-            Score s2 = obj.getScore(lineName);
-            s2.setScore(score--);
-        }
-
-        Score s4 = obj.getScore(ChatColor.ITALIC + "   ");
-        s4.setScore(score--);
-        Score s5 = obj.getScore(plugin.getLangManager().getText("scoreboard.red-team-name"));
-        s5.setScore(score--);
-
-        for (Target target : redTarget) {
-            String state;
-            if (target.completed) {
-                state = Utils.toChatColor(target.color) + plugin.getConfig().getString("chars.wool.placed");
-            } else {
-                state = Utils.toChatColor(target.color) + plugin.getConfig().getString("chars.wool.not-placed");
-            }
-
-            String woolName = plugin.getLangManager().getWoolName(target.color);
-            String lineName = state + " " + ChatColor.WHITE + woolName;
-
-            if (lineName.length() > 16) {
-                lineName = lineName.substring(0, 15);
-            }
-
-            Score s61 = obj.getScore(lineName);
-            s61.setScore(score--);
-        }
-
-        Score s7 = obj.getScore(ChatColor.ITALIC + "     ");
-        s7.setScore(score--);
-        Score s8 = obj.getScore(plugin.getLangManager().getText("scoreboard.server-ip"));
-        s8.setScore(score--);
-
-        for (Player player : game.world.getPlayers()) {
-            if (!player.getScoreboard().equals(board)) {
-                player.setScoreboard(board);
-            }
-        }
-    }*/
-
+    
     private void updateScoreBoard(Game game) {
         Scoreboard board = game.board;
 
@@ -1168,3 +1089,4 @@ public class GameManager {
         }
     }
 }
+
