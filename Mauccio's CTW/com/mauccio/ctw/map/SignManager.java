@@ -18,7 +18,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public final class SignManager {
+public class SignManager {
 
     private final CTW plugin;
     private final YamlConfiguration signConfig;
@@ -49,7 +49,7 @@ public final class SignManager {
             if (worldName == null) {
                 continue;
             }
-            World world = plugin.wm.loadWorld(worldName);
+            World world = plugin.getWorldManager().loadWorld(worldName);
             if (world == null) {
                 continue;
             }
@@ -67,7 +67,7 @@ public final class SignManager {
                 updateSign(loc);
             }
         }
-        joinSignText = ChatColor.translateAlternateColorCodes('&', plugin.cf.getSignFirstLineReplacement());
+        joinSignText = plugin.getLangManager().getText("sign-format.1");
     }
 
     public void persists() {
@@ -106,22 +106,15 @@ public final class SignManager {
 
     private void updateSign(Sign sign) {
         String roomName = sign.getLine(1);
-        if (plugin.rm.exists(roomName)) {
-            if (plugin.rm.isEnabled(roomName)) {
-                String mapName = plugin.rm.getCurrentMap(roomName);
-                if (mapName != null && plugin.mm.exists(mapName)) {
-                    sign.setLine(2, mapName);
-                    int maxPlayers = plugin.mm.getMaxPlayers(mapName);
-                    int currentPlayers = plugin.gm.getPlayersIn(roomName);
-                    String nowPlaying;
-                    if (currentPlayers < maxPlayers) {
-                        nowPlaying = ChatColor.GREEN + "" + currentPlayers;
-                    } else {
-                        nowPlaying = ChatColor.RED + "" + currentPlayers;
-                    }
-                    nowPlaying = nowPlaying + ChatColor.BLACK + " / "
-                            + ChatColor.AQUA + maxPlayers;
-                    sign.setLine(3, nowPlaying);
+        if (plugin.getRoomManager().exists(roomName)) {
+            if (plugin.getRoomManager().isEnabled(roomName)) {
+                String mapName = plugin.getRoomManager().getCurrentMap(roomName);
+                if (mapName != null && plugin.getMapManager().exists(mapName)) {
+                    int maxPlayers = plugin.getMapManager().getMaxPlayers(mapName);
+                    int currentPlayers = plugin.getGameManager().getPlayersIn(roomName);
+
+                    applyFormat(sign, roomName, mapName, currentPlayers, maxPlayers, true);
+
                     _signs_mutex.lock();
                     try {
                         signs.put(roomName, sign.getLocation());
@@ -129,10 +122,11 @@ public final class SignManager {
                         _signs_mutex.unlock();
                     }
                 } else {
-                    sign.setLine(0, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForInvalidMaps()));
+                    sign.setLine(0, plugin.getLangManager().getText("sign-format.invalid-map"));
                 }
             } else {
-                sign.setLine(2, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForDisabledMaps()));
+                applyFormat(sign, roomName, null, 0, 0, false);
+
                 _signs_mutex.lock();
                 try {
                     signs.put(roomName, sign.getLocation());
@@ -141,27 +135,46 @@ public final class SignManager {
                 }
             }
         } else {
-            sign.setLine(0, ChatColor.translateAlternateColorCodes('&', plugin.cf.getTextForInvalidRooms()));
+            sign.setLine(0, plugin.getLangManager().getText("sign-format.invalid-room"));
         }
         sign.update();
+    }
+
+
+    private void applyFormat(Sign sign, String roomName, String mapName, int currentPlayers, int maxPlayers, boolean enabled) {
+        for (int i = 1; i <= 4; i++) {
+            String raw = plugin.getLangManager().getText("sign-format." + i);
+            if (raw == null) raw = "";
+            String spaceFormat = mapName != null ? mapName.replace("_", " ") : "";
+
+            String formatted = raw
+                    .replace("%ROOM%", roomName != null ? roomName : "")
+                    .replace("%CURRENT_MAP%", enabled
+                            ? (!spaceFormat.isEmpty() ? spaceFormat : plugin.getLangManager().getText("sign-format.invalid-map"))
+                            : plugin.getLangManager().getText("sign-format.disabled"))
+                    .replace("%CURRENT_PLAYERS%", String.valueOf(currentPlayers))
+                    .replace("%MAX_PLAYERS%", String.valueOf(maxPlayers));
+
+            sign.setLine(i - 1, ChatColor.translateAlternateColorCodes('&', formatted));
+        }
     }
 
     public void checkForPlayerJoin(PlayerInteractEvent e) {
         Sign sign = (Sign) e.getClickedBlock().getState();
         if (sign.getLine(0).equals(joinSignText)) {
             e.setCancelled(true);
-            if (plugin.rm.isEnabled(sign.getLine(1))) {
-                plugin.gm.movePlayerToRoom(e.getPlayer(), sign.getLine(1));
+            if (plugin.getRoomManager().isEnabled(sign.getLine(1))) {
+                plugin.getGameManager().movePlayerToRoom(e.getPlayer(), sign.getLine(1));
             } else {
-                plugin.lm.sendMessage("room-is-disabled", e.getPlayer());
+                plugin.getLangManager().sendMessage("room-is-disabled", e.getPlayer());
             }
         }
     }
 
     public void checkForGameInPost(SignChangeEvent e) {
-        if (e.getLine(0).toLowerCase().equalsIgnoreCase(plugin.cf.getSignFirstLine())) {
+        if (e.getLine(0).toLowerCase().equalsIgnoreCase(plugin.getConfigManager().getSignFirstLine())) {
             e.setLine(0, joinSignText);
-            final Location loc = e.getBlock().getLocation();
+            Location loc = e.getBlock().getLocation();
             Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                 @Override
                 public void run() {
