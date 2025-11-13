@@ -1,0 +1,17 @@
+# Mauccio's CTW Kits Configuration
+# This is for /kit command!
+# You must use 1.8 items name!
+
+example:
+  icon: WOOD
+  name: '&6Planks'
+  lore:
+  - '&fYou will receive:'
+  - '&7Price: %PRICE%'
+  price: 10
+  cooldown: 0
+  permission: false
+  receive:
+    WOOD_0:
+      amount: 64
+      enchanted: false
