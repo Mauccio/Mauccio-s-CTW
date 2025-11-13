@@ -2,26 +2,18 @@ package com.mauccio.ctw.libs.titleapi;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 
 public class TitleAPI implements Listener {
 
-    @Deprecated
     public static void sendSubtitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String message) {
         sendTitle(player, fadeIn, stay, fadeOut, null, message);
     }
 
-    @Deprecated
     public static void sendFullTitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String title, String subtitle) {
         sendTitle(player, fadeIn, stay, fadeOut, title, subtitle);
     }
@@ -32,7 +24,7 @@ public class TitleAPI implements Listener {
             Object playerConnection = handle.getClass().getField("playerConnection").get(handle);
             playerConnection.getClass().getMethod("sendPacket", getNMSClass("Packet")).invoke(playerConnection, packet);
         } catch (Exception e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning(e.getCause().toString());
         }
     }
 
@@ -41,7 +33,7 @@ public class TitleAPI implements Listener {
         try {
             return Class.forName("net.minecraft.server." + version + "." + name);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().warning(e.getCause().toString());
             return null;
         }
     }
@@ -70,14 +62,14 @@ public class TitleAPI implements Listener {
             Object e;
             Object chatTitle;
             Object chatSubtitle;
-            Constructor subtitleConstructor;
+            Constructor<?> subtitleConstructor;
             Object titlePacket;
             Object subtitlePacket;
 
             if (title != null) {
                 title = ChatColor.translateAlternateColorCodes('&', title);
                 title = title.replaceAll("%player%", player.getDisplayName());
-                // Times packets
+
                 e = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField("TIMES").get((Object) null);
                 chatTitle = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", new Class[]{String.class}).invoke((Object) null, new Object[]{"{\"text\":\"" + title + "\"}"});
                 subtitleConstructor = getNMSClass("PacketPlayOutTitle").getConstructor(new Class[]{getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent"), Integer.TYPE, Integer.TYPE, Integer.TYPE});
@@ -94,7 +86,7 @@ public class TitleAPI implements Listener {
             if (subtitle != null) {
                 subtitle = ChatColor.translateAlternateColorCodes('&', subtitle);
                 subtitle = subtitle.replaceAll("%player%", player.getDisplayName());
-                // Times packets
+
                 e = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField("TIMES").get((Object) null);
                 chatSubtitle = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", new Class[]{String.class}).invoke((Object) null, new Object[]{"{\"text\":\"" + title + "\"}"});
                 subtitleConstructor = getNMSClass("PacketPlayOutTitle").getConstructor(new Class[]{getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent"), Integer.TYPE, Integer.TYPE, Integer.TYPE});
@@ -108,7 +100,7 @@ public class TitleAPI implements Listener {
                 sendPacket(player, subtitlePacket);
             }
         } catch (Exception var11) {
-            var11.printStackTrace();
+            Bukkit.getLogger().warning(var11.getCause().toString());
         }
     }
 
@@ -153,7 +145,7 @@ public class TitleAPI implements Listener {
             }
             sendPacket(player, packet);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Bukkit.getLogger().warning(ex.getCause().toString());
         }
     }
 }
