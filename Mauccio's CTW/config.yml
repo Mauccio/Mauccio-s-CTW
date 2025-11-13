@@ -1,11 +1,5 @@
-lang-file: english.yml
 signs:
-  first-line-text: "ctw"
-  first-line-text-replacement: "&4CaptureTheWool"
-  on-invalid-room-replacement: "&4Invalid Room"
-  on-invalid-map-replacement: "&4Invalid Map"
-  on-disabled-map: "&4Disabled"
-implement-spawn-cmd: true
+  first-line-text: "ctw" # Text to type into sign to create a CTW sign
 ingame:
   allowed-commands:
     - spawn
@@ -17,11 +11,6 @@ ingame:
     - w
     - helpop
     - report
-    - salir
-    - leave
-    - jugar
-    - entrar
-
 
 #######################################
 #                                     #
@@ -29,39 +18,50 @@ ingame:
 #                                     #
 #######################################
 
-message-decorator: ""
+message-decorator: "" # Used in /stats
+implement-spawn-cmd: true
 user-fireworks-on-win: true
 keep-teams-on-win: true
 instakill-on-void: false
-fall-damage: true
+disable-fall-damage: true
+global-tablist: false # Enable to have a global tablist instead of independent.
+use-sql-for-kits: false # Only for Personal Kits, Global Kit always use YAML.
+lobby-guard: false
+kit-menu: false
 
 vip-armors:
   blue:
-    R: 155
-    G: 155
-    B: 155
+    R: 181
+    G: 85
+    B: 255
   red:
-    R: 0
-    G: 0
-    B: 0
+    R: 255
+    G: 169
+    B: 85
 
 sounds:
+  enabled: true
+  alert: NOTE_PLING
   win-wool-sound: VILLAGER_YES
   wool-pickup-sound: FIREWORK_LAUNCH
   reversing-sound: ORB_PICKUP
   team-join-sound: LEVEL_UP
   join-command: CHEST_OPEN
   map-change: LEVEL_UP
+  gui: CHEST_OPEN
   team-win-sound: WITHER_DEATH
   your-stats: ORB_PICKUP
   error: ENDERDRAGON_HIT
+  tip: ITEM_PICKUP
+  headshot: BLAZE_DEATH
 
-no-crafteable-items: "none" # "none", if you wan't desactivate this option, if you want add items, delete "none".
-  #    - WOOL
-  #    - ANVIL
+no-crafteable-items:
+#  - WOOL
+#  - ANVIl
 
-no-protected-blocks: "none" # "none", if you wan't desactivate this option, if you want add items, delete "none".
-#    - WEB
+no-protected-blocks:
+#  - WEB
+
 coins:
   kill: 5
   capture: 10
