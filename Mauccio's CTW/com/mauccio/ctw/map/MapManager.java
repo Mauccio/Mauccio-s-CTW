@@ -16,12 +16,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
@@ -37,14 +33,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 
-public final class MapManager {
+public class MapManager {
     private final CTW plugin;
 
-    private YamlConfiguration mapsConfig;
+    private final YamlConfiguration mapsConfig;
 
-    private File mapsConfigFile;
+    private final File mapsConfigFile;
 
-    private TreeMap<String, MapData> maps;
+    private final TreeMap<String, MapData> maps;
 
     private boolean showRoomTip;
 
@@ -56,13 +52,13 @@ public final class MapManager {
 
     private static boolean WEATHER_STORM = false;
 
-    public class Weather {
+    public static class Weather {
         public boolean fixed;
 
         public boolean storm;
     }
 
-    public class Texts {
+    public static class Texts {
         List<String> atBeginingAnnounce;
 
         List<String> atStartAnnounce;
@@ -76,39 +72,22 @@ public final class MapManager {
 
     public static class MapData {
         public int maxPlayers;
-
         public MapManager.Weather weather;
-
         public World world;
-
         public TreeMap<String, Location> woolSpawners;
-
         public Location redSpawn;
-
         public Location blueSpawn;
-
         public Location mapSpawn;
-
         public TreeSet<Selection> redInaccessibleAreas;
-
         public TreeSet<Selection> blueInaccessibleAreas;
-
         public TreeSet<Selection> protectedAreas;
-
         public TreeMap<String, Location> redWoolWinPoints;
-
         public TreeMap<String, Location> blueWoolWinPoints;
-
         public Selection restaurationArea;
-
         int gracePeriodSeconds;
-
         public TreeSet<Material> noDropOnBreak;
-
         public MapManager.Texts texts;
-
         public Inventory kitInv;
-
         public boolean kitArmour;
     }
 
@@ -121,13 +100,14 @@ public final class MapManager {
         showRoomTip = maps.isEmpty();
     }
 
+
     private MapData loadMapData(String mapName)
             throws IOException, InvalidConfigurationException {
         MapData mapData = maps.get(mapName);
         if (mapData == null) {
             mapData = new MapData();
         }
-        World world = plugin.wm.loadWorld(mapName);
+        World world = plugin.getWorldManager().loadWorld(mapName);
         if (world == null) {
             plugin.getLogger().log(Level.SEVERE, "Unable to load map {0}. It world cannot be loaded.", mapName);
             return null;
@@ -157,7 +137,7 @@ public final class MapManager {
                 double pitch = mapsConfig.getDouble(mapName + ".map-spawn.pitch");
                 mapData.mapSpawn = new Location(world, x, y, z, (float) yaw, (float) pitch);
             } else {
-                mapData.mapSpawn = world.getSpawnLocation(); // Default Value
+                mapData.mapSpawn = world.getSpawnLocation();
             }
         } else {
             double x = localConfig.getDouble("map-spawn.x");
@@ -327,29 +307,7 @@ public final class MapManager {
         }
 
         if (mapData.noDropOnBreak == null) {
-            mapData.noDropOnBreak = new TreeSet<>(); // prevents null pointer exception
-        }
-
-        if (localConfig.isSet("kit")) {
-            ConfigurationSection itemsSection = localConfig.getConfigurationSection("kit");
-            if (itemsSection != null) {
-
-                mapData.kitInv = Bukkit.createInventory(null, InventoryType.PLAYER);
-                for (String position : itemsSection.getKeys(false)) {
-                    Material mat = Material.getMaterial(itemsSection.getString(position + ".material"));
-                    int amount = itemsSection.getInt(position + ".amount");
-                    short durability = (short) itemsSection.getInt(position + ".durability");
-                    ItemStack is = new ItemStack(mat, amount, durability);
-                    ConfigurationSection enchSect = itemsSection.getConfigurationSection(position + ".enchantment");
-                    if (enchSect != null) {
-                        for (String enchantName : enchSect.getKeys(false)) {
-                            Enchantment e = Enchantment.getByName(enchantName);
-                            is.addUnsafeEnchantment(e, enchSect.getInt(enchantName + ".level"));
-                        }
-                    }
-                    mapData.kitInv.setItem(Integer.parseInt(position), is);
-                }
-            }
+            mapData.noDropOnBreak = new TreeSet<>();
         }
 
         mapData.kitArmour = localConfig.getBoolean("kit-armour",
@@ -440,8 +398,7 @@ public final class MapManager {
     public void persist() {
         for (String mapName : maps.keySet()) {
             MapData data = maps.get(mapName);
-
-            if (data.kitInv != null) {
+            /*if (data.kitInv != null) {
                 ItemStack[] content = data.kitInv.getContents();
                 for (int i = 0; i < content.length; i++) {
                     ItemStack is = content[i];
@@ -454,7 +411,7 @@ public final class MapManager {
                         }
                     }
                 }
-            }
+            }*/
 
             if (data.maxPlayers > 0) {
                 mapsConfig.set(mapName + ".max-players", data.maxPlayers);
@@ -603,11 +560,6 @@ public final class MapManager {
         }
     }
 
-    /**
-     *
-     * @param world
-     * @return true if added, false if already exists.
-     */
     public boolean add(World world) {
         if (maps.containsKey(world.getName())) {
             return false;
@@ -619,11 +571,6 @@ public final class MapManager {
         return true;
     }
 
-    /**
-     *
-     * @param world
-     * @return true if given world is a map, false if not.
-     */
     public boolean isMap(World world) {
         return maps.containsKey(world.getName());
     }
@@ -632,124 +579,121 @@ public final class MapManager {
         MapData mapData = maps.get(player.getWorld().getName());
         if (mapData != null) {
             if (mapData.redSpawn == null) {
-                plugin.lm.sendMessage("map-tip-redspawn", player);
+                plugin.getLangManager().sendMessage("map-tip-redspawn", player);
                 return;
             }
             if (mapData.blueSpawn == null) {
-                plugin.lm.sendMessage("map-tip-bluespawn", player);
+                plugin.getLangManager().sendMessage("map-tip-bluespawn", player);
                 return;
             }
             if (mapData.maxPlayers == 0) {
-                plugin.lm.sendMessage("map-tip-maxplayers", player);
+                plugin.getLangManager().sendMessage("map-tip-maxplayers", player);
                 return;
             }
             if (mapData.redWoolWinPoints == null) {
-                plugin.lm.sendText("map-tip-redwoolwin", player);
+                plugin.getLangManager().sendText("map-tip-redwoolwin", player);
                 return;
             }
             if (mapData.blueWoolWinPoints == null) {
-                plugin.lm.sendText("map-tip-bluewoolwin", player);
+                plugin.getLangManager().sendText("map-tip-bluewoolwin", player);
                 return;
             }
             if (mapData.redInaccessibleAreas == null) {
-                plugin.lm.sendText("map-tip-rednoaccess", player);
+                plugin.getLangManager().sendText("map-tip-rednoaccess", player);
                 return;
             }
             if (mapData.blueInaccessibleAreas == null) {
-                plugin.lm.sendText("map-tip-bluenoaccess", player);
+                plugin.getLangManager().sendText("map-tip-bluenoaccess", player);
                 return;
             }
             if (mapData.protectedAreas == null) {
-                plugin.lm.sendText("map-tip-protected", player);
+                plugin.getLangManager().sendText("map-tip-protected", player);
                 return;
             }
             if (mapData.weather == null) {
-                plugin.lm.sendText("map-tip-weather", player);
+                plugin.getLangManager().sendText("map-tip-weather", player);
                 return;
             }
             if (mapData.woolSpawners == null) {
-                plugin.lm.sendText("map-tip-woolspawner", player);
+                plugin.getLangManager().sendText("map-tip-woolspawner", player);
                 return;
             }
             if (mapData.restaurationArea == null) {
-                plugin.lm.sendMessage("map-tip-restauration", player);
+                plugin.getLangManager().sendMessage("map-tip-restauration", player);
                 return;
             }
             if (showRoomTip) {
-                plugin.lm.sendMessage("map-seems-done", player);
-                plugin.lm.sendMessage("room-tip", player);
+                plugin.getLangManager().sendMessage("map-seems-done", player);
+                plugin.getLangManager().sendMessage("room-tip", player);
                 showRoomTip = false;
             }
         }
     }
 
     /**
-     *
      * @param location of the red spawn
-     * @return true if done, false if location does not match with a map.
      */
-    public boolean setRedSpawn(Location location) {
+
+    public void setRedSpawn(Location location) {
         MapData mapData = maps.get(location.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         mapData.redSpawn = location;
-        return true;
     }
 
     /**
-     *
      * @param location of the blue spawn
-     * @return true if done, false if location does not match with a map.
      */
-    public boolean setBlueSpawn(Location location) {
+    public void setBlueSpawn(Location location) {
         MapData mapData = maps.get(location.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         mapData.blueSpawn = location;
-        return true;
     }
 
     /**
-     *
      * @param location of the map spawn
-     * @return true if done, false if location does not match with a map.
      */
-    public boolean setSpawn(Location location) {
+    public void setSpawn(Location location) {
         MapData mapData = maps.get(location.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         mapData.mapSpawn = location;
         location.getWorld().setSpawnLocation(location.getBlockX(),
                 location.getBlockY(), location.getBlockZ());
-        return true;
     }
 
-    public boolean setMaxPlayers(World world, int maxPlayers) {
+    public Location getSpawn(World world) {
+        MapData mapData = maps.get(world.getName());
+        if (mapData == null || mapData.mapSpawn == null) {
+            return world.getSpawnLocation();
+        }
+        Location loc = mapData.mapSpawn.clone();
+        if (loc.getWorld() == null) {
+            loc.setWorld(world);
+        }
+        return loc;
+    }
+
+    public void setMaxPlayers(World world, int maxPlayers) {
         MapData mapData = maps.get(world.getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         mapData.maxPlayers = maxPlayers;
-        return true;
     }
 
     /**
-     *
      * @param world of the map
-     * @return true if done, false if world does not match with a map.
      */
     public boolean deleteMap(World world) {
         MapData mapData = maps.remove(world.getName());
         return mapData != null;
     }
 
-    /**
-     *
-     * @return a list of the names of configured maps.
-     */
     public Set<String> getMaps() {
         return maps.keySet();
     }
@@ -757,20 +701,19 @@ public final class MapManager {
     /**
      * Clones a map into another one.
      *
-     * @param source the world of the source map.
+     * @param source      the world of the source map.
      * @param destination the world of the destination map.
-     * @return true if success, false if destination exists of source does not.
      */
-    public boolean cloneMap(World source, World destination) {
+    public void cloneMap(World source, World destination) {
         if (source == null || destination == null) {
-            return false;
+            return;
         }
         MapData mapData = maps.get(source.getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (maps.containsKey(destination.getName())) {
-            return false;
+            return;
         }
 
         persist();
@@ -780,19 +723,17 @@ public final class MapManager {
         persist();
         load();
 
-        return true;
     }
 
-    public boolean addRedNoAccessArea(World world, Selection area) {
+    public void addRedNoAccessArea(World world, Selection area) {
         MapData mapData = maps.get(world.getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (mapData.redInaccessibleAreas == null) {
             mapData.redInaccessibleAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
         mapData.redInaccessibleAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
-        return true;
     }
 
     public boolean isRedNoAccessArea(World world, Selection area) {
@@ -806,16 +747,15 @@ public final class MapManager {
         return mapData.redInaccessibleAreas.contains(area);
     }
 
-    public boolean addBlueNoAccessArea(World world, Selection area) {
+    public void addBlueNoAccessArea(World world, Selection area) {
         MapData mapData = maps.get(world.getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (mapData.blueInaccessibleAreas == null) {
             mapData.blueInaccessibleAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
         mapData.blueInaccessibleAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
-        return true;
     }
 
     public boolean isBlueNoAccessArea(World world, Selection area) {
@@ -829,16 +769,15 @@ public final class MapManager {
         return mapData.blueInaccessibleAreas.contains(area);
     }
 
-    public boolean addProtectedArea(World world, Selection area) {
+    public void addProtectedArea(World world, Selection area) {
         MapData mapData = maps.get(world.getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (mapData.protectedAreas == null) {
             mapData.protectedAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
         mapData.protectedAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
-        return true;
     }
 
     public boolean isProtectedArea(World world, Selection area) {
@@ -932,43 +871,38 @@ public final class MapManager {
 
     }
 
-    public boolean delRedWoolWinPoint(Block block) {
+    public void delRedWoolWinPoint(Block block) {
         MapData mapData = maps.get(block.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (block.getType() != Material.WOOL) {
-            return false;
+            return;
         }
         Map.Entry<String, Location> wlEntry = getWoolPointFrom(block);
-        return mapData.redWoolWinPoints.remove(wlEntry.getKey()) != null;
+        mapData.redWoolWinPoints.remove(wlEntry.getKey());
     }
 
-    public boolean delBlueWoolWinPoint(Block block) {
+    public void delBlueWoolWinPoint(Block block) {
         MapData mapData = maps.get(block.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         if (block.getType() != Material.WOOL) {
-            return false;
+            return;
         }
         Map.Entry<String, Location> wlEntry = getWoolPointFrom(block);
-        return mapData.blueWoolWinPoints.remove(wlEntry.getKey()) != null;
+        mapData.blueWoolWinPoints.remove(wlEntry.getKey());
     }
 
-    public boolean delWoolSpawner(Block block) {
+    public void delWoolSpawner(Block block) {
         MapData mapData = maps.get(block.getWorld().getName());
         if (mapData == null) {
-            return false;
+            return;
         }
         Map.Entry<String, Location> wlEntry = getWoolPointFrom(block);
         boolean ret;
-        if (wlEntry != null) {
-            ret = mapData.woolSpawners.remove(wlEntry.getKey()) != null;
-        } else {
-            ret = false;
-        }
-        return ret;
+        ret = mapData.woolSpawners.remove(wlEntry.getKey()) != null;
     }
 
     public Location getRedWoolWinLocation(World world, DyeColor woolColor) {
@@ -1075,20 +1009,20 @@ public final class MapManager {
                 }
                 if (!warn && noDrop.contains(is.getType())) {
                     warn=true;
-                    plugin.lm.sendMessage("repeated-material-warn", player);
-                    plugin.lm.sendMessage("repeated-material-info", player);
-                    plugin.lm.sendMessage("repeated-material-example", player);
+                    plugin.getLangManager().sendMessage("repeated-material-warn", player);
+                    plugin.getLangManager().sendMessage("repeated-material-info", player);
+                    plugin.getLangManager().sendMessage("repeated-material-example", player);
                 } else {
                     noDrop.add(is.getType());
                 }
             }
             if (noDrop.isEmpty()) {
-                plugin.lm.sendMessage("no-drop-is-empty", player);
+                plugin.getLangManager().sendMessage("no-drop-is-empty", player);
             }
             mapData.noDropOnBreak = noDrop;
             ret = true;
         } else {
-            plugin.lm.sendMessage("cmd-in-a-not-ctw-map", player);
+            plugin.getLangManager().sendMessage("cmd-in-a-not-ctw-map", player);
         }
         return ret;
     }
@@ -1108,12 +1042,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
+                    plugin.getLangManager().sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
+                    plugin.getLangManager().sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 }
@@ -1127,12 +1061,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
+                    plugin.getLangManager().sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
+                    plugin.getLangManager().sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 }
@@ -1145,12 +1079,12 @@ public final class MapManager {
 
                 if (!selContainsFrom && selContainsTo) {
                     direction = ChatColor.GREEN + "Entrando ";
-                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
+                    plugin.getLangManager().sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 } else if (selContainsFrom && !selContainsTo) {
                     direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.lm.sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
+                    plugin.getLangManager().sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                 }
@@ -1168,7 +1102,7 @@ public final class MapManager {
             for (Selection sel : mapData.blueInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.blueInaccessibleAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.BLUE + "zona inaccesible para Azules "
+                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.BLUE + "zona inaccesible para Azules "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                     break;
@@ -1180,7 +1114,7 @@ public final class MapManager {
             for (Selection sel : mapData.redInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.redInaccessibleAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.RED + "zona inaccesible para Rojos "
+                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.RED + "zona inaccesible para Rojos "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                     break;
@@ -1192,7 +1126,7 @@ public final class MapManager {
             for (Selection sel : mapData.protectedAreas) {
                 if (sel.contains(loc)) {
                     mapData.protectedAreas.remove(sel);
-                    plugin.lm.sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.YELLOW + "zona Protegida "
+                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.YELLOW + "zona Protegida "
                             + ChatColor.GREEN + "("
                             + Utils.toString(sel) + ")", player);
                     break;
@@ -1201,13 +1135,14 @@ public final class MapManager {
         }
     }
 
+    /*
     public void setDefaultKit(Player player) {
         MapData mapData = this.maps.get(player.getWorld().getName());
         if (mapData == null)
             return;
         mapData = (MapData)Bukkit.createInventory(null, InventoryType.PLAYER);
         mapData.kitInv.setContents(player.getInventory().getContents());
-    }
+    }*/
 
     public void setKitarmour(World world, boolean active) {
         MapData mapData = this.maps.get(world.getName());
@@ -1230,57 +1165,11 @@ public final class MapManager {
         return mapData.kitArmour;
     }
 
+    /*
     public Inventory getDefaultKit(String mapName) {
         MapData mapData = this.maps.get(mapName);
         if (mapData == null)
             return null;
         return mapData.kitInv;
-    }
-
-    public void saveKit(Player player) throws IOException {
-        YamlConfiguration c = new YamlConfiguration();
-        c.set("custom-generalkit", player.getInventory().getContents());
-        c.save(new File(plugin.getDataFolder() + File.separator + "Kits", player.getUniqueId() + ".yml"));
-    }
-
-    public void saveGlobalKit(Player player) throws IOException {
-        YamlConfiguration c = new YamlConfiguration();
-        c.set("global-kit", player.getInventory().getContents());
-        c.save(new File(plugin.getDataFolder() + File.separator + "globalkit.yml"));
-    }
-
-    public void setGlobalKit(Player player) {
-        ItemStack[] contentido = this.plugin.mm.getGlobalKit();
-        player.getInventory().setContents(contentido);
-    }
-
-    public void setPlayerKit(Player player) {
-        try {
-            ItemStack[] content = this.plugin.mm.getPlayerKit(player);
-            player.getInventory().setContents(content);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ItemStack[] getPlayerKit(Player player) throws NullPointerException {
-        YamlConfiguration c = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder() + File.separator + "Kits", player.getUniqueId() + ".yml"));
-        ItemStack[] content = (ItemStack[])((List)c.get("custom-generalkit")).toArray((Object[])new ItemStack[0]);
-        return content;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ItemStack[] getGlobalKit() {
-        YamlConfiguration c = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder() + File.separator + "globalkit.yml"));
-        ItemStack[] contenido = (ItemStack[])((List)c.get("global-kit")).toArray((Object[])new ItemStack[0]);
-        return contenido;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ItemStack[] getKitInvItem() {
-        YamlConfiguration c = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder() + File.separator + "kitinv.yml"));
-        ItemStack[] kitCont = (ItemStack[])((List)c.get("global-kit")).toArray((Object[])new ItemStack[0]);
-        return kitCont;
-    }
+    }*/
 }
