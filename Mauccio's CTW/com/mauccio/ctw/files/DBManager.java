@@ -295,8 +295,8 @@ public class DBManager {
                     PlayerStats stats = new PlayerStats(
                             rs.getInt("score"),
                             rs.getInt("kills"),
-                            rs.getInt("wools"),
-                            rs.getInt("deaths")
+                            rs.getInt("deaths"),
+                            rs.getInt("wools")
                     );
                     statsCache.put(playerName, stats);
                     return stats;
@@ -315,8 +315,8 @@ public class DBManager {
         PlayerStats current = statsCache.getOrDefault(playerName, new PlayerStats(0, 0, 0, 0));
         int newScore = (score != null ? score : current.score);
         int newKills = (kills != null ? kills : current.kills);
-        int newWools = (wools != null ? wools : current.wools);
         int newDeaths = (deaths != null ? deaths : current.deaths);
+        int newWools = (wools != null ? wools : current.wools);
         statsCache.put(playerName, new PlayerStats(newScore, newKills, newDeaths, newWools));
     }
 
