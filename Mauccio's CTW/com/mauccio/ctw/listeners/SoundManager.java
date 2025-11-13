@@ -28,7 +28,7 @@ public class SoundManager {
     private Sound errorSound;
     private Sound alertSound;
     private Sound tipSound;
-    private Sound roomGuiSound;
+    private Sound guiSound;
     private Sound joinCommandSound;
     private Sound teamJoinSound;
     private Sound mapChangeSound;
@@ -47,7 +47,7 @@ public class SoundManager {
         errorSound = Sound.valueOf(plugin.getConfig().getString("sounds.error", "ENDERDRAGON_HIT"));
         alertSound = Sound.valueOf(plugin.getConfig().getString("sounds.alert", "NOTE_PLING"));
         tipSound = Sound.valueOf(plugin.getConfig().getString("sounds.tip", "ITEM_PICKUP"));
-        roomGuiSound = Sound.valueOf(plugin.getConfig().getString("sounds.room-gui", "CHEST_OPEN"));
+        guiSound = Sound.valueOf(plugin.getConfig().getString("sounds.gui", "CHEST_OPEN"));
         joinCommandSound = Sound.valueOf(plugin.getConfig().getString("sounds.join-command", "CHEST_OPEN"));
         teamJoinSound = Sound.valueOf(plugin.getConfig().getString("sounds.team-join-sound", "LEVEL_UP"));
         mapChangeSound = Sound.valueOf(plugin.getConfig().getString("sounds.map-change", "LEVEL_UP"));
@@ -71,8 +71,8 @@ public class SoundManager {
         return tipSound;
     }
 
-    public Sound getRoomGuiSound() {
-        return roomGuiSound;
+    public Sound getGuiSound() {
+        return guiSound;
     }
 
     public Sound getJoinCommandSound() {
@@ -231,10 +231,10 @@ public class SoundManager {
         }
     }
 
-    public void playRoomGuiSound(org.bukkit.entity.Player player) {
+    public void playGuiSound(org.bukkit.entity.Player player) {
         if (plugin.getConfig().getBoolean("sounds.enabled", true)) {
             try {
-                player.playSound(player.getLocation(), getRoomGuiSound(), 1.0f, 1.0f);
+                player.playSound(player.getLocation(), getGuiSound(), 1.0f, 1.0f);
             } catch (NullPointerException e) {
                 plugin.getLogger().warning("Room GUI sound is not configured properly.");
             }
