@@ -5,25 +5,6 @@ import org.bukkit.Sound;
 
 public class SoundManager {
 
-    /*
-    Config.yml Sounds
-    sounds:
-        enabled: true
-        alert: NOTE_PLING
-        win-wool-sound: VILLAGER_YES
-        wool-pickup-sound: FIREWORK_LAUNCH
-        reversing-sound: ORB_PICKUP
-        team-join-sound: LEVEL_UP
-        join-command: CHEST_OPEN
-        map-change: LEVEL_UP
-        room-gui: CHEST_OPEN
-        team-win-sound: WITHER_DEATH
-        your-stats: ORB_PICKUP
-        error: ENDERDRAGON_HIT
-        tip: ITEM_PICKUP
-        headshot: BLAZE_DEATH
-     */
-
     private final CTW plugin;
     private Sound errorSound;
     private Sound alertSound;
