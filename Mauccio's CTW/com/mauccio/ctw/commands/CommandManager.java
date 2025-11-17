@@ -993,7 +993,7 @@ public class CommandManager implements CommandExecutor {
                     return;
             }
         }
-        if ("kit".equals(section)) {
+        if ("kit".equals(section)) { // Working with kit-menu: true
             if (args.length < 2) {
                 plugin.getLangManager().sendText("commands.ctwsetup-kit", player);
                 plugin.getSoundManager().playTipSound(player);
