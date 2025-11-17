@@ -44,9 +44,6 @@ public class EventManager {
     private final GameListeners gameEvents;
     private final TreeMap<Player, SetupListeners> playerSetup;
 
-    /**
-     *
-     */
     public enum SetUpAction {
 
         RED_WIN_WOOL, BLUE_WIN_WOOL, WOOL_SPAWNER
@@ -73,6 +70,7 @@ public class EventManager {
                     currLoc = plugin.getMapManager().getWoolSpawnerLocation(e.getBlock().getWorld(), wool.getColor());
                     if (currLoc != null) {
                         plugin.getLangManager().sendMessage("spawner-deleted", e.getPlayer());
+                        plugin.getMapManager().delWoolSpawner(e.getBlock());
                         return;
                     }
                 }
@@ -95,7 +93,6 @@ public class EventManager {
                 plugin.getMapManager().delRedWoolWinPoint(e.getBlock());
                 return;
             }
-
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -188,20 +185,23 @@ public class EventManager {
         public void onVoid(PlayerMoveEvent e) {
             Player p = e.getPlayer();
             if (plugin.getConfigManager().isVoidInstaKill()) {
-                if (p.getHealth() <= 0) {
-                    return;
-                }
+                if(plugin.getPlayerManager().getTeamId(p) != null &&
+                        plugin.getPlayerManager().getTeamId(p) != TeamManager.TeamId.SPECTATOR) {
+                        if (p.getHealth() <= 0) {
+                            return;
+                        }
+                        if (p.getLocation().getBlockY() <= 0) {
+                            EntityDamageEvent damageEvent = new EntityDamageEvent(
+                                    p,
+                                    EntityDamageEvent.DamageCause.VOID,
+                                    p.getHealth() + 1.0
+                            );
 
-                if (p.getLocation().getBlockY() <= 0) {
-                    EntityDamageEvent damageEvent = new EntityDamageEvent(
-                            p,
-                            EntityDamageEvent.DamageCause.VOID,
-                            p.getHealth() + 1.0
-                    );
-                    Bukkit.getPluginManager().callEvent(damageEvent);
-                    if (!damageEvent.isCancelled()) {
-                        p.setLastDamageCause(damageEvent);
-                        p.setHealth(0.0);
+                            Bukkit.getPluginManager().callEvent(damageEvent);
+                            if (!damageEvent.isCancelled()) {
+                                p.setLastDamageCause(damageEvent);
+                             p.setHealth(0.0);
+                            }
                     }
                 }
             }
@@ -535,10 +535,15 @@ public class EventManager {
                     for (Team team : sb.getTeams()) {
                         team.removeEntry(plr.getName());
                     }
-                    plugin.getLobbyManager().assignLobbyBoard(plr);
 
-                    for (LobbyItem lobbyItem : plugin.getLobbyManager().getAllItems()) {
-                        inv.setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
+                    if(plugin.getConfigManager().isLobbyBoardEnabled() && plugin.getWorldManager().getLobbySpawnLocations() != null) {
+                        plugin.getLobbyManager().assignLobbyBoard(plr);
+                    }
+
+                    if(plugin.getConfigManager().isLobbyItemsEnabled() && plugin.getWorldManager().getLobbySpawnLocations() != null) {
+                        for (LobbyItem lobbyItem : plugin.getLobbyManager().getAllItems()) {
+                            inv.setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
+                        }
                     }
                 }, 2L);
             }
@@ -574,7 +579,9 @@ public class EventManager {
                         .replace("%PLAYER%", player.getDisplayName());
                 for (Player lobbyPlayer : plugin.getWorldManager().getLobbyWorld().getPlayers()) {
                     plugin.getLangManager().sendMessage(leftMessage, lobbyPlayer);
-                    plugin.getLobbyManager().refreshLobbyBoard();
+                    if(plugin.getConfigManager().isLobbyBoardEnabled()) {
+                        plugin.getLobbyManager().refreshLobbyBoard();
+                    }
                 }
             }
 
@@ -628,7 +635,9 @@ public class EventManager {
                         .replace("%PLAYER%", e.getPlayer().getDisplayName());
                 for (Player player : plugin.getWorldManager().getLobbyWorld().getPlayers()) {
                     plugin.getLangManager().sendMessage(joinMessage, player);
-                    plugin.getLobbyManager().refreshLobbyBoard();
+                    if(plugin.getConfigManager().isLobbyBoardEnabled()) {
+                        plugin.getLobbyManager().refreshLobbyBoard();
+                    }
                 }
                 if (plugin.getPlayerManager().getTeamId(e.getPlayer()) != null) {
                     plugin.getPlayerManager().clearTeam(e.getPlayer());
