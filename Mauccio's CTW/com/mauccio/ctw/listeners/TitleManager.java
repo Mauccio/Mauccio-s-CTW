@@ -2,6 +2,7 @@ package com.mauccio.ctw.listeners;
 
 import com.mauccio.ctw.CTW;
 import com.mauccio.ctw.libs.titleapi.TitleAPI;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 public class TitleManager {
@@ -9,11 +10,13 @@ public class TitleManager {
     private final CTW plugin;
     private final Title title;
     private final Subtitle subtitle;
+    private final FileConfiguration config;
 
     public TitleManager(CTW plugin) {
         this.plugin = plugin;
         this.title = new Title();
         this.subtitle = new Subtitle();
+        this.config = plugin.getConfig();
     }
 
     private class Title {
@@ -238,58 +241,78 @@ public class TitleManager {
         }
     }
 
+    /**
+     *           Central Title Sender
+     * @param player : Player to send the title.
+     * @param key : Uses config.yml to get title times.
+     * @param title : Text to display into the title.
+     * @param subtitle : Text to display into the subtitle.
+     */
+
+    public void send(Player player, String key, String title, String subtitle) {
+        int fadeIn = config.getInt("titles." + key + ".fade-in",
+                10);
+        int stay   = config.getInt("titles." + key + ".stay",
+                30);
+        int fadeOut= config.getInt("titles." + key + ".fade-out",
+                10);
+        TitleAPI.sendFullTitle(player, fadeIn, stay, fadeOut, title, subtitle);
+    }
+
+    /**
+     *             Title Senders
+     * @param player : Player to send the title.
+     */
+
     public void sendJoinRoom(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "join.room",
                 title.getJoinRoom(),
                 subtitle.getJoinRoom());
     }
 
     public void sendJoinRed(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
-                title.getJoinRed(), subtitle.getJoinRed());
+        send(player, "join.red",
+                title.getJoinRed(),
+                subtitle.getJoinRed());
     }
 
     public void sendJoinBlue(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "join.blue",
                 title.getJoinBlue(),
                 subtitle.getJoinBlue());
     }
 
     public void sendChangeMap(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "change-map",
                 title.getChangeMap(),
                 subtitle.getChangeMap());
     }
 
     public void sendWinRed(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "team-win.red",
                 title.getWinRed(),
                 subtitle.getWinRed());
     }
 
     public void sendWinBlue(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "team-win.blue",
                 title.getWinBlue(),
                 subtitle.getWinBlue());
     }
 
     public void sendHeadshot(Player player) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "headshot",
                 title.getHeadshot(),
                 subtitle.getHeadshot());
     }
 
+    /**
+     *                      Wool Pickup
+     * @param playerNameColored : Player name with Team Color.
+     * @param woolNameColored : Wool name with Chat Color.
+     */
     public void sendWoolPickup(Player player, String playerNameColored, String woolNameColored) {
-        TitleAPI.sendFullTitle(
-                player,
-                10, 60, 10,
+        send(player, "wool-pickup",
                 title.getWoolPickup(),
                 subtitle.getWoolPickup()
                         .replace("%PLAYER%", playerNameColored)
@@ -297,10 +320,13 @@ public class TitleManager {
         );
     }
 
-
+    /**
+     *                      Wool Placed
+     * @param playerNameColored : Player name with Team Color.
+     * @param woolNameColored : Wool name with Chat Color.
+     */
     public void sendWoolPlaced(Player player, String playerNameColored, String woolNameColored) {
-        TitleAPI.sendFullTitle(player,
-                10, 30, 10,
+        send(player, "wool-placed",
                 title.getWoolPlaced(),
                 subtitle.getWoolPlaced()
                 .replace("%PLAYER%", playerNameColored)
@@ -308,34 +334,34 @@ public class TitleManager {
     }
 
     public void sendCountdown30(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount30(), subtitle.getCount30());
+        send(player, "countdown", title.getCount30(), subtitle.getCount30());
     }
 
     public void sendCountdown20(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount20(), subtitle.getCount20());
+        send(player, "countdown", title.getCount20(), subtitle.getCount20());
     }
 
     public void sendCountdown10(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount10(), subtitle.getCount10());
+        send(player, "countdown", title.getCount10(), subtitle.getCount10());
     }
 
     public void sendCountdown5(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount5(), subtitle.getCount5());
+        send(player, "countdown", title.getCount5(), subtitle.getCount5());
     }
 
     public void sendCountdown4(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount4(), subtitle.getCount4());
+        send(player, "countdown", title.getCount4(), subtitle.getCount4());
     }
 
     public void sendCountdown3(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount3(), subtitle.getCount3());
+        send(player, "countdown", title.getCount3(), subtitle.getCount3());
     }
 
     public void sendCountdown2(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount2(), subtitle.getCount2());
+        send(player, "countdown", title.getCount2(), subtitle.getCount2());
     }
 
     public void sendCountdown1(Player player) {
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount1(), subtitle.getCount1());
+        send(player, "countdown", title.getCount1(), subtitle.getCount1());
     }
 }
