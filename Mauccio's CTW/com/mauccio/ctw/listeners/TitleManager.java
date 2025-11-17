@@ -7,9 +7,13 @@ import org.bukkit.entity.Player;
 public class TitleManager {
 
     private final CTW plugin;
+    private final Title title;
+    private final Subtitle subtitle;
 
     public TitleManager(CTW plugin) {
         this.plugin = plugin;
+        this.title = new Title();
+        this.subtitle = new Subtitle();
     }
 
     private class Title {
@@ -42,7 +46,7 @@ public class TitleManager {
             winBlue = plugin.getLangManager().getTitleMessage("titles.team-win.blue");
             headshot = plugin.getLangManager().getTitleMessage("titles.headshot");
             woolPickup = plugin.getLangManager().getTitleMessage("titles.wool-pickup");
-            woolPlaced = plugin.getLangManager().getTitleMessage("titles.woool-placed");
+            woolPlaced = plugin.getLangManager().getTitleMessage("titles.wool-placed");
             count30 = plugin.getLangManager().getTitleMessage("titles.countdown.thirty-seconds");
             count20 = plugin.getLangManager().getTitleMessage("titles.countdown.twenty-seconds");
             count10 = plugin.getLangManager().getTitleMessage("titles.countdown.ten-seconds");
@@ -153,7 +157,7 @@ public class TitleManager {
             winBlue = plugin.getLangManager().getTitleMessage("subtitles.team-win.blue");
             headshot = plugin.getLangManager().getTitleMessage("subtitles.headshot");
             woolPickup = plugin.getLangManager().getTitleMessage("subtitles.wool-pickup");
-            woolPlaced = plugin.getLangManager().getTitleMessage("subtitles.woool-placed");
+            woolPlaced = plugin.getLangManager().getTitleMessage("subtitles.wool-placed");
             count30 = plugin.getLangManager().getTitleMessage("subtitles.countdown.thirty-seconds");
             count20 = plugin.getLangManager().getTitleMessage("subtitles.countdown.twenty-seconds");
             count10 = plugin.getLangManager().getTitleMessage("subtitles.countdown.ten-seconds");
@@ -235,104 +239,103 @@ public class TitleManager {
     }
 
     public void sendJoinRoom(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getJoinRoom(), subtitle.getJoinRoom());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getJoinRoom(),
+                subtitle.getJoinRoom());
     }
 
     public void sendJoinRed(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getJoinRed(), subtitle.getJoinRed());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getJoinRed(), subtitle.getJoinRed());
     }
 
     public void sendJoinBlue(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getJoinBlue(), subtitle.getJoinBlue());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getJoinBlue(),
+                subtitle.getJoinBlue());
     }
 
     public void sendChangeMap(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getChangeMap(), subtitle.getChangeMap());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getChangeMap(),
+                subtitle.getChangeMap());
     }
 
     public void sendWinRed(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getWinRed(), subtitle.getWinRed());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getWinRed(),
+                subtitle.getWinRed());
     }
 
     public void sendWinBlue(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getWinBlue(), subtitle.getWinBlue());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getWinBlue(),
+                subtitle.getWinBlue());
     }
 
     public void sendHeadshot(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getHeadshot(), subtitle.getHeadshot());
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getHeadshot(),
+                subtitle.getHeadshot());
     }
 
-    public void sendWoolPickup(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getWoolPickup(), subtitle.getWoolPickup());
+    public void sendWoolPickup(Player player, String playerNameColored, String woolNameColored) {
+        TitleAPI.sendFullTitle(
+                player,
+                10, 60, 10,
+                title.getWoolPickup(),
+                subtitle.getWoolPickup()
+                        .replace("%PLAYER%", playerNameColored)
+                        .replace("%WOOL%", woolNameColored)
+        );
     }
 
-    public void sendWoolPlaced(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
-        TitleAPI.sendFullTitle(player, 10, 30, 10, title.getWoolPlaced(), subtitle.getWoolPlaced());
+
+    public void sendWoolPlaced(Player player, String playerNameColored, String woolNameColored) {
+        TitleAPI.sendFullTitle(player,
+                10, 30, 10,
+                title.getWoolPlaced(),
+                subtitle.getWoolPlaced()
+                .replace("%PLAYER%", playerNameColored)
+                .replace("%WOOL%", woolNameColored));
     }
 
     public void sendCountdown30(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount30(), subtitle.getCount30());
     }
 
     public void sendCountdown20(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount20(), subtitle.getCount20());
     }
 
     public void sendCountdown10(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount10(), subtitle.getCount10());
     }
 
     public void sendCountdown5(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount5(), subtitle.getCount5());
     }
 
     public void sendCountdown4(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount4(), subtitle.getCount4());
     }
 
     public void sendCountdown3(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount3(), subtitle.getCount3());
     }
 
     public void sendCountdown2(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount2(), subtitle.getCount2());
     }
 
     public void sendCountdown1(Player player) {
-        Title title = new Title();
-        Subtitle subtitle = new Subtitle();
         TitleAPI.sendFullTitle(player, 10, 30, 10, title.getCount1(), subtitle.getCount1());
     }
 }
