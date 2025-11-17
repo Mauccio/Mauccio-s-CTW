@@ -54,8 +54,8 @@ public class CTW extends JavaPlugin {
     private LobbyManager lb;
     private NametagManager nm;
     private SoundManager so;
+    private TitleManager ts;
     private Economy econ;
-
 
     @Override
     public void onEnable() {
@@ -88,6 +88,7 @@ public class CTW extends JavaPlugin {
         this.km = new KitManager(this);
         this.lb = new LobbyManager(this);
         this.so = new SoundManager(this);
+        this.ts = new TitleManager(this);
 
         scores = new Scores();
 
@@ -222,10 +223,6 @@ public class CTW extends JavaPlugin {
         }
     }
 
-    public SoundManager getSoundManager() {
-        return so;
-    }
-
     public MapManager getMapManager() {
         return mm;
     }
@@ -284,6 +281,14 @@ public class CTW extends JavaPlugin {
 
     public EventManager getEventManager() {
         return em;
+    }
+
+    public SoundManager getSoundManager() {
+        return so;
+    }
+
+    public TitleManager getTitleManager () {
+        return ts;
     }
 
     public Scores getScores() {
