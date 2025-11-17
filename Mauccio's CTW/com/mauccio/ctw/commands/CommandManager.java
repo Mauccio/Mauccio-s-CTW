@@ -643,18 +643,21 @@ public class CommandManager implements CommandExecutor {
                 case "spawn": {
                     plugin.getMapManager().setSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("mapspawn-set", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
                 case "redspawn": {
                     plugin.getMapManager().setRedSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("redspawn-set", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
                 case "bluespawn": {
                     plugin.getMapManager().setBlueSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("bluespawn-set", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
@@ -673,6 +676,7 @@ public class CommandManager implements CommandExecutor {
                         }
                         plugin.getMapManager().setMaxPlayers(w, max);
                         plugin.getLangManager().sendMessage("maxplayers-set", player);
+                        plugin.getMapManager().persist();
                         plugin.getMapManager().setupTip(player);
                     } catch (NumberFormatException ex) {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
@@ -685,6 +689,7 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.description", player);
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.help-0", player);
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.help-1", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
@@ -693,7 +698,9 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.description", player);
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.help-0", player);
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.help-1", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+
                     return;
                 }
                 case "rednoaccess": {
@@ -715,6 +722,7 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage("area-na-already-blue", player);
                     } else {
                         plugin.getMapManager().addBlueNoAccessArea(w, sel);
+                        plugin.getMapManager().persist();
                         plugin.getLangManager().sendMessage("area-na-done", player);
                     }
                     return;
@@ -726,6 +734,7 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage("area-na-already-protected", player);
                     } else {
                         plugin.getMapManager().addProtectedArea(w, sel);
+                        plugin.getMapManager().persist();
                         plugin.getLangManager().sendMessage("area-na-done", player);
                     }
                     return;
@@ -761,6 +770,7 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-wool-spawners.help-0", player);
                     plugin.getLangManager().sendMessage("add-wool-spawners.help-1", player);
                     plugin.getMapManager().setupTip(player);
+                    plugin.getMapManager().persist();
                     return;
                 }
                 case "restore": {
@@ -768,13 +778,14 @@ public class CommandManager implements CommandExecutor {
                     Selection sel = getSelection(player);
                     if(sel == null) return;
                     plugin.getMapManager().setRestaurationArea(sel);
-                    plugin.getLangManager().sendMessage("map-tip-restauration", player);
                     plugin.getMapManager().setupTip(player);
+                    plugin.getMapManager().persist();
                     return;
                 }
                 case "continue": {
                     plugin.getEventManager().unregisterSetUpEvents(player);
                     plugin.getLangManager().sendMessage("cmd-success", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
@@ -782,18 +793,21 @@ public class CommandManager implements CommandExecutor {
                     boolean active = !plugin.getMapManager().getKitarmour(w);
                     plugin.getMapManager().setKitarmour(w, active);
                     plugin.getLangManager().sendMessage(active ? "default-armour-on" : "default-armour-off", player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
                 case "removeregion": {
                     if (!requireWorldEdit(player)) return;
                     plugin.getMapManager().removeRegion(player);
+                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
                     return;
                 }
                 case "no-drop": {
                     if (plugin.getMapManager().setNoDrop(player)) {
                         plugin.getLangManager().sendMessage("repeated-material-ok", player);
+                        plugin.getMapManager().persist();
                         plugin.getMapManager().setupTip(player);
                     }
                     return;
