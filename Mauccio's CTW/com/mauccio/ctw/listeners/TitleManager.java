@@ -333,6 +333,10 @@ public class TitleManager {
                 .replace("%WOOL%", woolNameColored));
     }
 
+    /**
+     *        Countdown Time
+    */
+
     public void sendCountdown30(Player player) {
         send(player, "countdown", title.getCount30(), subtitle.getCount30());
     }
