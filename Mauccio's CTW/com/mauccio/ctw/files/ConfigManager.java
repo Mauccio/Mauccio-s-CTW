@@ -80,10 +80,22 @@ public class ConfigManager {
     }
 
     public boolean isLobbyGuardEnabled() {
-        return this.plugin.getConfig().getBoolean("lobby-guard", false);
+        return this.plugin.getConfig().getBoolean("lobby.guard", false);
+    }
+
+    public boolean isLobbyItemsEnabled() {
+        return this.plugin.getConfig().getBoolean("lobby.items", true);
+    }
+
+    public boolean isLobbyBoardEnabled() {
+        return this.plugin.getConfig().getBoolean("lobby.scoreboard", true);
     }
 
     public boolean isKitMenuEnabled() {
         return this.plugin.getConfig().getBoolean("kit-menu", false);
+    }
+
+    public boolean isProtectedZoneMsg() {
+        return this.plugin.getConfig().getBoolean("prohibited-msg", true);
     }
 }
