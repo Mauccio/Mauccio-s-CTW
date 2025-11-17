@@ -20,7 +20,7 @@ public class PlaceholderCTW extends PlaceholderExpansion {
     }
 
     public String getAuthor() {
-        return "Diego Lucio D'onofrio (Original), Mauccio (Mauccio's CTW)";
+        return "Diego Lucio D'onofrio (Original LibelulaUCTW), Mauccio (Mauccio's CTW)";
     }
 
     public String getIdentifier() {
