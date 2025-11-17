@@ -74,6 +74,7 @@ captured-wool: "&7Take this wool to your base."
 server-ip: "&emc.yourserver.com"
 no-free-slots: "&4Game full. &7Only &lVIP&7 players can join."
 no-craft: "&cYou can't craft this."
+prohibited-area: "&cYou can't enter at prohibited area."
 wool-join: "&aPlay!"
 map-tip-redwoolwin:
   description: "&7Now set where &cRED&7 team have to place the wools."
@@ -218,24 +219,39 @@ menus:
     title: "&5Kit Menu"
     kit-editor: "&6Editing Kit: &f"
 titles:
-  join-room-title: "&e&ka&c&lCTW&e&ka"
-  join-room-subtitle: "&fUse &e/join &fto join"
-  change-map: "&eCapture the enemy wools!"
-  join-red-title: "&cRED TEAM"
-  join-red-subtitle: "&7The &9Blue &7Team is your enemy!"
-  join-blue-title: "&9BLUE TEAM"
-  join-blue-subtitle: "&7The &cRed &7Team is your enemy!"
-  team-win-title:
+  join:
+    room: "&e&ka&c&lCTW&e&ka"
+    red: "&cRED TEAM"
+    blue: "&9BLUE TEAM"
+  change-map: "&7"
+  team-win:
     red: "&cRed Team &eWINS!"
     blue: "&9Blue Team &eWINS!"
-  team-win-subtitle: "&6Congratulations to all team members!"
-  headshot-title: "&7"
-  headshot-subtitle: "&c&l¡HEADSHOT!"
-  wool-pickup-title: "&6⚠"
-  wool-pickup-subtitle: "&7%PLAYER%&7 has captured the %WOOL%&7 wool."
-  wool-placed-title: "&a✔"
-  wool-placed-subtitle: "&7%PLAYER%&7 has placed the &l%WOOL%&7 wool."
-  countdown-titles:
+  headshot: "&7"
+  wool-pickup: "&6⚠"
+  wool-placed: "&a✔"
+  countdown:
+    thirty-seconds: "&d30"
+    twenty-seconds: "&920"
+    ten-seconds: "&c10"
+    five-seconds: "&25"
+    four-seconds: "&a4"
+    three-seconds: "&e3"
+    two-seconds: "&62"
+    one-seconds: "&41"
+subtitles:
+  join:
+    room: "&fUse &e/join &fto join"
+    red: "&7The &9Blue &7Team is your enemy!"
+    blue: "&7The &cRed &7Team is your enemy!"
+  change-map: "&eCapture the enemy wools!"
+  team-win:
+    red: "&6Congratulations to all team members!"
+    blue: "&6Congratulations to all team members!"
+  headshot: "&c&l¡HEADSHOT!"
+  wool-pickup: "&7%PLAYER%&7 has captured the %WOOL%&7 wool."
+  wool-placed: "&7%PLAYER%&7 has placed the &l%WOOL%&7 wool."
+  countdown:
     thirty-seconds: "&d30"
     twenty-seconds: "&920"
     ten-seconds: "&c10"
