@@ -1,3 +1,4 @@
+# Mauccio's CTW Configuration File | v1.4
 signs:
   first-line-text: "ctw" # Text to type into sign to create a CTW sign
 ingame:
@@ -12,23 +13,32 @@ ingame:
     - helpop
     - report
 
-#######################################
-#                                     #
-#            GAME CONFIG              #
-#                                     #
-#######################################
-
-message-decorator: "" # Used in /stats
-implement-spawn-cmd: true
+# Game Settings
+message-decorator: "" # Optional.
+implement-spawn-cmd: true # /spawn?
 user-fireworks-on-win: true
 keep-teams-on-win: true
 instakill-on-void: false
 disable-fall-damage: true
 global-tablist: false # Enable to have a global tablist instead of independent.
 use-sql-for-kits: false # Only for Personal Kits, Global Kit always use YAML.
-lobby-guard: false
-kit-menu: false
+kit-menu: false # Enable Kit Service?
+prohibited-msg: true # You can edit it in messages.yml (prohibited-zone)
 
+no-crafteable-items: {}
+#  - WOOL
+#  - ANVIl
+
+no-protected-blocks: {}
+#  - WEB
+
+# Lobby Settings
+lobby:
+  guard: true
+  items: true
+  scoreboard: true
+
+# Vip's Armor Settings
 vip-armors:
   blue:
     R: 181
@@ -39,6 +49,7 @@ vip-armors:
     G: 169
     B: 85
 
+# Sound Settings
 sounds:
   enabled: true
   alert: NOTE_PLING
@@ -55,13 +66,53 @@ sounds:
   tip: ITEM_PICKUP
   headshot: BLAZE_DEATH
 
-no-crafteable-items:
-#  - WOOL
-#  - ANVIl
+# Title Settings:
+# Default values: 10, 30, 10
+titles:
+  join:
+    room:
+      fade-in: 10
+      stay: 30
+      fade-out: 10
+    red:
+      fade-in: 10
+      stay: 30
+      fade-out: 10
+    blue:
+      fade-in: 10
+      stay: 30
+      fade-out: 10
+  change-map:
+    fade-in: 10
+    stay: 30
+    fade-out: 10
+  team-win:
+    red:
+      fade-in: 10
+      stay: 30
+      fade-out: 10
+    blue:
+      fade-in: 10
+      stay: 30
+      fade-out: 10
+  headshot:
+    fade-in: 10
+    stay: 30
+    fade-out: 10
+  wool-pickup:
+    fade-in: 10
+    stay: 30
+    fade-out: 10
+  wool-placed:
+    fade-in: 10
+    stay: 30
+    fade-out: 10
+  countdown:
+    fade-in: 10
+    stay: 30
+    fade-out: 10
 
-no-protected-blocks:
-#  - WEB
-
+# Coins Settings
 coins:
   kill: 5
   capture: 10
