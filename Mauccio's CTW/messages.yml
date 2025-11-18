@@ -75,6 +75,20 @@ server-ip: "&emc.yourserver.com"
 no-free-slots: "&4Game full. &7Only &lVIP&7 players can join."
 no-craft: "&cYou can't craft this."
 prohibited-area: "&cYou can't enter at prohibited area."
+bounding-no-access:
+  red:
+    entering: "&eEntering a restricted area for the &cRed Team: &6({coords})"
+    leaving: "&eLeaving a restricted area for the &cRed Team: &6({coords})"
+  blue:
+    entering: "&eEntering a restricted area for the &9Blue Team: &6({coords})"
+    leaving: "&eLeaving a restricted area for the &9Blue Team: &6({coords})"
+  protected:
+    entering: "&eEntering a &5Protected area: &6({coords})"
+    leaving: "&eLeaving a &5Protected area: &6({coords})"
+removed-area:
+  red: "&4Removed a restricted area for the &cRed Team: &6({coords})"
+  blue: "&4Removed a restricted area for the &9Blue Team: &6({coords})"
+  protected: "&4Removed a &5Protected area: &6({coords})"
 wool-join: "&aPlay!"
 map-tip-redwoolwin:
   description: "&7Now set where &cRED&7 team have to place the wools."
