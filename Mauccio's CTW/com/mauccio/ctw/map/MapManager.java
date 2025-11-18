@@ -2,8 +2,10 @@ package com.mauccio.ctw.map;
 
 import com.mauccio.ctw.CTW;
 import com.mauccio.ctw.utils.Utils;
+import com.sk89q.worldedit.BlockVector2D;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
+import com.sk89q.worldedit.bukkit.selections.CylinderSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -350,12 +352,55 @@ public class MapManager {
         return new CuboidSelection(world, min, max);
     }
 
+    private static CylinderSelection getCylinderSelection(ConfigurationSection cs, World world) {
+        BlockVector2D center = new BlockVector2D(cs.getInt("center.x"), cs.getInt("center.z"));
+        BlockVector2D radius = new BlockVector2D(cs.getInt("radius.x"), cs.getInt("radius.z"));
+        int minY = cs.getInt("min.y", 0);
+        int maxY = cs.getInt("max.y", world.getMaxHeight());
+
+        return new CylinderSelection(world, center, radius, minY, maxY);
+    }
+
     private static TreeSet<Selection> getSelectionList(ConfigurationSection cs, World world) {
         TreeSet<Selection> result = new TreeSet<>(new Utils.SelectionComparator());
         for (String area : cs.getKeys(false)) {
-            Vector min = new Vector(cs.getInt(area + ".min.x", 0), cs.getInt(area + ".min.y", 0), cs.getInt(area + ".min.z", 0));
-            Vector max = new Vector(cs.getInt(area + ".max.x", 0), cs.getInt(area + ".max.y", 0), cs.getInt(area + ".max.z", 0));
-            result.add(new CuboidSelection(world, min, max));
+            ConfigurationSection areaSection = cs.getConfigurationSection(area);
+            if (areaSection == null) continue;
+            String type = areaSection.getString("type", "cuboid").toLowerCase();
+            switch (type) {
+                case "cuboid": {
+                    Vector min = new Vector(
+                            areaSection.getInt("min.x", 0),
+                            areaSection.getInt("min.y", 0),
+                            areaSection.getInt("min.z", 0)
+                    );
+                    Vector max = new Vector(
+                            areaSection.getInt("max.x", 0),
+                            areaSection.getInt("max.y", 0),
+                            areaSection.getInt("max.z", 0)
+                    );
+                    result.add(new CuboidSelection(world, min, max));
+                    break;
+                }
+                case "cyl":
+                case "cylinder": {
+                    BlockVector2D center = new BlockVector2D(
+                            areaSection.getInt("center.x", 0),
+                            areaSection.getInt("center.z", 0)
+                    );
+                    BlockVector2D radius = new BlockVector2D(
+                            areaSection.getInt("radius.x", 5),
+                            areaSection.getInt("radius.z", 5)
+                    );
+                    int minY = areaSection.getInt("minY", 0);
+                    int maxY = areaSection.getInt("maxY", world.getMaxHeight());
+
+                    result.add(new CylinderSelection(world, center, radius, minY, maxY));
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Unknown selection type: " + type);
+            }
         }
         return result;
     }
@@ -398,20 +443,6 @@ public class MapManager {
     public void persist() {
         for (String mapName : maps.keySet()) {
             MapData data = maps.get(mapName);
-            /*if (data.kitInv != null) {
-                ItemStack[] content = data.kitInv.getContents();
-                for (int i = 0; i < content.length; i++) {
-                    ItemStack is = content[i];
-                    if (is != null) {
-                        mapsConfig.set(mapName + ".kit." + i + ".material", is.getType().name());
-                        mapsConfig.set(mapName + ".kit." + i + ".amount", is.getAmount());
-                        mapsConfig.set(mapName + ".kit." + i + ".durability", is.getDurability());
-                        for (Enchantment enchantment : is.getEnchantments().keySet()) {
-                            mapsConfig.set(mapName + ".kit." + i + ".enchantment." + enchantment.getName() + ".level", is.getEnchantmentLevel(enchantment));
-                        }
-                    }
-                }
-            }*/
 
             if (data.maxPlayers > 0) {
                 mapsConfig.set(mapName + ".max-players", data.maxPlayers);
@@ -449,13 +480,25 @@ public class MapManager {
             if (data.blueInaccessibleAreas != null) {
                 int count = 0;
                 for (Selection sel : data.blueInaccessibleAreas) {
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
+                    if (sel instanceof CuboidSelection) {
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".type", "cuboid");
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
 
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                    } else if (sel instanceof CylinderSelection) {
+                        CylinderSelection cyl = (CylinderSelection) sel;
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".type", "cyl");
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".center.x", cyl.getCenter().getBlockX());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".center.z", cyl.getCenter().getBlockZ());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".minY", cyl.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".maxY", cyl.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".radius.x", cyl.getRadius().getBlockX());
+                        mapsConfig.set(mapName + ".blue-inaccessible-area." + count + ".radius.z", cyl.getRadius().getBlockZ());
+                    }
                     count++;
                 }
             }
@@ -463,13 +506,24 @@ public class MapManager {
             if (data.redInaccessibleAreas != null) {
                 int count = 0;
                 for (Selection sel : data.redInaccessibleAreas) {
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
-
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                    if (sel instanceof CuboidSelection) {
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".type", "cuboid");
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                    } else if (sel instanceof CylinderSelection) {
+                        CylinderSelection cyl = (CylinderSelection) sel;
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".type", "cyl");
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".center.x", cyl.getCenter().getBlockX());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".center.z", cyl.getCenter().getBlockZ());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".minY", cyl.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".maxY", cyl.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".radius.x", cyl.getRadius().getBlockX());
+                        mapsConfig.set(mapName + ".red-inaccessible-area." + count + ".radius.z", cyl.getRadius().getBlockZ());
+                    }
                     count++;
                 }
             }
@@ -477,13 +531,24 @@ public class MapManager {
             if (data.protectedAreas != null) {
                 int count = 0;
                 for (Selection sel : data.protectedAreas) {
-                    mapsConfig.set(mapName + ".protected-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".protected-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".protected-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
-
-                    mapsConfig.set(mapName + ".protected-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
-                    mapsConfig.set(mapName + ".protected-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
-                    mapsConfig.set(mapName + ".protected-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                    if (sel instanceof CuboidSelection) {
+                        mapsConfig.set(mapName + ".protected-area." + count + ".type", "cuboid");
+                        mapsConfig.set(mapName + ".protected-area." + count + ".min.x", sel.getMinimumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".min.y", sel.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".min.z", sel.getMinimumPoint().getBlockZ());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".max.x", sel.getMaximumPoint().getBlockX());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".max.y", sel.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".max.z", sel.getMaximumPoint().getBlockZ());
+                    } else if (sel instanceof CylinderSelection) {
+                        CylinderSelection cyl = (CylinderSelection) sel;
+                        mapsConfig.set(mapName + ".protected-area." + count + ".type", "cyl");
+                        mapsConfig.set(mapName + ".protected-area." + count + ".center.x", cyl.getCenter().getBlockX());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".center.z", cyl.getCenter().getBlockZ());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".minY", cyl.getMinimumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".maxY", cyl.getMaximumPoint().getBlockY());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".radius.x", cyl.getRadius().getBlockX());
+                        mapsConfig.set(mapName + ".protected-area." + count + ".radius.z", cyl.getRadius().getBlockZ());
+                    }
                     count++;
                 }
             }
@@ -733,7 +798,27 @@ public class MapManager {
         if (mapData.redInaccessibleAreas == null) {
             mapData.redInaccessibleAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
-        mapData.redInaccessibleAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
+        if (area instanceof CuboidSelection) {
+            CuboidSelection cuboid = (CuboidSelection) area;
+            mapData.redInaccessibleAreas.add(
+                    new CuboidSelection(
+                            cuboid.getWorld(),
+                            cuboid.getNativeMinimumPoint(),
+                            cuboid.getNativeMaximumPoint()
+                    )
+            );
+        } else if (area instanceof CylinderSelection) {
+            CylinderSelection cyl = (CylinderSelection) area;
+            mapData.redInaccessibleAreas.add(
+                    new CylinderSelection(
+                            cyl.getWorld(),
+                            cyl.getCenter(),
+                            cyl.getRadius(),
+                            cyl.getMinimumPoint().getBlockY(),
+                            cyl.getMaximumPoint().getBlockY()
+                    )
+            );
+        }
     }
 
     public boolean isRedNoAccessArea(World world, Selection area) {
@@ -755,7 +840,27 @@ public class MapManager {
         if (mapData.blueInaccessibleAreas == null) {
             mapData.blueInaccessibleAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
-        mapData.blueInaccessibleAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
+        if (area instanceof CuboidSelection) {
+            CuboidSelection cuboid = (CuboidSelection) area;
+            mapData.blueInaccessibleAreas.add(
+                    new CuboidSelection(
+                            cuboid.getWorld(),
+                            cuboid.getNativeMinimumPoint(),
+                            cuboid.getNativeMaximumPoint()
+                    )
+            );
+        } else if (area instanceof CylinderSelection) {
+            CylinderSelection cyl = (CylinderSelection) area;
+            mapData.blueInaccessibleAreas.add(
+                    new CylinderSelection(
+                            cyl.getWorld(),
+                            cyl.getCenter(),
+                            cyl.getRadius(),
+                            cyl.getMinimumPoint().getBlockY(),
+                            cyl.getMaximumPoint().getBlockY()
+                    )
+            );
+        }
     }
 
     public boolean isBlueNoAccessArea(World world, Selection area) {
@@ -777,7 +882,27 @@ public class MapManager {
         if (mapData.protectedAreas == null) {
             mapData.protectedAreas = new TreeSet<>(new Utils.SelectionComparator());
         }
-        mapData.protectedAreas.add(new CuboidSelection(area.getWorld(), area.getNativeMaximumPoint(), area.getNativeMinimumPoint()));
+        if (area instanceof CuboidSelection) {
+            CuboidSelection cuboid = (CuboidSelection) area;
+            mapData.protectedAreas.add(
+                    new CuboidSelection(
+                            cuboid.getWorld(),
+                            cuboid.getNativeMinimumPoint(),
+                            cuboid.getNativeMaximumPoint()
+                    )
+            );
+        } else if (area instanceof CylinderSelection) {
+            CylinderSelection cyl = (CylinderSelection) area;
+            mapData.protectedAreas.add(
+                    new CylinderSelection(
+                            cyl.getWorld(),
+                            cyl.getCenter(),
+                            cyl.getRadius(),
+                            cyl.getMinimumPoint().getBlockY(),
+                            cyl.getMaximumPoint().getBlockY()
+                    )
+            );
+        }
     }
 
     public boolean isProtectedArea(World world, Selection area) {
@@ -1041,15 +1166,11 @@ public class MapManager {
                 boolean selContainsTo = sel.contains(e.getTo());
 
                 if (!selContainsFrom && selContainsTo) {
-                    direction = ChatColor.GREEN + "Entrando ";
-                    plugin.getLangManager().sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.blue.entering").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 } else if (selContainsFrom && !selContainsTo) {
-                    direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.getLangManager().sendMessage(ChatColor.BLUE + direction + "zona inaccesible para Azules "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.blue.leaving").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 }
             }
         }
@@ -1060,15 +1181,11 @@ public class MapManager {
                 boolean selContainsTo = sel.contains(e.getTo());
 
                 if (!selContainsFrom && selContainsTo) {
-                    direction = ChatColor.GREEN + "Entrando ";
-                    plugin.getLangManager().sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.red.entering").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 } else if (selContainsFrom && !selContainsTo) {
-                    direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.getLangManager().sendMessage(ChatColor.RED + direction + "zona inaccesible para Rojos "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.red.leaving").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 }
             }
         }
@@ -1078,15 +1195,11 @@ public class MapManager {
                 boolean selContainsTo = sel.contains(e.getTo());
 
                 if (!selContainsFrom && selContainsTo) {
-                    direction = ChatColor.GREEN + "Entrando ";
-                    plugin.getLangManager().sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.protected.entering").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 } else if (selContainsFrom && !selContainsTo) {
-                    direction = ChatColor.GREEN + "Saliendo ";
-                    plugin.getLangManager().sendMessage(ChatColor.YELLOW + direction + "zona Protegida "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("bounding-no-access.protected.leaving").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                 }
             }
         }
@@ -1102,9 +1215,8 @@ public class MapManager {
             for (Selection sel : mapData.blueInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.blueInaccessibleAreas.remove(sel);
-                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.BLUE + "zona inaccesible para Azules "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("removed-area.blue").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                     break;
                 }
             }
@@ -1114,9 +1226,8 @@ public class MapManager {
             for (Selection sel : mapData.redInaccessibleAreas) {
                 if (sel.contains(loc)) {
                     mapData.redInaccessibleAreas.remove(sel);
-                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.RED + "zona inaccesible para Rojos "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("removed-area.red").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                     break;
                 }
             }
@@ -1126,23 +1237,13 @@ public class MapManager {
             for (Selection sel : mapData.protectedAreas) {
                 if (sel.contains(loc)) {
                     mapData.protectedAreas.remove(sel);
-                    plugin.getLangManager().sendMessage(ChatColor.GREEN + "Eliminado" + ChatColor.YELLOW + "zona Protegida "
-                            + ChatColor.GREEN + "("
-                            + Utils.toString(sel) + ")", player);
+                    String msg = plugin.getLangManager().getText("removed-area.protected").replace("{coords}", Utils.toString(sel));
+                    player.sendMessage(msg);
                     break;
                 }
             }
         }
     }
-
-    /*
-    public void setDefaultKit(Player player) {
-        MapData mapData = this.maps.get(player.getWorld().getName());
-        if (mapData == null)
-            return;
-        mapData = (MapData)Bukkit.createInventory(null, InventoryType.PLAYER);
-        mapData.kitInv.setContents(player.getInventory().getContents());
-    }*/
 
     public void setKitarmour(World world, boolean active) {
         MapData mapData = this.maps.get(world.getName());
@@ -1164,12 +1265,4 @@ public class MapManager {
             return false;
         return mapData.kitArmour;
     }
-
-    /*
-    public Inventory getDefaultKit(String mapName) {
-        MapData mapData = this.maps.get(mapName);
-        if (mapData == null)
-            return null;
-        return mapData.kitInv;
-    }*/
 }
