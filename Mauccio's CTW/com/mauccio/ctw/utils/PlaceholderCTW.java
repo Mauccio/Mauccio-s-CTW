@@ -36,16 +36,16 @@ public class PlaceholderCTW extends PlaceholderExpansion {
             return "";
         }
         if (identifier.equals("score")) {
-            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getScore(player.getName()))).toString();
+            return String.valueOf(this.plugin.getDBManager().getScore(player.getName()));
         }
         if (identifier.equals("kills")) {
-            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getKill(player.getName()))).toString();
+            return String.valueOf(this.plugin.getDBManager().getKill(player.getName()));
         }
         if (identifier.equals("wools_placed")) {
-            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getWoolCaptured(player.getName()))).toString();
+            return String.valueOf(this.plugin.getDBManager().getWoolCaptured(player.getName()));
         }
         if (identifier.equals("deaths")) {
-            return new StringBuilder(String.valueOf(this.plugin.getDBManager().getDeath(player.getName()))).toString();
+            return String.valueOf(this.plugin.getDBManager().getDeath(player.getName()));
         }
         return null;
     }

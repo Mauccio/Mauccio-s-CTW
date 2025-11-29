@@ -75,6 +75,10 @@ public class ConfigManager {
         return this.plugin.getConfig().getBoolean("sounds.enabled", true);
     }
 
+    public boolean isBlockSpleafAlert() {
+        return this.plugin.getConfig().getBoolean("block-spleef-alert", true);
+    }
+
     public boolean isGlobalTablistEnabled() {
         return this.plugin.getConfig().getBoolean("global-tablist", false);
     }

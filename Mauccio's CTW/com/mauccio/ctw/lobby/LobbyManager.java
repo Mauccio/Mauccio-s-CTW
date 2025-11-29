@@ -10,11 +10,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -32,8 +27,6 @@ public class LobbyManager implements Listener {
     private final Map<String, LobbyItem> items = new HashMap<>();
     private Scoreboard lobbyBoard;
     private List<String> lobbyTemplateLines = Collections.emptyList();
-    private Team lobbyNeutral;
-
 
     public LobbyManager(CTW plugin) {
         this.plugin = plugin;
@@ -67,18 +60,6 @@ public class LobbyManager implements Listener {
             items.put(id, item);
         }
     }
-
-    public void ensureLobbyNeutralTeam() {
-        if (lobbyBoard == null) return;
-        lobbyNeutral = lobbyBoard.getTeam("LOBBY_NEUTRAL");
-        if (lobbyNeutral == null) {
-            lobbyNeutral = lobbyBoard.registerNewTeam("LOBBY_NEUTRAL");
-            lobbyNeutral.setPrefix(ChatColor.WHITE.toString());
-            lobbyNeutral.setCanSeeFriendlyInvisibles(false);
-            lobbyNeutral.setAllowFriendlyFire(false);
-        }
-    }
-
 
     public LobbyItem getItem(String id) {
         return items.get(id);
@@ -258,7 +239,7 @@ public class LobbyManager implements Listener {
     }
 
     @EventHandler
-    public void lobbyBlockPlace(BlockPlaceEvent e) {
+    public void lobbyBlockPlace(org.bukkit.event.block.BlockPlaceEvent e) {
         Player player = e.getPlayer();
         if(player.hasPermission("ctw.admin") || player.isOp()) return;
         if(isOnLobby(player)) {
@@ -269,7 +250,7 @@ public class LobbyManager implements Listener {
     }
 
     @EventHandler
-    public void lobbyBreakPlace(BlockBreakEvent e) {
+    public void lobbyBreakPlace(org.bukkit.event.block.BlockBreakEvent e) {
         Player player = e.getPlayer();
         if(player.hasPermission("ctw.admin") || player.isOp()) return;
         if(isOnLobby(player)) {
@@ -280,7 +261,7 @@ public class LobbyManager implements Listener {
     }
 
     @EventHandler
-    public void onLobbyHit(EntityDamageByEntityEvent e) {
+    public void onLobbyHit(org.bukkit.event.entity.EntityDamageByEntityEvent e) {
         if(plugin.getConfigManager().isLobbyGuardEnabled()) {
             if(e.getEntity() instanceof Player) {
                 Player player = (Player) e.getEntity();
@@ -299,7 +280,7 @@ public class LobbyManager implements Listener {
     }
 
     @EventHandler
-    public void lobbyHungry(FoodLevelChangeEvent e) {
+    public void lobbyHungry(org.bukkit.event.entity.FoodLevelChangeEvent e) {
         Player player = (Player) e.getEntity();
         if(player.hasPermission("ctw.admin") || player.isOp()) return;
         if(isOnLobby(player)) {
@@ -311,12 +292,32 @@ public class LobbyManager implements Listener {
     }
 
     @EventHandler
-    public void lobbyDamage(EntityDamageEvent e) {
+    public void lobbyDamage(org.bukkit.event.entity.EntityDamageEvent e) {
         Player player = (Player) e.getEntity();
         if(player.hasPermission("ctw.admin") || player.isOp()) return;
         if(isOnLobby(player)) {
             if(plugin.getConfigManager().isLobbyGuardEnabled()) {
                 e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void lobbyWeatherChange(org.bukkit.event.weather.WeatherChangeEvent e) {
+        if(plugin.getConfigManager().isLobbyGuardEnabled()) {
+            if (e.toWeatherState()) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onWorldLoad(org.bukkit.event.world.WorldLoadEvent event) {
+        if(plugin.getConfigManager().isLobbyGuardEnabled()) {
+            org.bukkit.World world = event.getWorld();
+            if (world == plugin.getWorldManager().getLobbyWorld()) {
+                world.setGameRuleValue("doDaylightCycle", "false");
+                world.setTime(7000);
             }
         }
     }

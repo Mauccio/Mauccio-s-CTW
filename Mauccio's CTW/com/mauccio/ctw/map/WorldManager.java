@@ -39,6 +39,8 @@ public class WorldManager {
     private int currentLobbySpawnPoint;
     private final TreeMap<String, CuboidSelection> restoreAreas;
     private final ReentrantLock _restoreAreas_mutex;
+    private static final int MAX_ATTEMPTS = 5;
+    private static final long DELAY_TICKS = 2L;
 
     public static class EmptyGenerator extends ChunkGenerator {
 
@@ -170,7 +172,7 @@ public class WorldManager {
         }
 
         for (Player player : world.getPlayers()) {
-            player.kickPlayer("");
+            player.kickPlayer("Unloading world...");
         }
 
         clearEntities(world);
@@ -180,7 +182,13 @@ public class WorldManager {
         for (Chunk chunk : world.getLoadedChunks()) {
             world.unloadChunk(chunk);
         }
-        //boolean ret = Bukkit.unloadWorld(world, false);
+        boolean success = Bukkit.unloadWorld(world, false);
+
+        if (!success) {
+            plugin.getLogger().warning("ALERTA: No se pudo descargar el mundo '" + world.getName() + "'. Posible fuga de memoria.");
+        } else {
+            plugin.getLogger().info("Mundo '" + world.getName() + "' descargado correctamente de la memoria.");
+        }
     }
 
     public World cloneWorld(World world, String newWorld) {

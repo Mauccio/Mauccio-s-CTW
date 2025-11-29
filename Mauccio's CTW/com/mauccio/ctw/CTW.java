@@ -10,7 +10,6 @@ import com.mauccio.ctw.game.NametagManager;
 import com.mauccio.ctw.utils.PlaceholderCTW;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,7 +22,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import net.milkbowl.vault.economy.Economy;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 
 public class CTW extends JavaPlugin {
@@ -48,7 +49,6 @@ public class CTW extends JavaPlugin {
     private RoomManager rm;
     private WorldManager wm;
     private EventManager em;
-    private WorldEditPlugin we;
     private Scores scores;
     private KitManager km;
     private LobbyManager lb;
@@ -59,18 +59,16 @@ public class CTW extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getLogger().info("Plugin enabled");
+        getLogger().info("Enabling...");
         this.lm = new LangManager(this);
-        we = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
+        WorldEditPlugin we = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
         if (we == null) {
             alert(lm.getText("we-not-enabled"));
             return;
         }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            new PlaceholderCTW(this).register();
-        }
         setupEconomy();
+        setupAudio();
 
         this.cf = new ConfigManager(this);
         this.wm = new WorldManager(this);
@@ -88,6 +86,7 @@ public class CTW extends JavaPlugin {
         this.km = new KitManager(this);
         this.lb = new LobbyManager(this);
         this.so = new SoundManager(this);
+        so.ensureNbsExtractedAndScanned();
         this.ts = new TitleManager(this);
 
         scores = new Scores();
@@ -122,7 +121,16 @@ public class CTW extends JavaPlugin {
             alert(ex.getMessage());
             db = null;
         }
-        so.loadSounds();
+
+        if(db != null) {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                new PlaceholderCTW(this).register();
+            }
+        }
+
+
+
+        lm.updateChecker();
     }
 
     @Override
@@ -130,23 +138,33 @@ public class CTW extends JavaPlugin {
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         }
-        getLogger().info("Plugin disabled");
+        getLogger().info("Disabling...");
         save();
         moveAllToLobby();
     }
 
     private void setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().info("Vault no encontrado, deshabilitando soporte de economía.");
+            alert(lm.getText("vault-not-enabled"));
             return;
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            getLogger().info("No se encontró proveedor de economía en Vault.");
+            alert(lm.getText("economy-addon-not-found"));
             return;
         }
         econ = rsp.getProvider();
-        getLogger().info("Economía conectada con Vault: " + econ.getName());
+        String msg = lm.getText("economy-addon-connected").replace("%ADDON%", econ.getName());
+        alert(msg);
+    }
+
+    private void setupAudio() {
+        if(getServer().getPluginManager().getPlugin("NoteBlockAPI") == null) {
+            alert(lm.getText("nb-not-enabled"));
+            return;
+        }
+        String msg = lm.getText("nb-detected");
+        alert(msg);
     }
 
     public Economy getEconomy() {
@@ -163,10 +181,8 @@ public class CTW extends JavaPlugin {
     }
 
     public void alert(String message) {
-        String prefix = ChatColor.YELLOW + "["
-                + ChatColor.GOLD + ChatColor.BOLD + this.getName()
-                + ChatColor.YELLOW + "]";
-        String prefixedMessage = prefix + " " + ChatColor.RED + "(alert) " + message;
+        String prefix = lm.getText("alert-prefix");
+        String prefixedMessage = prefix + message;
         getServer().getConsoleSender().sendMessage(prefixedMessage);
         for (Player player : getServer().getOnlinePlayers()) {
             if (hasPermission(player, "receive-alerts")) {
@@ -202,6 +218,7 @@ public class CTW extends JavaPlugin {
         mm.load();
         rm.load();
         sm.load();
+        lm.reload();
         km.reloadKits();
     }
 

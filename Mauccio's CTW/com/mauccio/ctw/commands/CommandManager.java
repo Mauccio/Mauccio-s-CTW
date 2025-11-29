@@ -170,7 +170,6 @@ public class CommandManager implements CommandExecutor {
             case "ctwsetup":     return handleCtwSetup(cs, args);
             case "createworld":
             case "gotoworld":    return handleWorldNav(cs, cmnd.getName(), args);
-            case "savekit":      return handleSaveKit(cs, args);
             case "g":            return handleG(cs, args);
             case "toggle":       return handleToggle(cs, args);
             case "leave":        return handleLeave(cs, args);
@@ -225,7 +224,7 @@ public class CommandManager implements CommandExecutor {
             }
             PlayerStats cached = plugin.getDBManager().getPlayerStats(player.getName());
             enviarStats(player, cached);
-            plugin.getSoundManager().playYourStatsSound(player);
+            plugin.getSoundManager().playStatsSound(player);
         } catch (Exception e) {
             plugin.getLangManager().sendMessage("stats-not-enabled", player);
             plugin.getSoundManager().playErrorSound(player);
@@ -298,19 +297,20 @@ public class CommandManager implements CommandExecutor {
         Player player = getPlayerOrNotify(cs);
         if (player == null) return true;
         if (!requireLobby(player)) return true;
-
         plugin.getKitManager().invSaver(player, player.getUniqueId());
         ItemStack[] globalKit = plugin.getKitManager().getGlobalKitYAML();
         player.getInventory().clear();
         player.getInventory().setContents(globalKit);
+        plugin.getEventManager().startEditing(player);
         plugin.getLangManager().sendMessage("edit-your-kit", player);
-        plugin.getLangManager().sendMessage("save-your-kit-with", player);
+        plugin.getLangManager().sendMessage("save-your-kit-move", player);
         return true;
     }
 
     private boolean handleSpawn(CommandSender cs, String[] args) {
         Player player = getPlayerOrNotify(cs);
         if (player == null) return true;
+        plugin.getGameManager().playerLeftGame(player);
         player.teleport(plugin.getWorldManager().getNextLobbySpawn());
         player.setPlayerListName(player.getName());
         player.setDisplayName(player.getName());
@@ -358,20 +358,6 @@ public class CommandManager implements CommandExecutor {
             player.teleport(world.getSpawnLocation());
             plugin.getLangManager().sendMessage("cmd-success", player);
         }
-        return true;
-    }
-
-    private boolean handleSaveKit(CommandSender cs, String[] args) {
-        Player player = getPlayerOrNotify(cs);
-        if (player == null) return true;
-        if (plugin.getPlayerManager().getTeamId(player) != null) {
-            plugin.getLangManager().sendMessage("not-in-lobby-cmd", player);
-            plugin.getSoundManager().playErrorSound(player);
-            return true;
-        }
-        plugin.getKitManager().saveKit(player, player.getInventory().getContents());
-        player.getInventory().clear();
-        plugin.getKitManager().invRecover(player, player.getUniqueId());
         return true;
     }
 
@@ -444,6 +430,7 @@ public class CommandManager implements CommandExecutor {
         Player player = getPlayerOrNotify(cs);
         if (player == null) return true;
         if (plugin.getPlayerManager().getTeamId(player) != null) {
+            plugin.getGameManager().playerLeftGame(player);
             player.teleport(plugin.getWorldManager().getNextLobbySpawn());
             player.setPlayerListName(player.getName());
             player.setDisplayName(player.getName());
@@ -509,7 +496,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     plugin.getWorldManager().addSpawnLocation(l);
-                    plugin.getWorldManager().persist();
                     plugin.getLangManager().sendMessage("lobby-spawnpoint-set.message-0", player);
                     plugin.getLangManager().sendMessage("lobby-spawnpoint-set.help-0", player);
                     plugin.getLangManager().sendMessage("lobby-spawnpoint-set.help-1", player);
@@ -531,7 +517,6 @@ public class CommandManager implements CommandExecutor {
                 }
                 case "clear": {
                     plugin.getWorldManager().clearLobbyInformation();
-                    plugin.getWorldManager().persist();
                     plugin.getLangManager().sendMessage("lobby-cleared", player);
                     return;
                 }
@@ -545,7 +530,6 @@ public class CommandManager implements CommandExecutor {
                     if (plugin.getWorldManager().getLobbySpawnLocations().isEmpty()) {
                         plugin.getWorldManager().addSpawnLocation(w.getSpawnLocation());
                     }
-                    plugin.getWorldManager().persist();
                     plugin.getLangManager().sendMessage("lobby-world-set", player);
                     return;
                 }
@@ -576,6 +560,9 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage(plugin.getLangManager().getText("map-already-exists").replace("%MAP%", w.getName()), player);
                     }
                     plugin.getMapManager().setupTip(player);
+                    player.getInventory().clear();
+                    plugin.getMapManager().giveMapEditorItem(player);
+                    plugin.getMapManager().openMapEditorInv(player);
                     return;
                 }
                 case "remove": {
@@ -585,8 +572,10 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     plugin.getMapManager().deleteMap(w);
-                    plugin.getMapManager().persist();
                     plugin.getLangManager().sendMessage("map-deleted", player);
+                    if(player.getInventory().contains(plugin.getMapManager().getMapItemEditor())) {
+                        player.getInventory().remove(plugin.getMapManager().getMapItemEditor());
+                    }
                     return;
                 }
                 case "list": {
@@ -643,22 +632,22 @@ public class CommandManager implements CommandExecutor {
                 case "spawn": {
                     plugin.getMapManager().setSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("mapspawn-set", player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "redspawn": {
                     plugin.getMapManager().setRedSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("redspawn-set", player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "bluespawn": {
                     plugin.getMapManager().setBlueSpawn(player.getLocation());
                     plugin.getLangManager().sendMessage("bluespawn-set", player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "maxplayers": {
@@ -676,8 +665,8 @@ public class CommandManager implements CommandExecutor {
                         }
                         plugin.getMapManager().setMaxPlayers(w, max);
                         plugin.getLangManager().sendMessage("maxplayers-set", player);
-                        plugin.getMapManager().persist();
                         plugin.getMapManager().setupTip(player);
+                        plugin.getSoundManager().playTipSound(player);
                     } catch (NumberFormatException ex) {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
                         plugin.getSoundManager().playErrorSound(player);
@@ -689,8 +678,6 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.description", player);
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.help-0", player);
                     plugin.getLangManager().sendMessage("add-red-wool-winpoint.help-1", player);
-                    plugin.getMapManager().persist();
-                    plugin.getMapManager().setupTip(player);
                     return;
                 }
                 case "bluewinwool": {
@@ -698,9 +685,6 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.description", player);
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.help-0", player);
                     plugin.getLangManager().sendMessage("add-blue-wool-winpoint.help-1", player);
-                    plugin.getMapManager().persist();
-                    plugin.getMapManager().setupTip(player);
-
                     return;
                 }
                 case "rednoaccess": {
@@ -710,7 +694,6 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage("area-na-already-red", player);
                     } else {
                         plugin.getMapManager().addRedNoAccessArea(w, sel);
-                        plugin.getMapManager().persist();
                         plugin.getLangManager().sendMessage("area-na-done", player);
                     }
                     return;
@@ -722,7 +705,6 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage("area-na-already-blue", player);
                     } else {
                         plugin.getMapManager().addBlueNoAccessArea(w, sel);
-                        plugin.getMapManager().persist();
                         plugin.getLangManager().sendMessage("area-na-done", player);
                     }
                     return;
@@ -734,7 +716,6 @@ public class CommandManager implements CommandExecutor {
                         plugin.getLangManager().sendMessage("area-na-already-protected", player);
                     } else {
                         plugin.getMapManager().addProtectedArea(w, sel);
-                        plugin.getMapManager().persist();
                         plugin.getLangManager().sendMessage("area-na-done", player);
                     }
                     return;
@@ -750,14 +731,17 @@ public class CommandManager implements CommandExecutor {
                         plugin.getMapManager().setWeather(w, true, false);
                         plugin.getLangManager().sendMessage("sunny-set", player);
                         plugin.getMapManager().setupTip(player);
+                        plugin.getSoundManager().playTipSound(player);
                     } else if (param.startsWith("fixed=storm")) {
                         plugin.getMapManager().setWeather(w, true, true);
                         plugin.getLangManager().sendMessage("storm-set", player);
                         plugin.getMapManager().setupTip(player);
+                        plugin.getSoundManager().playTipSound(player);
                     } else if (param.startsWith("random")) {
                         plugin.getMapManager().setWeather(w, false, false);
                         plugin.getLangManager().sendMessage("random-set", player);
                         plugin.getMapManager().setupTip(player);
+                        plugin.getSoundManager().playTipSound(player);
                     } else {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
                         plugin.getSoundManager().playErrorSound(player);
@@ -769,8 +753,6 @@ public class CommandManager implements CommandExecutor {
                     plugin.getLangManager().sendMessage("add-wool-spawners.description", player);
                     plugin.getLangManager().sendMessage("add-wool-spawners.help-0", player);
                     plugin.getLangManager().sendMessage("add-wool-spawners.help-1", player);
-                    plugin.getMapManager().setupTip(player);
-                    plugin.getMapManager().persist();
                     return;
                 }
                 case "restore": {
@@ -778,37 +760,41 @@ public class CommandManager implements CommandExecutor {
                     Selection sel = getSelection(player);
                     if(sel == null) return;
                     plugin.getMapManager().setRestaurationArea(sel);
+                    plugin.getLangManager().sendMessage("cmd-success", player);
                     plugin.getMapManager().setupTip(player);
-                    plugin.getMapManager().persist();
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "continue": {
                     plugin.getEventManager().unregisterSetUpEvents(player);
+                    if(player.getInventory().contains(plugin.getMapManager().getContinueSetupItem())) {
+                        player.getInventory().remove(plugin.getMapManager().getContinueSetupItem());
+                    }
                     plugin.getLangManager().sendMessage("cmd-success", player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "toggleleather": {
                     boolean active = !plugin.getMapManager().getKitarmour(w);
                     plugin.getMapManager().setKitarmour(w, active);
                     plugin.getLangManager().sendMessage(active ? "default-armour-on" : "default-armour-off", player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "removeregion": {
                     if (!requireWorldEdit(player)) return;
                     plugin.getMapManager().removeRegion(player);
-                    plugin.getMapManager().persist();
                     plugin.getMapManager().setupTip(player);
+                    plugin.getSoundManager().playTipSound(player);
                     return;
                 }
                 case "no-drop": {
                     if (plugin.getMapManager().setNoDrop(player)) {
                         plugin.getLangManager().sendMessage("repeated-material-ok", player);
-                        plugin.getMapManager().persist();
                         plugin.getMapManager().setupTip(player);
+                        plugin.getSoundManager().playTipSound(player);
                     }
                     return;
                 }
@@ -830,11 +816,11 @@ public class CommandManager implements CommandExecutor {
                     if (args.length < 3) {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
                         plugin.getSoundManager().playErrorSound(player);
+
                         return;
                     }
                     String roomName = args[2];
                     if (plugin.getRoomManager().add(roomName)) {
-                        plugin.getRoomManager().persist();
                         plugin.getLangManager().sendMessage("room-added.message-0", player);
                         plugin.getLangManager().sendMessage("room-added.help-1", player);
                     } else {
@@ -858,7 +844,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     if (plugin.getRoomManager().remove(roomName)) {
-                        plugin.getRoomManager().persist();
                         plugin.getLangManager().sendMessage("cmd-success", player);
                     } else {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
@@ -895,7 +880,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     plugin.getRoomManager().enable(roomName);
-                    plugin.getRoomManager().persist();
                     plugin.getLangManager().sendMessage("cmd-success", player);
                     return;
                 }
@@ -915,7 +899,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     plugin.getRoomManager().disable(roomName);
-                    plugin.getRoomManager().persist();
                     plugin.getLangManager().sendMessage("cmd-success", player);
                     return;
                 }
@@ -945,7 +928,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     if (plugin.getRoomManager().addMap(roomName, map)) {
-                        plugin.getRoomManager().persist();
                         plugin.getLangManager().sendMessage("cmd-success", player);
                     } else {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
@@ -979,7 +961,6 @@ public class CommandManager implements CommandExecutor {
                         return;
                     }
                     if (plugin.getRoomManager().removeMap(roomName, map)) {
-                        plugin.getRoomManager().persist();
                         plugin.getLangManager().sendMessage("cmd-success", player);
                     } else {
                         plugin.getLangManager().sendMessage("incorrect-parameters", player);
@@ -993,7 +974,7 @@ public class CommandManager implements CommandExecutor {
                     return;
             }
         }
-        if ("kit".equals(section)) { // Working with kit-menu: true
+        if ("kit".equals(section)) {
             if (args.length < 2) {
                 plugin.getLangManager().sendText("commands.ctwsetup-kit", player);
                 plugin.getSoundManager().playTipSound(player);

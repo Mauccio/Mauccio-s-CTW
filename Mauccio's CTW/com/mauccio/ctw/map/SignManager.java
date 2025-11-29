@@ -111,7 +111,7 @@ public class SignManager {
                 String mapName = plugin.getRoomManager().getCurrentMap(roomName);
                 if (mapName != null && plugin.getMapManager().exists(mapName)) {
                     int maxPlayers = plugin.getMapManager().getMaxPlayers(mapName);
-                    int currentPlayers = plugin.getGameManager().getPlayersIn(roomName);
+                    int currentPlayers = plugin.getGameManager().getPlayersInRoom(roomName);
 
                     applyFormat(sign, roomName, mapName, currentPlayers, maxPlayers, true);
 
@@ -139,7 +139,6 @@ public class SignManager {
         }
         sign.update();
     }
-
 
     private void applyFormat(Sign sign, String roomName, String mapName, int currentPlayers, int maxPlayers, boolean enabled) {
         for (int i = 1; i <= 4; i++) {

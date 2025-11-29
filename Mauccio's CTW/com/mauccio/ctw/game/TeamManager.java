@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import com.mauccio.ctw.CTW;
-import com.mauccio.ctw.libs.titleapi.TitleAPI;
+import com.mauccio.ctw.listeners.SoundManager;
 import org.bukkit.*;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
@@ -27,6 +27,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
 import org.bukkit.scoreboard.Scoreboard;
@@ -168,24 +169,27 @@ public class TeamManager {
                         case EYE_OF_ENDER:
                             player.closeInventory();
                             break;
-                        case WOOL:
+                        case BANNER:
                             player.closeInventory();
-                            Wool wool = (Wool) e.getCurrentItem().getData();
-                            switch (wool.getColor()) {
+                            ItemStack item = e.getCurrentItem();
+                            BannerMeta bannerMeta = (BannerMeta) item.getItemMeta();
+                            DyeColor color = bannerMeta.getBaseColor();
+                            switch (color) {
                                 case RED:
-                                    if(player.hasPermission("ctw.choseteam")) {
+                                    if (player.hasPermission("ctw.choseteam")) {
                                         plugin.getGameManager().joinInTeam(player, TeamId.RED);
-                                        TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.join-red-title"), plugin.getLangManager().getTitleMessage("titles.join-blue-subtitle"));
-                                        plugin.getSoundManager().playTeamJoinSound(player);
+                                        plugin.getTitleManager().sendJoinRed(player);
+                                        plugin.getSoundManager().playTeamJoinSound(player, SoundManager.SoundTeam.RED);
                                     } else {
                                         plugin.getLangManager().sendMessage("not-teamselect-perm", player);
                                     }
                                     break;
+
                                 case BLUE:
-                                    if(player.hasPermission("ctw.choseteam")) {
+                                    if (player.hasPermission("ctw.choseteam")) {
                                         plugin.getGameManager().joinInTeam(player, TeamId.BLUE);
-                                        TitleAPI.sendFullTitle(player, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.join-blue-title"), plugin.getLangManager().getTitleMessage("titles.join-blue-subtitle"));
-                                        plugin.getSoundManager().playTeamJoinSound(player);
+                                        plugin.getTitleManager().sendJoinBlue(player);
+                                        plugin.getSoundManager().playTeamJoinSound(player, SoundManager.SoundTeam.BLUE);
                                     } else {
                                         plugin.getLangManager().sendMessage("not-teamselect-perm", player);
                                     }
@@ -282,6 +286,7 @@ public class TeamManager {
 
         List<String> ayuda = new ArrayList<>();
 
+
         ItemStack option = new ItemStack(Material.EMERALD);
         ItemMeta im = option.getItemMeta();
         im.setDisplayName(plugin.getLangManager().getText("view-tutorial"));
@@ -300,23 +305,23 @@ public class TeamManager {
         teamMenu.setItem(13, option);
 
         ayuda.clear();
-        Wool wool = new Wool(DyeColor.BLUE);
-        option = wool.toItemStack();
-        im = option.getItemMeta();
-        im.setDisplayName(plugin.getLangManager().getText("join-blue"));
+        option = new ItemStack(Material.BANNER, 1);
+        BannerMeta bm = (BannerMeta) option.getItemMeta();
+        bm.setBaseColor(DyeColor.BLUE);
+        bm.setDisplayName(plugin.getLangManager().getText("join-blue"));
         ayuda.add(plugin.getLangManager().getText("blue-join-help"));
-        im.setLore(ayuda);
-        option.setItemMeta(im);
+        bm.setLore(ayuda);
+        option.setItemMeta(bm);
         teamMenu.setItem(15, option);
 
         ayuda.clear();
-        wool = new Wool(DyeColor.RED);
-        option = wool.toItemStack();
-        im = option.getItemMeta();
-        im.setDisplayName(plugin.getLangManager().getText("join-red"));
+        option = new ItemStack(Material.BANNER, 1);
+        bm = (BannerMeta) option.getItemMeta();
+        bm.setBaseColor(DyeColor.RED);
+        bm.setDisplayName(plugin.getLangManager().getText("join-red"));
         ayuda.add(plugin.getLangManager().getText("red-join-help"));
-        im.setLore(ayuda);
-        option.setItemMeta(im);
+        bm.setLore(ayuda);
+        option.setItemMeta(bm);
         teamMenu.setItem(11, option);
 
         ayuda.clear();
@@ -404,12 +409,12 @@ public class TeamManager {
             return;
         }
 
-        e.setDeathMessage(null);
+        e.setDeathMessage("");
 
         Player player = e.getEntity();
         Player killer = null;
         int blockDistance = 0;
-        boolean headhoot = false;
+        boolean headshot = false;
         e.setDeathMessage("");
         if (e.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent entityDamageByEntityEvent = (EntityDamageByEntityEvent) e.getEntity().getLastDamageCause();
@@ -422,7 +427,7 @@ public class TeamManager {
                     blockDistance = (int) player.getLocation().distance(killer.getLocation());
                     double y = arrow.getLocation().getY();
                     double shotY = player.getLocation().getY();
-                    headhoot = y - shotY > 1.35d;
+                    headshot = y - shotY > 1.35d;
                 }
             }
         }
@@ -433,11 +438,10 @@ public class TeamManager {
                 ItemStack is = killer.getItemInHand();
                 murderText = plugin.getLangManager().getMurderText(player, killer, is);
             } else {
-                murderText = plugin.getLangManager().getRangeMurderText(player, killer, blockDistance, headhoot);
-                if(headhoot) {
+                murderText = plugin.getLangManager().getRangeMurderText(player, killer, blockDistance, headshot);
+                if(headshot) {
                     plugin.getSoundManager().playHeadshotSound(killer);
-                    TitleAPI.sendFullTitle(killer, 10, 30, 10, plugin.getLangManager().getTitleMessage("titles.headshot-title"), plugin.getLangManager().getTitleMessage("titles.headshot-subtitle"));
-                    plugin.getLangManager().sendMessage("", killer);
+                    plugin.getTitleManager().sendHeadshot(killer);
                 }
             }
         } else {
@@ -471,49 +475,82 @@ public class TeamManager {
                     continue;
                 }
             }
-            receiver.sendMessage(murderText);
+            String personalizedMessage = murderText;
+
+            if (personalizedMessage.contains(receiver.getName())) {
+                personalizedMessage = personalizedMessage.replace(receiver.getName(),
+                        ChatColor.BOLD + receiver.getName() + ChatColor.RESET);
+            }
+            receiver.sendMessage(personalizedMessage);
         }
 
         if (plugin.getDBManager() != null) {
             String playerName = player.getName();
             if (killer != null) {
                 String killerName = killer.getName();
-                Player finalKiller = killer;
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getDBManager().addEvent(killerName, playerName, "KILL|" + murderText);
-                        plugin.getDBManager().incKill(killerName, 1);
-                        plugin.getDBManager().incScore(killerName, plugin.getScores().kill);
-                        String msg = plugin.getLangManager().getText("player-messages.add-points");
-                        finalKiller.sendMessage(msg);
-                        if(plugin.getEconomy() != null) {
-                            plugin.getEconomy().depositPlayer(finalKiller, plugin.getScores().coins_kill);
-                            String msgCoins = plugin.getLangManager().getText("player-messages.add-coins.kill");
-                            finalKiller.sendMessage(msgCoins);
-                        }
+
+                if(plugin.getEconomy() != null) {
+                    plugin.getEconomy().depositPlayer(killer, plugin.getScores().coins_kill);
+                    String msgCoins = plugin.getLangManager().getText("player-messages.add-coins.kill");
+                    String msgdeath = plugin.getLangManager().getText("player-messages.remove-points");
+                    if(plugin.getLangManager().getLang().getString("player-messages.type").equals("MESSAGE")) {
+                        player.sendMessage(msgdeath);
+                    } else if(plugin.getLangManager().getLang().getString("player-messages.type").equals("ACTIONBAR")) {
+                        plugin.getTitleManager().sendActionBar(player, msgdeath);
+                    } else {
+                        player.sendMessage(msgdeath);
                     }
+
+                    String msgkiller = plugin.getLangManager().getText("player-messages.add-points");
+                    if(plugin.getLangManager().getLang().getString("player-messages.type").equals("MESSAGE")) {
+                        killer.sendMessage(msgkiller + msgCoins);
+                    } else if(plugin.getLangManager().getLang().getString("player-messages.type").equals("ACTIONBAR")) {
+                        plugin.getTitleManager().sendActionBar(killer, msgkiller + msgCoins);
+                    } else {
+                        killer.sendMessage(msgkiller + msgCoins);
+                    }
+                } else {
+                    String msgdeath = plugin.getLangManager().getText("player-messages.remove-points");
+                    if(plugin.getLangManager().getLang().getString("player-messages.type").equals("MESSAGE")) {
+                        player.sendMessage(msgdeath);
+                    } else if(plugin.getLangManager().getLang().getString("player-messages.type").equals("ACTIONBAR")) {
+                        plugin.getTitleManager().sendActionBar(player, msgdeath);
+                    } else {
+                        player.sendMessage(msgdeath);
+                    }
+
+                    String msgkiller = plugin.getLangManager().getText("player-messages.add-points");
+                    if(plugin.getLangManager().getLang().getString("player-messages.type").equals("MESSAGE")) {
+                        killer.sendMessage(msgkiller);
+                    } else if(plugin.getLangManager().getLang().getString("player-messages.type").equals("ACTIONBAR")) {
+                        plugin.getTitleManager().sendActionBar(killer, msgkiller);
+                    } else {
+                        killer.sendMessage(msgkiller);
+                    }
+                }
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    plugin.getDBManager().addEvent(killerName, playerName, "KILL|" + murderText);
+                    plugin.getDBManager().incKill(killerName, 1);
+                    plugin.getDBManager().incScore(killerName, plugin.getScores().kill);
                 });
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getDBManager().addEvent(playerName, killerName, "DEAD|" + murderText);
-                        plugin.getDBManager().incDeath(playerName, 1);
-                        plugin.getDBManager().incScore(playerName, plugin.getScores().death);
-                        String msg = plugin.getLangManager().getText("player-messages.remove-points");
-                        player.sendMessage(msg);
-                    }
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    plugin.getDBManager().addEvent(playerName, killerName, "DEAD|" + murderText);
+                    plugin.getDBManager().incDeath(playerName, 1);
+                    plugin.getDBManager().incScore(playerName, plugin.getScores().death);
                 });
             } else {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getDBManager().addEvent(playerName, "SUICIDE|" + murderText);
-                        plugin.getDBManager().incDeath(playerName, 1);
-                        plugin.getDBManager().incScore(playerName, plugin.getScores().death);
-                        String msg = plugin.getLangManager().getText("player-messages.remove-points");
-                        player.sendMessage(msg);
-                    }
+                String msg = plugin.getLangManager().getText("player-messages.remove-points");
+                if(plugin.getLangManager().getLang().get("player-messages.type") == "MESSAGE") {
+                    player.sendMessage(msg);
+                } else if(plugin.getLangManager().getLang().get("player-messages.type") == "ACTIONBAR") {
+                    plugin.getTitleManager().sendActionBar(player, msg);
+                } else {
+                    player.sendMessage(msg);
+                }
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    plugin.getDBManager().addEvent(playerName, "SUICIDE|" + murderText);
+                    plugin.getDBManager().incDeath(playerName, 1);
+                    plugin.getDBManager().incScore(playerName, plugin.getScores().death);
                 });
             }
         }

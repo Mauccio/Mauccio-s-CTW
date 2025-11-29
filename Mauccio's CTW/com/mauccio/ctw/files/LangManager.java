@@ -1,12 +1,14 @@
 package com.mauccio.ctw.files;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mauccio.ctw.game.*;
 import com.mauccio.ctw.CTW;
+import com.mauccio.ctw.map.MapManager;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -23,59 +25,58 @@ import org.bukkit.inventory.meta.BookMeta;
 public class LangManager {
 
     private final CTW plugin;
-    private final YamlConfiguration lang;
-    private final String messagePrefix;
+    private File langFile;
+    private YamlConfiguration lang;
+    private String messagePrefix;
 
     public LangManager(CTW plugin) {
         this.plugin = plugin;
-        lang = new YamlConfiguration();
-        File langFile = new File(plugin.getDataFolder(), "messages.yml");
+        langFile = new File(plugin.getDataFolder(), "messages.yml");
 
         if (!langFile.exists()) {
             plugin.saveResource("messages.yml", false);
         }
+        loadLang();
+    }
 
-        try {
-            lang.load(langFile);
-        } catch (IOException | InvalidConfigurationException ex) {
+    public YamlConfiguration getLang() {
+        return lang;
+    }
+
+    private void loadLang() {
+        lang = new YamlConfiguration();
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(langFile.toPath()), StandardCharsets.UTF_8)) {
+            lang = YamlConfiguration.loadConfiguration(reader);
+        } catch (IOException ex) {
             plugin.getLogger().severe("Error loading messages.yml: " + ex.getMessage());
         }
 
         messagePrefix = ChatColor.translateAlternateColorCodes('&',
-                lang.getString("message-prefix"));
+                lang.getString("message-prefix", "&7[CTW]"));
     }
 
-    private String translateUnicode(String input) {
-        if (input == null) return "";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < input.length();) {
-            char c = input.charAt(i);
-            if (c == '\\' && i + 5 < input.length() && input.charAt(i + 1) == 'u') {
-                String hex = input.substring(i + 2, i + 6);
-                try {
-                    int code = Integer.parseInt(hex, 16);
-                    sb.append((char) code);
-                    i += 6;
-                    continue;
-                } catch (NumberFormatException ignored) {}
-            }
-            sb.append(c);
-            i++;
-        }
-        return ChatColor.translateAlternateColorCodes('&', sb.toString());
+    public void reload() {
+        loadLang();
     }
 
+    private String translateUnicode(char input) {
+        return String.format("\\u%04X", (int) input);
+    }
 
     public String getChar(String path) {
         String raw = lang.getString(path);
-        return translateUnicode(raw);
+        if (raw == null || raw.isEmpty()) {
+            return "?";
+        }
+        char c = raw.charAt(0);
+        return translateUnicode(c);
     }
 
     public List<String> getStringList(String path) {
         List<String> list = lang.getStringList(path);
         List<String> colored = new ArrayList<>();
         for (String line : list) {
-            colored.add(translateUnicode(line));
+            colored.add(ChatColor.translateAlternateColorCodes('&', line));
         }
         return colored;
     }
@@ -236,5 +237,52 @@ public class LangManager {
         }
 
         return woolName;
+    }
+
+    public void updateChecker() {
+        File file = new File(plugin.getDataFolder(), "messages.yml");
+        if (!file.exists()) {
+            plugin.saveResource("messages.yml", false);
+        }
+
+        YamlConfiguration defaultConfig;
+        try (InputStream in = plugin.getResource("messages.yml");
+             InputStreamReader r = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+            defaultConfig = YamlConfiguration.loadConfiguration(r);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error loading default messages.yml: " + e.getMessage());
+            return;
+        }
+
+        YamlConfiguration currentConfig;
+        try (InputStreamReader r = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
+            currentConfig = YamlConfiguration.loadConfiguration(r);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error loading current messages.yml: " + e.getMessage());
+            return;
+        }
+
+        boolean updated = false;
+        for (String key : defaultConfig.getKeys(true)) {
+            if (!currentConfig.isSet(key)) {
+                currentConfig.set(key, defaultConfig.get(key));
+                plugin.getLogger().info("\"messages.yml\": + " + key);
+                updated = true;
+            }
+        }
+
+        try {
+            String out = currentConfig.saveToString();
+            Files.write(file.toPath(), out.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            plugin.getLogger().severe("Error saving messages.yml: " + e.getMessage());
+        }
+
+        plugin.getLogger().info("\"messages.yml\": Updated!");
+        if (updated) {
+            plugin.getLogger().info("Restart your server for apply changes!");
+        } else {
+            plugin.getLogger().info("You're updated, enjoy your game!");
+        }
     }
 }

@@ -10,13 +10,7 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Level;
 
 import org.bukkit.*;
@@ -27,12 +21,13 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Wool;
 
 public class MapManager {
@@ -53,6 +48,12 @@ public class MapManager {
     private static boolean WEATHER_FIXED = true;
 
     private static boolean WEATHER_STORM = false;
+
+    private TreeMap<UUID, String> awaitingMaxPlayersInput = new TreeMap<>();
+
+    private TreeMap<UUID, String> awaitingWeatherInput = new TreeMap<>();
+
+    private Set<UUID> awaitingGlobalKitMove = new HashSet<>();
 
     public static class Weather {
         public boolean fixed;
@@ -1264,5 +1265,514 @@ public class MapManager {
         if (mapData == null)
             return false;
         return mapData.kitArmour;
+    }
+
+    public ItemStack getMapItemEditor() {
+        ItemStack mapEditorItem = new ItemStack(Material.DIAMOND);
+        ItemMeta meta = mapEditorItem.getItemMeta();
+        meta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.item.name"));
+        List<String> lore = new ArrayList<>();
+        for(String line : plugin.getLangManager().getStringList("map-editor-gui.item.lore")) {
+            lore.add(ChatColor.translateAlternateColorCodes('&', line));
+        }
+        meta.setLore(lore);
+        mapEditorItem.setItemMeta(meta);
+        return mapEditorItem;
+    }
+
+    public ItemStack getContinueSetupItem() {
+        ItemStack continueSetupItem = new ItemStack(Material.BLAZE_ROD);
+        ItemMeta meta = continueSetupItem.getItemMeta();
+        meta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.continue.name"));
+        List<String> lore = new ArrayList<>();
+        for(String line : plugin.getLangManager().getStringList("map-editor-gui.continue.lore")) {
+            lore.add(ChatColor.translateAlternateColorCodes('&', line));
+        }
+        meta.setLore(lore);
+        continueSetupItem.setItemMeta(meta);
+        return continueSetupItem;
+    }
+
+    public void openMapEditorInv(Player player) {
+        player.openInventory(getMapEditorInv(player));
+    }
+
+    public void giveMapEditorItem(Player player) {
+        player.getInventory().setItem(4, getMapItemEditor());
+    }
+
+    public void giveContinueSetupItem(Player player) {
+        player.getInventory().setItem(8, getContinueSetupItem());
+    }
+
+    public Inventory getMapEditorInv(Player player) {
+        World world = player.getWorld();
+        String mapName = world.getName();
+        MapData mapData = maps.get(mapName);
+        int blueAreas = mapData.blueInaccessibleAreas != null ? mapData.blueInaccessibleAreas.size() : 0;
+        int redAreas = mapData.redInaccessibleAreas != null ? mapData.redInaccessibleAreas.size() : 0;
+        int protectedAreas = mapData.protectedAreas != null ? mapData.protectedAreas.size() : 0;
+        String msg = plugin.getLangManager().getText("map-editor-gui.title")
+                .replace("%MAP_NAME%", mapName);
+        Inventory inv = Bukkit.createInventory(null, 54, msg);
+        // Map Spawn Item
+        ItemStack spawnItem = new ItemStack(Material.EYE_OF_ENDER);
+        ItemMeta spawnMeta = spawnItem.getItemMeta();
+        spawnMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.map-spawn.name"));
+        spawnMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.map-spawn.lore"));
+        if(mapChecker("map-spawn", mapData)) {
+            List<String> lore = spawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.setted"));
+            spawnMeta.setLore(lore);
+        } else {
+            List<String> lore = spawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            spawnMeta.setLore(lore);
+        }
+        spawnItem.setItemMeta(spawnMeta);
+        inv.setItem(13, spawnItem);
+        // Red Spawn Item
+        ItemStack redSpawnItem = new ItemStack(Material.BANNER, 1, (short) 1);
+        BannerMeta redSpawnMeta = (BannerMeta) redSpawnItem.getItemMeta();
+        redSpawnMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.red-spawn.name"));
+        redSpawnMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.red-spawn.lore"));
+        if(mapChecker("red-spawn", mapData)) {
+            List<String> lore = redSpawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.setted"));
+            redSpawnMeta.setLore(lore);
+        } else {
+            List<String> lore = redSpawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            redSpawnMeta.setLore(lore);
+        }
+        redSpawnItem.setItemMeta(redSpawnMeta);
+        inv.setItem(11, redSpawnItem);
+        // Blue Spawn Item
+        ItemStack blueSpawnItem = new ItemStack(Material.BANNER, 1, (short) 4);
+        BannerMeta blueSpawnMeta = (BannerMeta) blueSpawnItem.getItemMeta();
+        blueSpawnMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.blue-spawn.name"));
+        blueSpawnMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.blue-spawn.lore"));
+        if(mapChecker("blue-spawn", mapData)) {
+            List<String> lore = blueSpawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.setted"));
+            blueSpawnMeta.setLore(lore);
+        } else {
+            List<String> lore = blueSpawnMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            blueSpawnMeta.setLore(lore);
+        }
+        blueSpawnItem.setItemMeta(blueSpawnMeta);
+        inv.setItem(15, blueSpawnItem);
+        // Max Players Item
+        ItemStack maxPlayersItem = new ItemStack(Material.LEASH);
+        ItemMeta maxPlayersMeta = maxPlayersItem.getItemMeta();
+        maxPlayersMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.max-players.name"));
+        maxPlayersMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.max-players.lore"));
+        if(mapChecker("max-players", mapData)) {
+            List<String> lore = maxPlayersMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.setted"));
+            maxPlayersMeta.setLore(lore);
+        } else {
+            List<String> lore = maxPlayersMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            maxPlayersMeta.setLore(lore);
+        }
+        maxPlayersItem.setItemMeta(maxPlayersMeta);
+        inv.setItem(28, maxPlayersItem);
+        // Weather Item
+        ItemStack weatherItem = new ItemStack(Material.WATER_LILY);
+        ItemMeta weatherMeta = weatherItem.getItemMeta();
+        weatherMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.weather.name"));
+        weatherMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.weather.lore"));
+        if(mapChecker("weather", mapData)) {
+            List<String> lore = weatherMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.weather-type")
+                    .replace("%WEATHER%", mapData.weather.fixed ?
+                            plugin.getLangManager().getText("map-editor-gui.sun") :
+                            plugin.getLangManager().getText("map-editor-gui.storm")));
+            weatherMeta.setLore(lore);
+        } else {
+            List<String> lore = weatherMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            weatherMeta.setLore(lore);
+        }
+        weatherItem.setItemMeta(weatherMeta);
+        inv.setItem(29, weatherItem);
+        // Kit Armour Item
+        ItemStack kitArmourItem = new ItemStack(Material.LEATHER_CHESTPLATE);
+        LeatherArmorMeta kitArmourMeta = (LeatherArmorMeta) kitArmourItem.getItemMeta();
+
+        kitArmourMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.use-armor.name"));
+        kitArmourMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.use-armor.lore"));
+
+        if (mapChecker("use-armor", mapData)) {
+            List<String> lore = kitArmourMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.turn-on"));
+            kitArmourMeta.setLore(lore);
+            kitArmourMeta.setColor(Color.GREEN);
+            player.updateInventory();
+        } else {
+            List<String> lore = kitArmourMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.turn-off"));
+            kitArmourMeta.setLore(lore);
+            kitArmourMeta.setColor(Color.RED);
+            player.updateInventory();
+        }
+
+        kitArmourItem.setItemMeta(kitArmourMeta);
+        inv.setItem(30, kitArmourItem);
+
+        // Restauration Area Item
+        ItemStack restaurationAreaItem = new ItemStack(Material.IRON_AXE);
+        ItemMeta restaurationAreaMeta = restaurationAreaItem.getItemMeta();
+        restaurationAreaMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.restauration-area.name"));
+        restaurationAreaMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.restauration-area.lore"));
+        if(mapChecker("restauration-area", mapData)) {
+            List<String> lore = restaurationAreaMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.setted"));
+            restaurationAreaMeta.setLore(lore);
+        } else {
+            List<String> lore = restaurationAreaMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.empty"));
+            restaurationAreaMeta.setLore(lore);
+        }
+        restaurationAreaItem.setItemMeta(restaurationAreaMeta);
+        inv.setItem(41, restaurationAreaItem);
+        // Red No Access Area Item
+        ItemStack redNoAccessItem = new ItemStack(Material.REDSTONE_BLOCK);
+        ItemMeta redNoAccessMeta = redNoAccessItem.getItemMeta();
+        redNoAccessMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.red-noaccess-areas.name"));
+        redNoAccessMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.red-noaccess-areas.lore"));
+        if(mapChecker("red-noaccess-area", mapData)) {
+            List<String> lore = redNoAccessMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.areas-count")
+                    .replace("%COUNT%", String.valueOf(mapData.redInaccessibleAreas.size())));
+            redNoAccessMeta.setLore(lore);
+        } else {
+            List<String> lore = redNoAccessMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-areas"));
+            redNoAccessMeta.setLore(lore);
+        }
+        redNoAccessItem.setItemMeta(redNoAccessMeta);
+        inv.setItem(37, redNoAccessItem);
+        // Blue No Access Area Item
+        ItemStack blueNoAccessItem = new ItemStack(Material.LAPIS_BLOCK);
+        ItemMeta blueNoAccessMeta = blueNoAccessItem.getItemMeta();
+        blueNoAccessMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.blue-noaccess-areas.name"));
+        blueNoAccessMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.blue-noaccess-areas.lore"));
+        if(mapChecker("blue-noaccess-area", mapData)) {
+            List<String> lore = blueNoAccessMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.areas-count")
+                    .replace("%COUNT%", String.valueOf(mapData.blueInaccessibleAreas.size())));
+            blueNoAccessMeta.setLore(lore);
+        } else {
+            List<String> lore = blueNoAccessMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-areas"));
+            blueNoAccessMeta.setLore(lore);
+        }
+        blueNoAccessItem.setItemMeta(blueNoAccessMeta);
+        inv.setItem(38, blueNoAccessItem);
+        // Protected Area Item
+        ItemStack protectedAreaItem = new ItemStack(Material.BEACON);
+        ItemMeta protectedAreaMeta = protectedAreaItem.getItemMeta();
+        protectedAreaMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.protected-areas.name"));
+        protectedAreaMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.protected-areas.lore"));
+        if(mapChecker("protected-area", mapData)) {
+            List<String> lore = protectedAreaMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.areas-count")
+                    .replace("%COUNT%", String.valueOf(mapData.protectedAreas.size())));
+            protectedAreaMeta.setLore(lore);
+        } else {
+            List<String> lore = protectedAreaMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-areas"));
+            protectedAreaMeta.setLore(lore);
+        }
+        protectedAreaItem.setItemMeta(protectedAreaMeta);
+        inv.setItem(39, protectedAreaItem);
+        // Red Win Wool Item
+        ItemStack redWinWoolItem = new ItemStack(Material.WOOL, 1, (short) 14);
+        ItemMeta redWinWoolMeta = redWinWoolItem.getItemMeta();
+        redWinWoolMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.red-wool-winpoint.name"));
+        redWinWoolMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.red-wool-winpoint.lore"));
+        if(mapChecker("red-wool-winpoint", mapData)) {
+            List<String> lore = redWinWoolMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.red-win-wool-count")
+                    .replace("%COUNT%", String.valueOf(mapData.redWoolWinPoints.size())));
+            redWinWoolMeta.setLore(lore);
+        } else {
+            List<String> lore = redWinWoolMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-wools"));
+            redWinWoolMeta.setLore(lore);
+        }
+        redWinWoolItem.setItemMeta(redWinWoolMeta);
+        inv.setItem(42, redWinWoolItem);
+        // Blue Win Wool Item
+        ItemStack blueWinWoolItem = new ItemStack(Material.WOOL, 1, (short) 11);
+        ItemMeta blueWinWoolMeta = blueWinWoolItem.getItemMeta();
+        blueWinWoolMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.blue-wool-winpoint.name"));
+        blueWinWoolMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.blue-wool-winpoint.lore"));
+        if(mapChecker("blue-wool-winpoint", mapData)) {
+            List<String> lore = blueWinWoolMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.blue-win-wool-count")
+                    .replace("%COUNT%", String.valueOf(mapData.blueWoolWinPoints.size())));
+            blueWinWoolMeta.setLore(lore);
+        } else {
+            List<String> lore = blueWinWoolMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-wools"));
+            blueWinWoolMeta.setLore(lore);
+        }
+        blueWinWoolItem.setItemMeta(blueWinWoolMeta);
+        inv.setItem(43, blueWinWoolItem);
+        // Wool Spawner Item
+        ItemStack woolSpawnerItem = new ItemStack(Material.MOB_SPAWNER);
+        ItemMeta woolSpawnerMeta = woolSpawnerItem.getItemMeta();
+        woolSpawnerMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.wool-spawners.name"));
+        woolSpawnerMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.wool-spawners.lore"));
+        if(mapChecker("wool-spawners", mapData)) {
+            List<String> lore = woolSpawnerMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.wool-spawners-count")
+                    .replace("%COUNT%", String.valueOf(mapData.woolSpawners.size())));
+            woolSpawnerMeta.setLore(lore);
+        } else {
+            List<String> lore = woolSpawnerMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-spawners"));
+            woolSpawnerMeta.setLore(lore);
+        }
+        woolSpawnerItem.setItemMeta(woolSpawnerMeta);
+        inv.setItem(32, woolSpawnerItem);
+        // Remove Region Item
+        ItemStack removeRegionItem = new ItemStack(Material.BARRIER);
+        ItemMeta removeRegionMeta = removeRegionItem.getItemMeta();
+        removeRegionMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.remove-region.name"));
+        removeRegionMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.remove-region.lore"));
+        if(mapChecker("remove-region", mapData)) {
+            List<String> lore = removeRegionMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.areas-can-be-removed")
+                    .replace("%COUNT%", String.valueOf(
+                            blueAreas +
+                            redAreas +
+                            protectedAreas)));
+            removeRegionMeta.setLore(lore);
+        } else {
+            List<String> lore = removeRegionMeta.getLore();
+            lore.add(plugin.getLangManager().getText("map-editor-gui.no-areas"));
+            removeRegionMeta.setLore(lore);
+        }
+        removeRegionItem.setItemMeta(removeRegionMeta);
+        inv.setItem(33, removeRegionItem);
+        // Global Kit Item
+        ItemStack globalKitItem = new ItemStack(Material.WORKBENCH);
+        ItemMeta globalKitMeta = globalKitItem.getItemMeta();
+        globalKitMeta.setDisplayName(plugin.getLangManager().getText("map-editor-gui.global-kit.name"));
+        globalKitMeta.setLore(plugin.getLangManager().getStringList("map-editor-gui.global-kit.lore"));
+        globalKitItem.setItemMeta(globalKitMeta);
+        inv.setItem(34, globalKitItem);
+        // Black Panels in Empty Slots
+        ItemStack blackPanel = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15);
+        ItemMeta blackPanelMeta = blackPanel.getItemMeta();
+        blackPanelMeta.setDisplayName(" ");
+        blackPanel.setItemMeta(blackPanelMeta);
+        for (int i = 0; i < inv.getSize(); i++) {
+            if (inv.getItem(i) == null) {
+                inv.setItem(i, blackPanel);
+            }
+        }
+        return inv;
+    }
+
+    public void onChat(org.bukkit.event.player.AsyncPlayerChatEvent e) {
+        Player player = e.getPlayer();
+
+        if (awaitingMaxPlayersInput.containsKey(player.getUniqueId())) {
+            e.setCancelled(true);
+            String msg = e.getMessage();
+            try {
+                int value = Integer.parseInt(msg);
+
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    player.performCommand("ctwsetup mapconfig maxplayers " + value);
+                    openMapEditorInv(player);
+                });
+
+            } catch (NumberFormatException ex) {
+                player.sendMessage("§cPlease enter a valid number.");
+                openMapEditorInv(player);
+                return;
+            }
+            awaitingMaxPlayersInput.remove(player.getUniqueId());
+        }
+
+        if (awaitingWeatherInput.containsKey(player.getUniqueId())) {
+            e.setCancelled(true);
+            String msg = e.getMessage().toLowerCase();
+
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                switch (msg) {
+                    case "fixed=sun":
+                        player.performCommand("ctwsetup mapconfig weather fixed=sun");
+                        openMapEditorInv(player);
+                        break;
+                    case "fixed=storm":
+                        player.performCommand("ctwsetup mapconfig weather fixed=storm");
+                        openMapEditorInv(player);
+                        break;
+                    case "random":
+                        player.performCommand("ctwsetup mapconfig weather random");
+                        openMapEditorInv(player);
+                        break;
+                    default:
+                        player.sendMessage("§cPlease enter 'fixed=sun' or 'fixed=storm'.");
+                        openMapEditorInv(player);
+                        break;
+                }
+            });
+            awaitingWeatherInput.remove(player.getUniqueId());
+        }
+    }
+
+    public boolean mapChecker(String type, MapData mapData) {
+        if(mapData == null) {
+            return false;
+        }
+        switch (type.toLowerCase()) {
+            case "map-spawn":
+                return mapData.mapSpawn != null;
+            case "red-spawn":
+                return mapData.redSpawn != null;
+            case "blue-spawn":
+                return mapData.blueSpawn != null;
+            case "max-players":
+                return mapData.maxPlayers > 0;
+            case "weather":
+                return mapData.weather != null;
+            case "no-drop":
+                return mapData.noDropOnBreak != null && !mapData.noDropOnBreak.isEmpty();
+            case "use-armor":
+                return mapData.kitArmour;
+            case "restauration-area":
+                return mapData.restaurationArea != null;
+            case "red-noaccess-area":
+                return mapData.redInaccessibleAreas != null && !mapData.redInaccessibleAreas.isEmpty();
+            case "blue-noaccess-area":
+                return mapData.blueInaccessibleAreas != null && !mapData.blueInaccessibleAreas.isEmpty();
+            case "protected-area":
+                return mapData.protectedAreas != null && !mapData.protectedAreas.isEmpty();
+            case "red-wool-winpoint":
+                return mapData.redWoolWinPoints != null && !mapData.redWoolWinPoints.isEmpty();
+            case "blue-wool-winpoint":
+                return mapData.blueWoolWinPoints != null && !mapData.blueWoolWinPoints.isEmpty();
+            case "wool-spawners":
+                return mapData.woolSpawners != null && !mapData.woolSpawners.isEmpty();
+            case "remove-region":
+                int blueAreas = mapData.blueInaccessibleAreas != null ? mapData.blueInaccessibleAreas.size() : 0;
+                int redAreas = mapData.redInaccessibleAreas != null ? mapData.redInaccessibleAreas.size() : 0;
+                int protectedAreas = mapData.protectedAreas != null ? mapData.protectedAreas.size() : 0;
+                int total = blueAreas + redAreas + protectedAreas;
+                return total > 0;
+            default:
+                return false;
+        }
+    }
+
+    public void onMapEditorInteract(org.bukkit.event.inventory.InventoryClickEvent e) {
+        Player player = (Player) e.getWhoClicked();
+        World world = player.getWorld();
+        String mapName = world.getName();
+        ItemStack clickedItem = e.getCurrentItem();
+        if (clickedItem == null || !clickedItem.hasItemMeta()) {
+            return;
+        }
+        ItemMeta clickedMeta = clickedItem.getItemMeta();
+        String clickedName = clickedMeta.getDisplayName();
+
+        if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.map-spawn.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig spawn");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.red-spawn.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig redspawn");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.blue-spawn.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig bluespawn");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.max-players.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            awaitingMaxPlayersInput.put(player.getUniqueId(), mapName);
+            String maxValue = plugin.getLangManager().getText("map-editor-gui.enter-value")
+                    .replace("%VALUE%", plugin.getLangManager().getText("map-editor-gui.max-players-value"));
+            player.sendMessage(maxValue);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.weather.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            awaitingWeatherInput.put(player.getUniqueId(), mapName);
+            String maxValue = plugin.getLangManager().getText("map-editor-gui.enter-value")
+                    .replace("%VALUE%", plugin.getLangManager().getText("map-editor-gui.weather-value"));
+            player.sendMessage(maxValue);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.use-armor.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig toggleleather");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.restauration-area.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig restore");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.red-noaccess-areas.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig rednoaccess");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.blue-noaccess-areas.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig bluenoaccess");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.protected-areas.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig protected");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.red-wool-winpoint.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            player.performCommand("ctwsetup mapconfig redwinwool");
+            giveContinueSetupItem(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.blue-wool-winpoint.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            player.performCommand("ctwsetup mapconfig bluewinwool");
+            giveContinueSetupItem(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.wool-spawners.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            player.performCommand("ctwsetup mapconfig woolspawner");
+            giveContinueSetupItem(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.remove-region.name"))) {
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig removeregion");
+            openMapEditorInv(player);
+        } else if (clickedName.equals(plugin.getLangManager().getText("map-editor-gui.global-kit.name"))) {
+            e.setCancelled(true);
+            player.closeInventory();
+            plugin.getKitManager().invSaver(player, player.getUniqueId());
+            player.getInventory().clear();
+            awaitingGlobalKitMove.add(player.getUniqueId());
+            plugin.getLangManager().sendMessage("global-kit-tip", player);
+        } else if(clickedItem.getType() == Material.STAINED_GLASS_PANE) {
+            e.setCancelled(true);
+        }
+    }
+
+    public void onGlobalKitMove(org.bukkit.event.player.PlayerMoveEvent e) throws IOException {
+        Player player = e.getPlayer();
+        if(!plugin.getMapManager().isMap(player.getWorld())) {
+            return;
+        }
+        if (awaitingGlobalKitMove.contains(player.getUniqueId())) {
+            plugin.getKitManager().saveGlobalKitYAML(player.getInventory().getContents());
+            player.getInventory().clear();
+            plugin.getKitManager().invRecover(player, player.getUniqueId());
+            plugin.getLangManager().sendMessage("starting-kit-set", player);
+            awaitingGlobalKitMove.remove(player.getUniqueId());
+        }
     }
 }

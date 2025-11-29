@@ -2,14 +2,14 @@ package com.mauccio.ctw.listeners;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import com.mauccio.ctw.CTW;
-import com.mauccio.ctw.game.PlayerManager;
 import com.mauccio.ctw.game.TeamManager;
+import com.mauccio.ctw.map.MapManager;
 import com.mauccio.ctw.utils.LobbyItem;
 import com.mauccio.ctw.utils.Utils;
+import com.sk89q.worldedit.bukkit.selections.Selection;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -35,6 +35,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -43,6 +45,9 @@ public class EventManager {
     private final CTW plugin;
     private final GameListeners gameEvents;
     private final TreeMap<Player, SetupListeners> playerSetup;
+    private final Set<UUID> editingPlayers = new HashSet<>();
+    private final Map<UUID, BukkitTask> particleTasks = new HashMap<>();
+
 
     public enum SetUpAction {
 
@@ -91,7 +96,6 @@ public class EventManager {
             if (currLoc != null) {
                 plugin.getLangManager().sendMessage("cappoint-deleted", e.getPlayer());
                 plugin.getMapManager().delRedWoolWinPoint(e.getBlock());
-                return;
             }
         }
 
@@ -171,8 +175,16 @@ public class EventManager {
             plugin.getGameManager().ajustWeather(e);
         }
 
-        @EventHandler(priority = EventPriority.HIGHEST)
+        @EventHandler(priority = EventPriority.HIGH)
         public void onPlayerMove(PlayerMoveEvent e) {
+            if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
+                    e.getFrom().getBlockY() == e.getTo().getBlockY() &&
+                    e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
+                return;
+            }
+            if(e.getPlayer().getGameMode() == GameMode.ADVENTURE) {
+                return;
+            }
             plugin.getGameManager().denyEnterToProhibitedZone(e);
             if (!e.isCancelled()) {
                 if (plugin.getMapManager().isMap(e.getPlayer().getWorld())) {
@@ -181,7 +193,28 @@ public class EventManager {
             }
         }
 
-        @EventHandler(priority = EventPriority.MONITOR)
+        @EventHandler
+        public void handleGlobalKitMove(PlayerMoveEvent e) throws IOException {
+            plugin.getMapManager().onGlobalKitMove(e);
+        }
+
+        @EventHandler(priority = EventPriority.HIGH)
+        public void onPlayerKitEditor(PlayerMoveEvent e) {
+            Player player = e.getPlayer();
+            if (!editingPlayers.contains(player.getUniqueId())) return;
+            if(!plugin.getWorldManager().isOnLobby(player)) {
+                plugin.getLangManager().sendMessage("not-in-lobby-cmd", player);
+                plugin.getSoundManager().playErrorSound(player);
+                return;
+            }
+            plugin.getKitManager().saveKit(player, player.getInventory().getContents());
+            player.getInventory().clear();
+            plugin.getKitManager().invRecover(player, player.getUniqueId());
+            editingPlayers.remove(player.getUniqueId());
+        }
+
+        @SuppressWarnings("deprecation")
+        @EventHandler(priority = EventPriority.HIGH)
         public void onVoid(PlayerMoveEvent e) {
             Player p = e.getPlayer();
             if (plugin.getConfigManager().isVoidInstaKill()) {
@@ -227,6 +260,7 @@ public class EventManager {
                     default:
                         return;
                 }
+
                 String mapName = plugin.getRoomManager().getCurrentMap(roomName);
                 if (plugin.getMapManager().getKitarmour(mapName)) {
                     ItemStack air = new ItemStack(Material.AIR);
@@ -253,6 +287,10 @@ public class EventManager {
 
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onDeath(PlayerDeathEvent e) {
+            Player player = e.getEntity();
+            if(plugin.getGameManager().getPlayersWithWool().containsKey(player.getUniqueId())) {
+                plugin.getGameManager().clearPlayerWools(player.getUniqueId());
+            }
             plugin.getTeamManager().manageDeath(e);
         }
 
@@ -264,11 +302,9 @@ public class EventManager {
         @EventHandler(ignoreCancelled = true)
         public void onItemSpawnEvent(ItemSpawnEvent e) {
             plugin.getTeamManager().onArmourDrop(e);
-            if (!e.isCancelled()) {
-                if (plugin.getRoomManager().isInGame(e.getEntity().getWorld())) {
-                    if (plugin.getRoomManager().isProhibited(e.getEntity())) {
-                        e.setCancelled(true);
-                    }
+            if (plugin.getRoomManager().isInGame(e.getEntity().getWorld())) {
+                if (plugin.getRoomManager().isProhibited(e.getEntity())) {
+                    e.setCancelled(true);
                 }
             }
         }
@@ -277,10 +313,12 @@ public class EventManager {
         public void onPlayerCommand(PlayerCommandPreprocessEvent e) {
             if (plugin.getPlayerManager().getTeamId(e.getPlayer()) != null) {
                 if (!plugin.hasPermission(e.getPlayer(), "ingame-extra-cmds")) {
-                    String cmd = e.getMessage().split(" ")[0].replaceFirst("/", "");
+                    String rawCmd = e.getMessage().split(" ")[0].replaceFirst("/", "");
+                    String cmd = rawCmd.toLowerCase();
                     if (!plugin.getCommandManager().isAllowedInGameCmd(cmd)) {
                         e.setCancelled(true);
-                        String errorMessage = ChatColor.RED + "/" + cmd + " " + plugin.getLangManager().getText("disabled") + ".";
+                        String errorMessage = plugin.getLangManager().getText("cmd-disabled")
+                                .replace("%CMD%", rawCmd);
                         plugin.getLangManager().sendMessage(errorMessage, e.getPlayer());
                     }
                 }
@@ -292,15 +330,12 @@ public class EventManager {
             plugin.getTeamManager().playerChat(e);
         }
 
-        @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
+        @EventHandler(priority = EventPriority.LOWEST)
         public void onPlayerInteract(PlayerInteractEvent e) {
-
             plugin.getTeamManager().cancelSpectator(e);
-
             if (e.isCancelled()) {
                 return;
             }
-
             if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)
                     && e.getClickedBlock().getType() == Material.WORKBENCH
                     && !e.getPlayer().isSneaking()) {
@@ -308,13 +343,10 @@ public class EventManager {
                     e.setCancelled(true);
                     e.getPlayer().openWorkbench(null, true);
                 }
-
             }
-
             if (e.isCancelled()) {
                 return;
             }
-
             if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)
                     || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
                 if (e.getClickedBlock().getType() == Material.WALL_SIGN
@@ -326,12 +358,11 @@ public class EventManager {
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onPlayerDrop(PlayerDropItemEvent e
-        ) {
+        public void onPlayerDrop(PlayerDropItemEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
         }
 
-        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
             if (e.isCancelled() && e.getEntity() instanceof Player) {
                 TeamManager.TeamId teamId = plugin.getPlayerManager().getTeamId((Player) e.getEntity());
@@ -360,16 +391,15 @@ public class EventManager {
             }
         }
 
-        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onPlayerFish(PlayerFishEvent e) {
             plugin.getTeamManager().cancelSameTeam(e);
         }
 
-        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
         }
-
 
         @EventHandler
         public void onLobbyItemUse(PlayerInteractEvent e) {
@@ -393,34 +423,140 @@ public class EventManager {
                     break;
                 }
             }
-
         }
 
-        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        @EventHandler(priority = EventPriority.LOW)
+        public void onMapEditorItemUse(PlayerInteractEvent e) {
+            Player player = e.getPlayer();
+            if (!player.getInventory().getItemInHand().isSimilar(plugin.getMapManager().getMapItemEditor())) {
+                return;
+            }
+
+            if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) {
+                return;
+            }
+
+            if (!plugin.getMapManager().isMap(player.getWorld())) {
+                plugin.getLangManager().sendMessage("not-in-map", player);
+                return;
+
+            }
+            e.setCancelled(true);
+            plugin.getMapManager().openMapEditorInv(player);
+        }
+
+        @EventHandler(priority = EventPriority.LOW)
+        public void onContinueItemUse(PlayerInteractEvent e) {
+            Player player = e.getPlayer();
+            if (!player.getInventory().getItemInHand().isSimilar(plugin.getMapManager().getContinueSetupItem())) {
+                return;
+            }
+
+            if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) {
+                return;
+            }
+
+            if (!plugin.getMapManager().isMap(player.getWorld())) {
+                plugin.getLangManager().sendMessage("not-in-map", player);
+                return;
+
+            }
+            e.setCancelled(true);
+            player.performCommand("ctwsetup mapconfig continue");
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onInventoryOpenEvent(InventoryOpenEvent e) {
             plugin.getGameManager().cancelProtectedChest(e);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onInventoryClick(InventoryClickEvent e) {
-            plugin.getTeamManager().cancelSpectator(e);
-            if (!e.isCancelled()) {
-                plugin.getGameManager().checkTarget(e);
-            }
-        }
+            if (e.getCurrentItem() == null) return;
 
-        @EventHandler
-        public void onInvClick(InventoryClickEvent event) {
-            if (event.getCurrentItem() == null) return;
-
-            ItemStack clicked = event.getCurrentItem();
+            ItemStack clicked = e.getCurrentItem();
             ItemMeta meta = clicked.getItemMeta();
             if (meta == null || !meta.hasDisplayName()) return;
 
             for (LobbyItem item : plugin.getLobbyManager().getAllItems()) {
                 if (meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', item.getName()))) {
-                    event.setCancelled(true);
+                    e.setCancelled(true);
                     break;
+                }
+            }
+            plugin.getTeamManager().cancelSpectator(e);
+            plugin.getGameManager().checkTarget(e);
+        }
+
+        @EventHandler
+        public void atMapParticlesDisplay(PlayerTeleportEvent e) {
+            Player player = e.getPlayer();
+            if (e.getTo() == null || e.getFrom() == null) return;
+
+            World toWorld = e.getTo().getWorld();
+            World fromWorld = e.getFrom().getWorld();
+
+            if (plugin.getMapManager().isMap(toWorld) && !plugin.getMapManager().isMap(fromWorld)) {
+                String mapName = toWorld.getName();
+                MapManager.MapData mapData = plugin.getMapManager().getMapData(mapName);
+                if (mapData == null) return;
+                if(mapData.blueInaccessibleAreas == null) return;
+                if(mapData.redInaccessibleAreas == null) return;
+                if(mapData.protectedAreas == null) return;
+
+                BukkitTask oldTask = particleTasks.remove(player.getUniqueId());
+                if (oldTask != null) oldTask.cancel();
+
+                BukkitTask task = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        double step = 1.5;
+
+                        for (Selection sel : mapData.redInaccessibleAreas) {
+                            Utils.drawSelectionBorderSpigot(player, sel, Effect.COLOURED_DUST,
+                                    1f, 0f, 0f, 1f, step);
+                        }
+
+                        for (Selection sel : mapData.blueInaccessibleAreas) {
+                            Utils.drawSelectionBorderSpigot(player, sel, Effect.COLOURED_DUST,
+                                    0f, 0f, 1f, 1f, step);
+                        }
+
+                        for (Selection sel : mapData.protectedAreas) {
+                            Utils.drawSelectionBorderSpigot(player, sel, Effect.COLOURED_DUST,
+                                    1f, 1f, 0f, 1f, step);
+                        }
+                    }
+                }.runTaskTimer(plugin, 0L, 20L);
+
+                particleTasks.put(player.getUniqueId(), task);
+            }
+
+            if (plugin.getMapManager().isMap(fromWorld) && !plugin.getMapManager().isMap(toWorld)) {
+                BukkitTask task = particleTasks.remove(player.getUniqueId());
+                if (task != null) {
+                    task.cancel();
+                }
+            }
+        }
+
+        @EventHandler
+        public void atLeaveLobby(PlayerChangedWorldEvent e) {
+            if(!plugin.getConfigManager().isLobbyItemsEnabled()) return;
+            Player player = e.getPlayer();
+            World fromWorld = e.getFrom();
+            if(fromWorld == plugin.getWorldManager().getLobbyWorld()) {
+                PlayerInventory inv = player.getInventory();
+                for (ItemStack itemStack : inv.getContents()) {
+                    if (itemStack == null) return;
+                    ItemMeta meta = itemStack.getItemMeta();
+                    if (meta == null || !meta.hasDisplayName()) return;
+                    for (LobbyItem item : plugin.getLobbyManager().getAllItems()) {
+                        if (meta.getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', item.getName()))) {
+                            inv.remove(itemStack);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -510,12 +646,7 @@ public class EventManager {
             if (!e.getFrom().getWorld().getName().equals(e.getTo().getWorld().getName())) {
                 if (plugin.getRoomManager().isInGame(e.getTo().getWorld())) {
                     Player player = e.getPlayer();
-                    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            plugin.getGameManager().movePlayerTo(player, TeamManager.TeamId.SPECTATOR);
-                        }
-                    }, 5);
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getGameManager().movePlayerTo(player, TeamManager.TeamId.SPECTATOR), 5);
                 } else {
                     if (plugin.getRoomManager().isInGame(e.getFrom().getWorld())) {
                         plugin.getGameManager().playerLeftGame(e.getPlayer());
@@ -525,7 +656,7 @@ public class EventManager {
         }
 
         @EventHandler
-        public void onPlayerLobby(PlayerTeleportEvent e) throws IOException {
+        public void onPlayerLobby(PlayerTeleportEvent e) {
             if(e.getTo().getWorld().equals(plugin.getWorldManager().getLobbyWorld())) {
                 Player plr = e.getPlayer();
                 PlayerInventory inv = plr.getInventory();
@@ -551,16 +682,16 @@ public class EventManager {
 
         @EventHandler
         public void onTeleport(PlayerTeleportEvent e) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                plugin.getPlayerManager().updateTablistFor(e.getPlayer());
-            }, 2L);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getPlayerManager().updateTablistFor(e.getPlayer()), 2L);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onPlayerQuit(PlayerQuitEvent e) {
             Player player = e.getPlayer();
             e.setQuitMessage(null);
-
+            if(plugin.getGameManager().getPlayersWithWool().containsKey(player.getUniqueId())) {
+                plugin.getGameManager().clearPlayerWools(player.getUniqueId());
+            }
             if (plugin.getWorldManager().getLobbyWorld() != null) {
                 Location lobbySpawn = plugin.getWorldManager().getNextLobbySpawn();
                 if (lobbySpawn != null) {
@@ -584,7 +715,6 @@ public class EventManager {
                     }
                 }
             }
-
             if (plugin.getRoomManager().isInGame(player.getWorld())) {
                 plugin.getGameManager().playerLeftGame(player);
             }
@@ -606,30 +736,21 @@ public class EventManager {
             if (lobbyWorld == null) {
                 if (plugin.hasPermission(e.getPlayer(), "setup")) {
                     Player player = e.getPlayer();
-                    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            plugin.getLangManager().sendText("unconfigured-lobby", player);
-                            try {
-                                for (LobbyItem lobbyItem : plugin.getLobbyManager().getAllItems()) {
-                                    player.getInventory().setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
-                                }
-                            } catch (NullPointerException ex) {
-                                player.sendMessage("Error at load lobby items.");
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        plugin.getLangManager().sendText("unconfigured-lobby", player);
+                        try {
+                            for (LobbyItem lobbyItem : plugin.getLobbyManager().getAllItems()) {
+                                player.getInventory().setItem(lobbyItem.getSlot(), lobbyItem.toItemStack());
                             }
+                        } catch (NullPointerException ex) {
+                            player.sendMessage("Error at load lobby items.");
                         }
                     }, 30);
                 }
             } else {
                 e.setJoinMessage(null);
 
-                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        e.getPlayer().teleport(plugin.getWorldManager().getNextLobbySpawn());
-
-                    }
-                }, 10);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> e.getPlayer().teleport(plugin.getWorldManager().getNextLobbySpawn()), 10);
 
                 String joinMessage = plugin.getLangManager().getText("join-message")
                         .replace("%PLAYER%", e.getPlayer().getDisplayName());
@@ -648,12 +769,8 @@ public class EventManager {
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onBlockPlaceEvent(BlockPlaceEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
-            if (!e.isCancelled()) {
-                plugin.getGameManager().events.cancelEditProtectedAreas(e);
-            }
-            if (e.isCancelled()) {
-                plugin.getGameManager().checkTarget(e);
-            }
+            plugin.getGameManager().events.cancelEditProtectedAreas(e);
+            plugin.getGameManager().checkTarget(e);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -661,34 +778,42 @@ public class EventManager {
             plugin.getGameManager().events.cancelCrafting(e);
         }
 
+        @EventHandler
+        public void onSetupChat(AsyncPlayerChatEvent e) {
+            plugin.getMapManager().onChat(e);
+        }
+
+        @EventHandler
+        public void handleMapEditorInv(InventoryClickEvent e) {
+            plugin.getMapManager().onMapEditorInteract(e);
+        }
+
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onBlockBreakEvent(BlockBreakEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
             plugin.getGameManager().events.cancelEditProtectedAreas(e);
-            if (!e.isCancelled()) {
-                if (plugin.getPlayerManager().getTeamId(e.getPlayer()) != null) {
-                    Location blockLoc = e.getBlock().getLocation();
-                    for (Entity entity : e.getPlayer().getWorld().getNearbyEntities(blockLoc,1, 2, 1)) {
-                        if(entity instanceof Player) {
-                            Player other = (Player) entity;
-                            if (other.getName().equals(e.getPlayer().getName())) {
-                                continue;
-                            }
-                            if (other.getLocation().getBlockX() == e.getBlock().getLocation().getBlockX()
-                                    && other.getLocation().getBlockY() >= e.getBlock().getLocation().getBlockY()
-                                    && other.getLocation().getBlockY() < e.getBlock().getLocation().getBlockY() + 2
-                                    && other.getLocation().getBlockZ() == e.getBlock().getLocation().getBlockZ()
-                                    && e.getBlock().getType().isSolid()){
+            if (plugin.getPlayerManager().getTeamId(e.getPlayer()) != null) {
+                Location blockLoc = e.getBlock().getLocation();
+                for (Entity entity : e.getPlayer().getWorld().getNearbyEntities(blockLoc, 1, 2, 1)) {
+                    if (entity instanceof Player) {
+                        Player other = (Player) entity;
+                        if (other.getName().equals(e.getPlayer().getName())) {
+                            continue;
+                        }
+                        if (other.getLocation().getBlockX() == e.getBlock().getLocation().getBlockX()
+                                && other.getLocation().getBlockY() >= e.getBlock().getLocation().getBlockY()
+                                && other.getLocation().getBlockY() < e.getBlock().getLocation().getBlockY() + 2
+                                && other.getLocation().getBlockZ() == e.getBlock().getLocation().getBlockZ()
+                                && e.getBlock().getType().isSolid()) {
 
-                                String spleafText = plugin.getLangManager().getText("block-spleaf");
-
-                                plugin.getLangManager().sendVerbatimTextToWorld(
-                                        spleafText.replace("%DAMAGER%",
-                                                        plugin.getPlayerManager().getChatColor(e.getPlayer()) + e.getPlayer().getName())
-                                                .replace("%VICTIM%",
-                                                        plugin.getPlayerManager().getChatColor(other) + other.getName()), other.getWorld(), null);
-                                break;
-                            }
+                            if(!plugin.getConfigManager().isBlockSpleafAlert()) return;
+                            String spleafText = plugin.getLangManager().getText("block-spleaf");
+                            plugin.getLangManager().sendVerbatimTextToWorld(
+                                    spleafText.replace("%DAMAGER%",
+                                                    plugin.getPlayerManager().getChatColor(e.getPlayer()) + e.getPlayer().getName())
+                                            .replace("%VICTIM%",
+                                                    plugin.getPlayerManager().getChatColor(other) + other.getName()), other.getWorld(), null);
+                            break;
                         }
                     }
                 }
@@ -698,20 +823,16 @@ public class EventManager {
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onPlayerPickupItem(PlayerPickupItemEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
-            if (!e.isCancelled()) {
-                plugin.getGameManager().checkTarget(e);
-            }
+            plugin.getGameManager().checkTarget(e);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onEntityTarget(EntityTargetEvent e
-        ) {
+        public void onEntityTarget(EntityTargetEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onBlockDamage(BlockDamageEvent e
-        ) {
+        public void onBlockDamage(BlockDamageEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
         }
 
@@ -725,9 +846,11 @@ public class EventManager {
             if(e.getCause() == DamageCause.FALL) {
                 if(e.getEntity() instanceof Player) {
                     Player plr = (Player) e.getEntity();
-                    if(plugin.getPlayerManager().getTeamId(plr) != null) {
-                        e.setCancelled(plugin.getConfigManager().isFallDamage());
+                    if(plugin.getPlayerManager().getTeamId(plr) == null ||
+                    plugin.getPlayerManager().getTeamId(plr) == TeamManager.TeamId.SPECTATOR) {
+                        return;
                     }
+                    e.setCancelled(plugin.getConfigManager().isFallDamage());
                 }
             }
         }
@@ -735,7 +858,7 @@ public class EventManager {
         @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
         public void onFoodLevelChange(FoodLevelChangeEvent e) {
             plugin.getTeamManager().cancelSpectator(e);
-            if (e.getEntity() instanceof Player && !e.isCancelled()) {
+            if (e.getEntity() instanceof Player) {
                 Player player = (Player) e.getEntity();
                 TeamManager.TeamId ti = plugin.getPlayerManager().getTeamId(player);
                 if (ti != null && player.getFoodLevel() > e.getFoodLevel()) {
@@ -754,6 +877,10 @@ public class EventManager {
         registerGameEvents();
     }
 
+    public void startEditing(Player player) {
+        editingPlayers.add(player.getUniqueId());
+    }
+
     public void registerGameEvents() {
         plugin.getServer().getPluginManager().registerEvents(gameEvents, plugin);
     }
@@ -763,10 +890,6 @@ public class EventManager {
         SetupListeners sl = new SetupListeners(action);
         plugin.getServer().getPluginManager().registerEvents(sl, plugin);
         playerSetup.put(player, sl);
-    }
-
-    public void unregisterGameEvents() {
-        HandlerList.unregisterAll(gameEvents);
     }
 
     public void unregisterSetUpEvents(Player player) {

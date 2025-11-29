@@ -191,7 +191,7 @@ public class PlayerManager {
 
     public ChatColor getChatColor(Player player) {
         ChatColor cc = ChatColor.WHITE;
-        TeamManager.TeamId teamId = (TeamManager.TeamId)this.playerTeam.get(player.getName());
+        TeamManager.TeamId teamId = this.playerTeam.get(player.getName());
         if (teamId != null) {
             cc = this.plugin.getTeamManager().getChatColor(teamId);
         }
@@ -204,7 +204,7 @@ public class PlayerManager {
         this.falseSpectators.remove(player.getName());
 
         try {
-            TeamManager.TeamId previousTeam = (TeamManager.TeamId)this.playerTeam.put(player.getName(), teamId);
+            TeamManager.TeamId previousTeam = this.playerTeam.put(player.getName(), teamId);
             if (previousTeam != null) {
                 this.plugin.getTeamManager().removeFromTeam(player, previousTeam);
             }
@@ -233,7 +233,7 @@ public class PlayerManager {
         try {
             this.clearInventory(player);
             this.dress(player);
-            teamId = (TeamManager.TeamId)this.playerTeam.remove(player.getName());
+            teamId = this.playerTeam.remove(player.getName());
             this.plugin.getTeamManager().removeFromTeam(player, teamId);
         } finally {
             this._playerTeam_mutex.unlock();
@@ -243,12 +243,12 @@ public class PlayerManager {
     }
 
     public TeamManager.TeamId getTeamId(Player player) {
-        return (TeamManager.TeamId)this.playerTeam.get(player.getName());
+        return this.playerTeam.get(player.getName());
     }
 
     public boolean isSpectator(Player player) {
         boolean resp = false;
-        TeamManager.TeamId teamId = (TeamManager.TeamId)this.playerTeam.get(player.getName());
+        TeamManager.TeamId teamId = this.playerTeam.get(player.getName());
         if (teamId != null) {
             if (teamId != TeamManager.TeamId.SPECTATOR) {
                 if (this.falseSpectators.contains(player.getName())) {
