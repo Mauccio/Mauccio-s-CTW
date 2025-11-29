@@ -10,6 +10,7 @@ world: "world"
 cmd-success: "&aCommand executed successfully."
 enabled: "enabled"
 disabled: "disabled"
+cmd-disabled: "&4/%CMD% can't be used in game."
 maps: "maps"
 none: "none"
 Close: "Close"
@@ -19,8 +20,13 @@ room-gui-enabled: "&aRoom %ROOM% is &lenabled&a."
 room-gui-disabled: "&cRoom %ROOM% is &ldisabled&c."
 join-message: "&7%PLAYER% just join."
 left-message: "&7%PLAYER% left the server."
-armour-brand: "Libélula Armour"
-we-not-enabled: "WorldEdit plugin is not enabled, can't continue."
+armour-brand: "CTW Armor"
+we-not-enabled: "&cWorldEdit plugin is not enabled, can't continue."
+nb-not-enabled: "&cNoteBlockAPI plugin is not enabled, &eit's optional, but if you want to use NBS sounds, please &cinstall it."
+vault-not-enabled: "&cVault plugin is not enabled, &eit's optional, but if kits are enabled, kits will be for &cfree."
+economy-addon-not-found: "&cEconomy addon not found, coins will not be given."
+economy-addon-connected: "Economy addon: %ADDON% &aconnected&a successfully."
+nb-detected: "&aNoteBlockAPI detected, now you can use NBS Sounds."
 moved-to-red: "&aYou have been moved to &cRED&a team"
 moved-to-blue: "&aYou have been moved to &9BLUE&a team"
 moved-to-spectator: "&aNow you are spectating"
@@ -66,7 +72,7 @@ player-join-spect: "&7%PLAYER% is &bspectator&7."
 not-in-room-cmd: "&4This command cannot be executed outside a game room."
 not-teamselect-perm: "&4You need to be a &lVIP&4 for choosing team."
 already-in-this-team: "&4You were already on that team."
-win-wool-placed: "&l%PLAYER%&7 has placed the &l%WOOL%&7 wool."
+win-wool-placed: "&l%PLAYER%&7 has placed the &l%WOOL%&7."
 red-win-game: "&cRED&7 Team won!"
 blue-win-game: "&9AZUL&7 Team won!"
 starting-new-game: "&7¡Starting a new game!"
@@ -75,6 +81,8 @@ server-ip: "&emc.yourserver.com"
 no-free-slots: "&4Game full. &7Only &lVIP&7 players can join."
 no-craft: "&cYou can't craft this."
 prohibited-area: "&cYou can't enter at prohibited area."
+updater:
+  checking: "Checking for updates..."
 bounding-no-access:
   red:
     entering: "&eEntering a restricted area for the &cRed Team: &6({coords})"
@@ -196,7 +204,7 @@ four-seconds-to-start: "&a4 &7seconds."
 three-seconds-to-start: "&e3 &7seconds."
 two-seconds-to-start: "&62 &7seconds."
 one-second-to-start: "&41 &7second."
-wool-pickup-message: "&7%PLAYER%&7 has captured the %WOOL%&7 wool."
+wool-pickup-message: "&7%PLAYER%&7 has captured the %WOOL%&7"
 obs-true: "&aNow you'll see all spectators when you are a spectator."
 obs-false: "&aNow you'll see no spectators when you are a spectator."
 dms-true: "&aNow you'll see the death messages of all players."
@@ -208,11 +216,12 @@ starting-kit-set: "&aPlayer's initial kit has been configured."
 saved-kit-success: "&aYour Personal Kit has been saved successfully."
 edit-your-kit: "&aEdit your Personal Kit."
 edit-global-kit: "&aGlobal Kit has been added into your inventory."
-save-your-kit-with: "&aRemember to execute the command: /savekit, to save the Personal Kit."
+save-your-kit-move: "&aRemember to move if you want to save your kit."
 error-at-save-kit: "&4An error occurred while saving the global kit."
 error-at-save-player-kit: "&4An error occurred while saving the personal kit."
 error-at-get-kit: "&4An error occurred while getting the global kit."
 global-kit-error: "&4Global Kit has not yet been set."
+global-kit-tip: "&eSet the Global Kit, when you finished, just move."
 default-armour-on: "&aPlayers will start the game with the default armour on."
 default-armour-off: "&aPlayers will start the game without any armour."
 block-spleaf: "&aPlayer %DAMAGER%&a He has broken the ground where %VICTIM%&a stood."
@@ -242,8 +251,8 @@ titles:
     red: "&cRed Team &eWINS!"
     blue: "&9Blue Team &eWINS!"
   headshot: "&7"
-  wool-pickup: "&6⚠"
-  wool-placed: "&a✔"
+  wool-pickup: "&e⚠"
+  wool-placed: "&a✦"
   countdown:
     thirty-seconds: "&d30"
     twenty-seconds: "&920"
@@ -263,8 +272,8 @@ subtitles:
     red: "&6Congratulations to all team members!"
     blue: "&6Congratulations to all team members!"
   headshot: "&c&l¡HEADSHOT!"
-  wool-pickup: "&7%PLAYER%&7 has captured the %WOOL%&7 wool."
-  wool-placed: "&7%PLAYER%&7 has placed the &l%WOOL%&7 wool."
+  wool-pickup: "&7%PLAYER%&7 has captured the %WOOL%&7."
+  wool-placed: "&7%PLAYER%&7 has placed the &l%WOOL%&7."
   countdown:
     thirty-seconds: "&f"
     twenty-seconds: "&f"
@@ -452,18 +461,21 @@ help-book:
       10: ""
       11: "&5&o   ¡Thank you!"
 scoreboard:
-  title: "&6Capture The Wool&f"
-  blue-team-name: "&9Blue Team &f"
-  red-team-name: "&cRed Team &f"
+  title: '&6&lCAPTURE THE WOOL&f'
+  blue-team-name: '&9Blue Team &f'
+  red-team-name: '&cRed Team &f'
   lines:
-    - "&7&m----------------&r"
-    - "&9%BLUE_TEAM_NAME%"
-    - "%BLUE_WOOLS%"
-    - "&r"
-    - "&c%RED_TEAM_NAME%"
-    - "%RED_WOOLS%"
-    - "&7&m----------------"
-    - "&7%SERVER_IP%"
+    - '&7&l'
+    - '&eMap: &f%MAP_NAME%'
+    - '&aRoom: &f%ROOM_NAME%'
+    - '&a'
+    - '&9%BLUE_TEAM_NAME% &7(%BLUE_PLAYERS%)'
+    - '%BLUE_WOOLS%'
+    - '&r'
+    - '&c%RED_TEAM_NAME% &7(%RED_PLAYERS%)'
+    - '%RED_WOOLS%'
+    - '&7'
+    - '&7%SERVER_IP%'
 lobby-scoreboard:
   title: "&6Lobby&f"
   lines:
@@ -474,8 +486,8 @@ lobby-scoreboard:
     - "&7%SERVER_IP%"
 chars:
   wool:
-    placed: "\u2B1B"
-    not-placed: "\u2B1C"
+    placed: "⬛"
+    not-placed: "⬜"
 death-events:
   by-player:
     message: "%KILLED_COLOR%%KILLED%&7 has been killed by %KILLER_COLOR%%KILLER%&7 %HOW%"
@@ -503,29 +515,30 @@ death-events:
       POISON: "has been poisoned"
       _OTHER_: "has had a shameful and painful death"
 player-messages:
+  type: "ACTIONBAR" # MESSAGE OR ACTIONBAR
   add-points: "&e+1 &7score"
   add-points-capture: "&6+10 &7score"
   remove-points: "&c-1 &7score"
   add-coins:
     capture: "&a+5 &6coins"
-    kill: "&a+1 &6coins"
+    kill: " &7| &a+1 &6coins"
 wool-names:
-  WHITE: "White"
-  RED: "Red"
-  BLUE: "Blue"
-  GREEN: "Green"
-  YELLOW: "Yellow"
-  BLACK: "Black"
-  ORANGE: "Orange"
-  MAGENTA: "Magenta"
-  LIGHT_BLUE: "Light Blue"
-  LIME: "Lime"
-  PINK: "Pink"
-  GRAY: "Gray"
-  SILVER: "Silver"
-  CYAN: "Cyan"
-  PURPLE: "Purple"
-  BROWN: "Brown"
+  WHITE: "White Wool"
+  RED: "Red Wool"
+  BLUE: "Blue Wool"
+  GREEN: "Green Wool"
+  YELLOW: "Yellow Wool"
+  BLACK: "Black Wool"
+  ORANGE: "Orange Wool"
+  MAGENTA: "Magenta Wool"
+  LIGHT_BLUE: "Light Blue Wool"
+  LIME: "Lime Wool"
+  PINK: "Pink Wool"
+  GRAY: "Gray Wool"
+  SILVER: "Silver Wool"
+  CYAN: "Cyan Wool"
+  PURPLE: "Purple Wool"
+  BROWN: "Brown Wool"
 sign-format: # Max 16 characters.
   disabled: "&4Disabled"
   invalid-map: "&4Invalid Map"
@@ -534,3 +547,112 @@ sign-format: # Max 16 characters.
   2: "&0%ROOM%"
   3: "&a%CURRENT_MAP%"
   4: "&0%CURRENT_PLAYERS%/%MAX_PLAYERS%"
+tablist:
+  header: "&c&lCapture The Wool &7| &a%ROOM_NAME% &7| &e%MAP_NAME%"
+  footer: "&fIP: &e%SERVER_IP%"
+map-editor-gui:
+  title: "&b&lMap Editor &7| &9%MAP_NAME%"
+  enter-value: "&eEnter value for: %VALUE%" # %VALUE% : max-players-value or weather-value
+  max-players-value: "&eMax Players"
+  weather-value: "&eWeather"
+  setted: "&aSetted!"
+  empty: "&4Not setted!"
+  no-areas: "&4No areas added!"
+  areas-can-be-removed: "&aDetected areas: &e%COUNT%"
+  no-wools: "&4No wool points added!"
+  no-spawners: "&4No wool spawners added!"
+  areas-count: "&eAreas added: &a%COUNT%"
+  max-players-count: "&eMax Players: &a%COUNT%"
+  weather-type: "&eWeather: %WEATHER%"
+  sun: "&6Sunny"
+  storm: "&8Stormy"
+  red-win-wool-count: "&eRed Wool Points: &a%COUNT%"
+  blue-win-wool-count: "&eBlue Wool Points: &a%COUNT%"
+  wool-spawners-count: "&eWool Spawners: &a%COUNT%"
+  turn-on: "&aON"
+  turn-off: "&cOFF"
+  item:
+    name: "&b&lMap Editor"
+    lore:
+    - "&7Edit the map settings."
+    - "&eClick to open."
+  continue:
+    name: "&6&lContinue Setup"
+    lore:
+    - "&7Continue configuring the map."
+    - "&eClick to continue."
+  red-spawn:
+    name: "&cSet Red Team Spawn"
+    lore:
+    - "&7Set the &cRED&7 team spawn point."
+    - "&eClick to set."
+  blue-spawn:
+    name: "&9Set Blue Team Spawn"
+    lore:
+    - "&7Set the &9BLUE&7 team spawn point."
+    - "&eClick to set."
+  map-spawn:
+    name: "&eSet Map Spawn"
+    lore:
+    - "&7Set the map spawn point."
+    - "&eClick to set."
+  max-players:
+    name: "&aSet Max Players"
+    lore:
+    - "&7Set the maximum players for this map."
+    - "&eClick to set."
+  red-wool-winpoint:
+    name: "&cSet Red Wool Points"
+    lore:
+    - "&7Set the capture points for &cRED&7 team."
+    - "&eClick to set."
+  blue-wool-winpoint:
+    name: "&9Set Blue Wool Points"
+    lore:
+    - "&7Set the capture points for &9BLUE&7 team."
+    - "&eClick to set."
+  red-noaccess-areas:
+    name: "&cAdd Red No Access Area"
+    lore:
+    - "&7Add prohibited areas for &cRED&7 team."
+    - "&eClick to add."
+  blue-noaccess-areas:
+    name: "&9Add Blue No Access Area"
+    lore:
+    - "&7Add prohibited areas for &9BLUE&7 team."
+    - "&eClick to add."
+  protected-areas:
+    name: "&5Add Protected Area"
+    lore:
+    - "&7Add protected areas where no one can edit."
+    - "&eClick to add."
+  weather:
+    name: "&6Set Weather"
+    lore:
+      - "&7Set the weather for this map."
+      - "&eClick to set."
+  wool-spawners:
+    name: "&aAdd Wool Spawners"
+    lore:
+      - "&7Add wool spawners to the map."
+      - "&eClick to add."
+  restauration-area:
+    name: "&6Set Restauration Area"
+    lore:
+    - "&7Set the restauration area for this map."
+    - "&eClick to set."
+  use-armor:
+    name: "&dToggle Default Armor"
+    lore:
+      - "&7Enable/Disable default armor for players."
+      - "&eClick to toggle."
+  remove-region:
+    name: "&4Remove Region"
+    lore:
+      - "&7Remove the region you are standing in."
+      - "&eClick to remove."
+  global-kit:
+    name: "&bEdit Global Kit"
+    lore:
+      - "&7Edit the global kit for all players."
+      - "&eClick to edit."

@@ -24,6 +24,7 @@ global-tablist: false # Enable to have a global tablist instead of independent.
 use-sql-for-kits: false # Only for Personal Kits, Global Kit always use YAML.
 kit-menu: false # Enable Kit Service?
 prohibited-msg: true # You can edit it in messages.yml (prohibited-zone)
+block-spleaf-alert: true # Alert players when they spleef same team members.
 
 no-crafteable-items: {}
 #  - WOOL
@@ -52,23 +53,44 @@ vip-armors:
 # Sound Settings
 sounds:
   enabled: true
-  alert: NOTE_PLING
-  win-wool-sound: VILLAGER_YES
-  wool-pickup-sound: FIREWORK_LAUNCH
-  reversing-sound: ORB_PICKUP
-  team-join-sound: LEVEL_UP
-  join-command: CHEST_OPEN
-  map-change: LEVEL_UP
-  gui: CHEST_OPEN
-  team-win-sound: WITHER_DEATH
-  your-stats: ORB_PICKUP
-  error: ENDERDRAGON_HIT
-  tip: ITEM_PICKUP
-  headshot: BLAZE_DEATH
+  type: GAME
+  # GAME (Game Sounds) | NOTEBLOCK (Requires NoteBlockAPI) | MIXED (Game + Noteblock)
+  # - In order to modify NOTEBLOCK Sounds, you must change or edit the nbs files from /sounds folder
+  # - For MIXED mode, to disable a specific sound, just change value to NONE.
+  # - For MIXED mode, to use NBS file for a specific sound, just type NOTEBLOCK next to the path.
+  # Example:
+  # type: MIXED
+  # alert: NOTE_PLING
+  # win-wool:
+  #   same: NONE
+  #   enemy: NOTEBLOCK -> uses win-wool-enemy.nbs
+  alert: NOTE_PLING # alert.nbs
+  win-wool:
+    same: VILLAGER_YES # win-wool-same.nbs
+    enemy: VILLAGER_NO # win-wool-enemy.nbs
+    generic: # win-wool-generic.nbs | For Spectators
+  wool-pickup:
+    same: FIREWORK_LAUNCH  # win-wool-same.nbs
+    enemy: BLAZE_HIT # win-wool-enemy.nbs
+    generic: FIREWORK_LAUNCH # win-wool-generic.nbs | For Spectators
+  countdown: ORB_PICKUP # countdown.nbs
+  team-join:
+    red: LEVEL_UP # team-join-red.nbs
+    blue: LEVEL_UP # team-join-blue.nbs
+  join-command: CHEST_OPEN # join-command.nbs
+  map-change: LEVEL_UP # map-change.nbs
+  gui: CHEST_OPEN # gui.nbs
+  team-win:
+    same: WITHER_DEATH # team-win-same.nbs
+    enemy: BLAZE_DEATH # team-win-enemy.nbs
+    generic: WITHER_DEATH # team-win-generic.nbs
+  stats: ORB_PICKUP # stats.nbs
+  error: ENDERDRAGON_HIT # error.nbs
+  tip: ITEM_PICKUP # tip.nbs
+  headshot: BAT_DEATH # headshot.nbs
 
 # Title Settings:
 # Default values: 10, 30, 10
-# To change titles text, go to messages.yml
 titles:
   join:
     room:
@@ -117,4 +139,3 @@ titles:
 coins:
   kill: 5
   capture: 10
-

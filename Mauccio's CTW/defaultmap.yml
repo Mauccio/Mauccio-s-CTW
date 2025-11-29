@@ -1,5 +1,5 @@
 ## Grace Period in seconds for waiting before game starts:
-grace-period: 30 # In development
+grace-period: 30
 
 # Blocks which will not drop materials (prevents target WOOL crafting).
 no-drop-on-break:

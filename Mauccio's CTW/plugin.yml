@@ -1,10 +1,10 @@
 name: Mauccios-CTW
-version: 1.4
+version: 1.4-R3
 main: com.mauccio.ctw.CTW
 description: An updated LibelulaUltimateCaptureTheWool
 author: Mauccio
 depend: [WorldEdit]
-softdepend: [Vault, PlaceholderAPI]
+softdepend: [Vault, PlaceholderAPI, NoteBlockAPI]
 commands:
   ctw:
     description: Mauccios CTW main command.
@@ -69,12 +69,6 @@ commands:
     usage: /kit
     permission: ctw.kit
     permission-message: You don't have <permission>
-  savekit:
-    description: Save your custom kit.
-    usage: /savekit
-    permission: ctw.customkit
-    permission-message: You don't have <permission>
-    aliases: [skit, kitsave, ctw-savekit]
   saveglobalkit:
     description: Save the global kit.
     usage: /saveglobalkit
