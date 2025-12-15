@@ -1,0 +1,675 @@
+# Mauccio's CTW Messages File | v1.4 Release 3
+message-prefix: "&7[&4CTW&7]"
+alert-prefix: "&7[&4Alerta&7] &e"
+chat-format: "&7>> &f" # Next to player's name.
+RED-TEAM: "EQUIPO ROJO"
+BLUE-TEAM: "EQUIPO AZUL"
+SPECTATOR: "ESPECTADOR"
+Blue-Team: "&9Equipo Azul"
+Red-Team: "&cEquipo Rojo"
+world: "mundo"
+cmd-success: "&aComando ejecutado exitosamente."
+enabled: "habilitado"
+disabled: "deshabilitado"
+cmd-disabled: "&4No se puede usar este comando en juego: &c/%CMD%."
+maps: "mapas"
+none: "ninguno"
+Close: "Cerrar"
+close-menu: "Cerrar este menú"
+rooms-gui: "&d&lSalas"
+room-gui-enabled: "&aLa sala %ROOM% está &lhabilitada&a."
+room-gui-disabled: "&cLa sala %ROOM% está &ldeshabilitada&c."
+loading-room: "&e[%ROOM_NAME%] &7| &fEstado: %STATUS%"
+join-message: "&7%PLAYER% acaba de entrar al servidor."
+left-message: "&7%PLAYER% salió del servidor."
+armour-brand: "Armadura marca CTW"
+we-not-enabled: "&cWorldEdit no está habilitado, no se puede continuar."
+nb-not-enabled: "&cNoteBlockAPI no está habilitado, &ees opcional, pero si desea usar sonidos NBS, porfavor &cinstálelo."
+vault-not-enabled: "&cVault no está habilitado, &ees opcional, pero si el Servicio de Kits está habilitado, los kits serán &cgratuitos."
+economy-addon-not-found: "&cExtensión de economía no encontrada, no se recibirá coins."
+economy-addon-connected: "Extesión de economía: %ADDON% &aconectada&a exitosamente."
+nb-detected: "&aNoteBlockAPI detectado, ahora puedes usar sonidos NBS."
+moved-to-red: "&aHas sido movido al &aequipo &cROJO"
+moved-to-blue: "&aHas sido movido al &aequipo &9AZUL"
+moved-to-spectator: "&aEstás espectando ahora."
+brackets-team: "[Equipo]"
+pick-your-team: "&4Selecciona tu equipo:"
+view-tutorial: "&a&lVer Tutorial"
+not-available-yet: "&b&oNo implementado."
+auto-join: "&f&lEntrar automáticamente."
+auto-join-help: "&b&oTe unirás al equipo de menos jugadores."
+join-blue: "&9&lEntrar al equipo azul"
+blue-join-help: "&b&oJugarás en el equipo azul."
+join-red: "&4&lEntrar al equipo rojo"
+red-join-help: "&b&oJugarás en el equipo rojo."
+not-in-game-cmd: "&4Este comando no se puede ejecutar fuera del juego."
+not-in-lobby-cmd: "&4Este comando no se puede ejecutar fuera del lobby."
+join-in-team: "&4No puedes entrar a otro equipo estando en uno."
+world-doesnot-exists: "&4El mundo no pudo ser cargado."
+lobby-world-set: "&aEl mundo del lobby ha sido establecido exitosamente."
+lobby-spawnpoint-missmatch: "&4Los puntos de aparición del lobby deben estar en el mismo mundo donde está el Lobby."
+lobby-spawnpoint-empty: "&4No hay puntos de aparición establecidos para el lobby principal."
+lobby-cleared: "&aToda la información sobre el lobby ha sido eliminada."
+map-cannot-be-lobby: "&4El lobby principal no puede ser un mapa, si estás seguro de que esto es el lobby escribe &5/ctwsetup map remove&7 antes."
+lobby-cannot-be-map: "&4Un mapa no puede ser el lobby principal, si estás seguro de que esto no es un lobby escribe &5/ctwsetup lobby clear&7 antes."
+map-successfully-added: "&aEl mapa \"%MAP%\" ha sido añadido."
+map-already-exists: "&4\"%MAP%\" ya estaba configurado como mapa."
+map-tip-redspawn: "&7Ahora establece el spawn de &cROJO&7 escribiendo: &5/ctwsetup mapconfig redspawn&7."
+map-tip-bluespawn: "&7Ahora establece el spawn de &9AZUL&7 escribiendo: &5/ctwsetup mapconfig bluespawn&7."
+map-tip-maxplayers: "&7Ahora establece el límite de jugadores para este mapa escribiendo &5/ctwsetup mapconfig maxplayers [número]&7."
+map-tip-restauration: "&7Ahora establece el área de restauración, selecciona todo el mapa usando World Edit y escribe &5/ctwsetup mapconfig restore&7."
+woolwin-already-blueteam: "&4Este punto de captura ya estaba configurado para el equipo &9AZUL&4 en la ubicación: &7%X% %Y% %Z%."
+woolwin-already-redteam: "&4Este punto de captura ya estaba configurado para el equipo &cROJO&4 en la ubicación: &7%X% %Y% %Z%."
+spawner-already-exists: "&4Ya existía un generador para este color de lana en: &7%X% %Y% %Z%. Si quieres moverlo aquí simplemente rompe el anterior."
+cappoint-deleted: "&aPunto de captura eliminado."
+storm-set: "&aEl clima &otormenta&a ha sido establecido para este mapa."
+sunny-set: "&aEl clima &osoleado&a ha sido establecido para este mapa."
+random-set: "&aEl clima &oaleatorio&a ha sido establecido para este mapa."
+spawner-deleted: "&aSpawner eliminado."
+player-join-map: "&a%PLAYER%&7 se unió al mapa."
+player-left-map: "&c%PLAYER%&7 salió del mapa."
+player-join-red: "&7%PLAYER% se unió al equipo &cROJO&7."
+player-join-blue: "&7%PLAYER% se unió al equipo &9AZUL&7."
+player-join-spect: "&7%PLAYER% es &bespectador&7."
+not-in-room-cmd: "&4Este comando no puede ejecutarse fuera de una sala de juego."
+not-teamselect-perm: "&4Necesitas ser &lVIP&4 para elegir equipo."
+already-in-this-team: "&4Ya estabas en ese equipo."
+win-wool-placed: "&l%PLAYER%&7 ha colocado la Lana &l%WOOL%&7."
+red-win-game: "El &cEQUIPO ROJO&7 ganó la partida!"
+blue-win-game: "El &9EQUIPO AZUL&7 ganó la partida!"
+starting-new-game: "&7¡Iniciando una nueva partida!"
+captured-wool: "&7Lleva esta lana a tu base."
+server-ip: "&emc.tuservidor.com"
+no-free-slots: "&4Partida llena. &7Solo jugadores &lVIP&7 pueden unirse."
+no-craft: "&cNo puedes craftear esto."
+prohibited-area: "&cNo puedes entrar en un área prohibida."
+updater:
+  checking: "Buscando actualizaciones..."
+bounding-no-access:
+  red:
+    entering: "&eEntrando a un área restringida para el equipo &cROJO: &6({coords})"
+    leaving: "&eSaliendo de un área restringida para el equipo &cROJO: &6({coords})"
+  blue:
+    entering: "&eEntrando a un área restringida para el equipo &9AZUL: &6({coords})"
+    leaving: "&eSaliendo de un área restringida para el equipo &9AZUL: &6({coords})"
+  protected:
+    entering: "&eEntrando a un área &5Protegida: &6({coords})"
+    leaving: "&eSaliendo de un área &5Protegida: &6({coords})"
+removed-area:
+  red: "&4Se eliminó un área restringida para el equipo &cROJO: &6({coords})"
+  blue: "&4Se eliminó un área restringida para el equipo &9AZUL: &6({coords})"
+  protected: "&4Se eliminó un área &5Protegida: &6({coords})"
+wool-join: "&a¡Jugar!"
+map-tip-redwoolwin:
+  description: "&7Ahora establece dónde el equipo &cROJO&7 debe colocar las lanas."
+  help-0: "&7Escribe &5/ctwsetup mapconfig redwinwool&7 y coloca las lanas."
+map-tip-bluewoolwin:
+  description: "&7Ahora establece dónde el equipo &9AZUL&7 debe colocar las lanas."
+  help-0: "&7Escribe &5/ctwsetup mapconfig bluewinwool&7 y coloca las lanas."
+map-tip-weather:
+  description: "&7Ahora configura el clima para este mapa."
+  help-0: "Usa el comando &5/ctwsetup mapconfig weather&7 con las siguientes opciones:"
+  help-1: "&5/ctwsetup mapconfig weather fixed=sun&7 - establece el clima soleado para este mapa."
+  help-2: "&5/ctwsetup mapconfig weather fixed=storm&7 - establece el clima tormentoso para este mapa."
+  help-3: "&5/ctwsetup mapconfig weather random&7 - el clima de este mapa será aleatorio."
+map-tip-rednoaccess:
+  description: "&7Ahora establece las regiones donde el equipo &cROJO&7 no podrá pasar."
+  help-0: "&7Selecciona el área de la región usando WorldEdit y escribe &5/ctwsetup mapconfig rednoaccess&7."
+map-tip-bluenoaccess:
+  description: "&7Ahora establece las regiones donde el equipo &9AZUL&7 no podrá pasar."
+  help-0: "&7Selecciona el área de la región usando WorldEdit y escribe &5/ctwsetup mapconfig bluenoaccess&7."
+map-tip-protected:
+  description: "&7Ahora establece las regiones donde nadie puede editar (los cofres y puertas estarán habilitados para su uso)."
+  help-0: "&7Selecciona el área de la región usando WorldEdit y escribe &5/ctwsetup mapconfig protected&7."
+map-tip-woolspawner:
+  description: "&7Opcionalmente puedes añadir algunos \"Spawners de Lana\" en cualquier lugar."
+  help-0: "No es obligatorio, pero los generadores de lana suelen ser útiles."
+  help-1: "&7Escribe &5/ctwsetup mapconfig woolspawner&7 y coloca las lanas."
+map-deleted: "&aMapa eliminado."
+map-list-empty: "&7No hay mapas configurados. Para añadir uno, ve a un mundo de mapas escribiendo &5/gotoworld&7 y luego escribe &5/ctwsetup map add&7 allí."
+available-maps: "&aLos mapas disponibles son:"
+not-in-map: "&4Este comando solo puede ejecutarse en un mapa. Si esto es un mapa, añádelo escribiendo &5/ctwsetup map add&7."
+redspawn-set: "&aPunto de aparición del equipo &cROJO &aestablecido correctamente."
+bluespawn-set: "Punto de aparición del equipo &9AZUL&a establecido correctamente."
+mapspawn-set: "&aPunto de aparición del mapa establecido correctamente."
+maxplayers-set: "&aLímite de jugadores establecido."
+incorrect-parameters: "&4Error en los parámetros."
+area-not-selected: "&4Primero haz una selección de región con WorldEdit."
+area-na-already-blue: "&4El área seleccionada ya era inaccesible para el equipo &9AZUL&a."
+area-na-already-red: "&4El área seleccionada ya era inaccesible para el equipo &cROJO&a."
+area-na-already-protected: "&4El área seleccionada ya estaba protegida."
+area-na-done: "&7Selección añadida, continúa repitiendo esta operación o escribe &5/ctwsetup mapconfig continue"
+world-created: "&aMundo creado correctamente. &7Ahora puedes escribir &5/gotoworld %WORLD%&7 en cualquier momento."
+add-blue-wool-winpoint:
+  description: "&7Coloca la lana que el equipo &9AZUL&7 debe capturar en sus puntos de captura."
+  help-0: "&7La lana desaparecerá cuando el mapa esté en partida. Si la colocas en un lugar incorrecto, simplemente rómpela."
+  help-1: "&7Escribe &5/ctwsetup mapconfig continue&7 para continuar."
+add-red-wool-winpoint:
+  description: "&7Coloca la lana que el equipo &cROJO&7 debe capturar en sus puntos de captura."
+  help-0: "&7La lana desaparecerá cuando el mapa esté en partida. Si la colocas en un lugar incorrecto, simplemente rómpela."
+  help-1: "&7Escribe &5/ctwsetup mapconfig continue&7 para continuar."
+add-wool-spawners:
+  description: "&7Coloca las lanas donde deban estar los generadores de lana."
+  help-0: "&7Estos comenzarán a funcionar cuando el mapa esté en juego."
+  help-1: "&7Escribe &5/ctwsetup mapconfig continue&7 para continuar."
+blue-wool-winpoint-placed: "&aSe ha añadido un punto de captura para el equipo &9AZUL&a. &7Coloca más o escribe &5/ctwsetup mapconfig continue&7."
+red-wool-winpoint-placed: "&aSe ha añadido un punto de captura para el equipo &cROJO&a. &7Coloca más o escribe &5/ctwsetup mapconfig continue&7."
+spawner-placed: "&aSe ha añadido un generador de lana %WOOL%. &7Agrega más o escribe &5/ctwsetup mapconfig continue&7."
+not-a-wool: "&4¡Esto no es lana! &7Coloca lanas o escribe &5/ctwsetup mapconfig continue&7."
+not-a-spawner: "&4¡Esto no es un generador! &7Coloca lanas o escribe &5/ctwsetup mapconfig continue&7."
+map-seems-done: "&a¡El mapa parece estar correctamente configurado!"
+room-tip: "&7Ahora crea una sala de juego escribiendo &5/ctwsetup room add [nombre]"
+lobby-spawnpoint-set:
+  message-0: "&aSe ha añadido un punto de aparición."
+  help-0: "&7Puedes añadir tantos como quieras repitiendo: &5/ctwsetup lobby addspawn."
+  help-1: "&7Para listarlos escribe: &5/ctwsetup lobby listspawn"
+  help-2: "&7O escribe &5/ctwsetup lobby clear &7para borrarlos todos."
+unconfigured-lobby:
+  error: "&4¡El lobby principal del servidor no está configurado! Libelula CTW no puede funcionar sin un lobby principal."
+  help-1: "&7Ve al lobby de tu servidor y escribe &5/ctwsetup lobby addspawn&7 tantas veces como quieras."
+  help-2: "&7Recuerda colocar un &eKit Global&7 con /saveglobalkit&7."
+room-added:
+  message-0: "&aSala añadida correctamente."
+  help-1: "&7Ahora añade al menos 2 mapas escribiendo: &5/ctwsetup room addmap [nombre de sala] [nombre de mapa]&7."
+duplicated-room: "&4Ya existe una sala con ese nombre. Puedes borrarla escribiendo &5/ctwsetup room remove [nombre]"
+edit-enabled-room: "&4Una sala habilitada no puede ser editada. &7Desactívala escribiendo &5/ctwsetup room disable [nombre de sala]&7."
+room-doesnot-exists: "&4Esa sala no existe."
+room-list-empty: "&7No hay salas para listar."
+room-enabled-remove: "&4Una sala habilitada no puede ser eliminada. &7Desactívala escribiendo &5/ctwsetup room disable [nombre de sala]&7."
+room-already-enabled: "&4Esta sala ya estaba habilitada."
+room-already-disabled: "&4Esta sala ya estaba deshabilitada."
+room-already-has-this-map: "&4Este mapa ya pertenece a esta sala."
+room-doesnot-has-this-map: "&4Este mapa no pertenece a esta sala."
+room-has-no-map: "&4Esta sala no contiene ningún mapa."
+room-is-disabled: "&4Esta sala no está habilitada."
+stats-not-enabled: "&4El servicio de estadísticas no está habilitado."
+kits-not-enabled: "&4El servicio de kits no está habilitado."
+kit-created: "&aKit creado correctamente."
+kit-deleted: "&aKit eliminado correctamente."
+kit-saved: "&aKit guardado correctamente."
+kit-saving-error: "&4Error al guardar el kit."
+kit-creating-error: "&4Error al crear un kit."
+kit-deleting-error: "&4Error al eliminar un kit."
+kit-already-exists: "&4Este kit ya existe."
+kit-doesnot-exists: "&4Este kit no existe."
+kit-cooldown-message: "&4Debes esperar &c%COOLDOWN% &4segundos."
+kit-edit-tip: "&ePuedes editar el kit con &5/ctwsetup kit edit [nombre]"
+kit-permission: "&4No tienes permisos suficientes para obtener este kit."
+kit-free: "&aKit recibido correctamente."
+no-vault-alert: "&4Vault no está habilitado, los ítems del kit serán gratuitos."
+next-map-is: "&7El siguiente mapa es &o%MAP%"
+thirty-seconds-to-start: "&730 segundos restantes para iniciar la partida..."
+twenty-seconds-to-start: "&720 segundos restantes para iniciar la partida..."
+ten-seconds-to-start: "&710 segundos restantes para iniciar la partida..."
+next-game-starts-in-five: "&7La siguiente partida comienza en 5 segundos..."
+four-seconds-to-start: "&a4 &7segundos."
+three-seconds-to-start: "&e3 &7segundos."
+two-seconds-to-start: "&62 &7segundos."
+one-second-to-start: "&41 &7segundo."
+wool-pickup-message: "&7%PLAYER%&7 ha capturado la %WOOL%&7"
+obs-true: "&aAhora verás a todos los espectadores cuando seas espectador."
+obs-false: "&aAhora no verás a ningún espectador cuando seas espectador."
+dms-true: "&aAhora verás los mensajes de muerte de todos los jugadores."
+dms-false: "&aSolo verás los mensajes en los que estés involucrado."
+blood-true: "&aSangre habilitada."
+blood-false: "&aSangre deshabilitada."
+use-join: "&ePara unirte, usa &a/jugar&e!"
+starting-kit-set: "&aEl kit inicial del jugador ha sido configurado."
+saved-kit-success: "&aTu Kit Personal ha sido guardado correctamente."
+edit-your-kit: "&aEdita tu Kit Personal."
+edit-global-kit: "&aEl Kit Global ha sido añadido a tu inventario."
+save-your-kit-move: "&aRecuerda moverte si quieres guardar tu kit."
+error-at-save-kit: "&4Ocurrió un error al guardar el kit global."
+error-at-save-player-kit: "&4Ocurrió un error al guardar el kit personal."
+error-at-get-kit: "&4Ocurrió un error al obtener el kit global."
+global-kit-error: "&4El Kit Global aún no ha sido configurado."
+global-kit-tip: "&eConfigura el Kit Global, cuando termines, simplemente muévete."
+default-armour-on: "&aLos jugadores comenzarán la partida con la armadura predeterminada equipada."
+default-armour-off: "&aLos jugadores comenzarán la partida sin ninguna armadura."
+block-spleaf: "&aEl jugador %DAMAGER%&a ha roto el suelo donde estaba %VICTIM%&a."
+repeated-material-warn: "&aADVERTENCIA: Uno o más materiales están repetidos en tu inventario."
+repeated-material-info: "&aEste comando solo establece un tipo de material, no uno específico."
+repeated-material-example: "&aPor ejemplo, si añades lana, ningún color de lana será soltado."
+repeated-material-ok: "&aSe ha configurado el material que no se soltará en este mapa."
+cmd-in-a-not-ctw-map: "&4Este comando debe ejecutarse en un mundo de mapa CTW."
+no-drop-is-empty: "&aTodos los tipos de materiales serán soltados en este mapa."
+menus:
+  kits:
+    no-money: "&4No tienes suficiente dinero para esto."
+    purchased: "&aKit comprado correctamente."
+    title: "&5Menú de Kits"
+    kit-editor: "&6Editando Kit: &f"
+titles:
+  join:
+    room: "&e&ka&c&lCTW&e&ka"
+    red: "&cEQUIPO ROJO"
+    blue: "&9EQUIPO AZUL"
+  change-map: "&7"
+  team-win:
+    red: "&c¡El Equipo Rojo &eGANA!"
+    blue: "&9¡El Equipo Azul &eGANA!"
+  headshot: "&7"
+  wool-pickup: "&e⚠"
+  wool-placed: "&a✦"
+  countdown:
+    thirty-seconds: "&d30"
+    twenty-seconds: "&920"
+    ten-seconds: "&c10"
+    five-seconds: "&25"
+    four-seconds: "&a4"
+    three-seconds: "&e3"
+    two-seconds: "&62"
+    one-second: "&41"
+subtitles:
+  join:
+    room: "&fUsa &e/join &fpara unirte"
+    red: "&7El &9Equipo Azul &7es tu enemigo!"
+    blue: "&7El &cEquipo Rojo &7es tu enemigo!"
+  change-map: "&e¡Captura las lanas enemigas!"
+  team-win:
+    red: "&6¡Felicitaciones!"
+    blue: "&6¡Felicitaciones!"
+  headshot: "&c&l¡HEADSHOT!"
+  wool-pickup: "&7%PLAYER%&7 ha capturado la %WOOL%&7."
+  wool-placed: "&7%PLAYER%&7 ha colocado la &l%WOOL%&7."
+  countdown:
+    thirty-seconds: "&f"
+    twenty-seconds: "&f"
+    ten-seconds: "&f"
+    five-seconds: "&f"
+    four-seconds: "&f"
+    three-seconds: "&f"
+    two-seconds: "&f"
+    one-second: "&f"
+stats:
+  title: "&c&lTus Estadísticas"
+  points: "&5- &7Tus puntos son: &a%SCORE%"
+  placed-wools: "&5- &7Tus lanas colocadas son: &d%WOOLS_PLACED%"
+  kills: "&5- &7Tus asesinatos son: &c%KILLS%"
+  deaths: "&5- &7Tus muertes son: &b%DEATHS%"
+  coins: "&5- &7Tus monedas son: &6%COINS%"
+# NPCS no usado
+npcs:
+  name:
+    games: "&cClick to join!"
+    random-join: "&aRandom Join!"
+  skin:
+    games: "Mauzzio"
+
+commands:
+  toggle:
+    description: "&7Cambia tus opciones de visualización."
+    usage: "&7Uso: /toggle [obs|dms|blood]"
+    example1: "&7Ejemplo: /toggle obs &a alterna ver a otros espectadores."
+    example2: "&7Ejemplo: /toggle dms &a alterna ver los mensajes de muerte de otros jugadores."
+    example3: "&7Ejemplo: /toggle blood &a alterna ver sangre al recibir daño."
+  join:
+    description: "&7Únete a un equipo o conviértete en espectador."
+    usage: "&7Uso: /join [blue|red|obs|rand]"
+    example: "&7Ejemplo: /join blue"
+  g:
+    description: "&7Envía un mensaje a todos los equipos en una partida."
+    usage: "&7Uso: /g [texto a decir]"
+    example: "&7Ejemplo: /g ¡Gran partida amigos! ¡Me encanta este servidor!"
+  alert:
+    description: "&7Envía un mensaje de alerta a todo el servidor."
+    usage: "&7Uso: /alert [mensaje]"
+    example: "&7Ejemplo: /alert El servidor entrará en mantenimiento!"
+  gotoworld:
+    description: "&7Este comando se usa para navegar entre mundos, los mundos se cargarán automáticamente."
+    usage: "&7Uso: /gotoworld [mundo al que deseas ir]"
+    example: "&7Ejemplo: /gotoworld lobby"
+  createworld:
+    description: "&7Crea un mundo vacío perfecto y sin lag para colocar un mapa."
+    usage: "&7Uso: /createworld [Nombre del Mundo]"
+    example: "&7Ejemplo: /createworld CTWMap"
+  ctwsetup:
+    description: "&7Este comando se usa para configurar el plugin."
+    help-1: "&7Para hacerlo usa los siguientes sub-comandos:"
+    help-2: "&5/ctwsetup lobby &7 - Accede a todos los comandos generales del lobby."
+    help-3: "&5/ctwsetup map &7 - Accede a todos los comandos de gestión de mapas."
+    help-4: "&5/ctwsetup mapconfig &7 - Accede a todos los comandos de configuración de mapas."
+    help-5: "&5/ctwsetup room &7 - Accede a todos los comandos de gestión de salas de juego."
+    help-6: "&5/ctwsetup kit &7 - Accede a todos los comandos de gestión de kits."
+  ctwsetup-lobby:
+    description: "&7Usa este sub-comando para configurar el lobby principal del servidor."
+    help-1: "&7Los parámetros posibles son:"
+    help-2: "&5/ctwsetup lobby addspawn&7 - Añade un punto de aparición para jugadores."
+    help-3: "&5/ctwsetup lobby listspawn&7 - Lista los puntos de aparición del lobby."
+    help-4: "&5/ctwsetup lobby clear&7 - Borra toda la información relacionada con el lobby."
+  ctwsetup-map:
+    description: "&7Usa este sub-comando para configurar los mapas de juego."
+    help-1: "&7Los parámetros posibles son:"
+    help-2: "&5/ctwsetup map add&7 - añade el mundo actual a la lista de mapas disponibles."
+    help-3: "&5/ctwsetup map remove&7 - elimina toda la información sobre el mapa actual."
+    help-4: "&5/ctwsetup map list&7 - lista los mapas disponibles."
+    help-5: "&5/ctwsetup map copy [destino] &7 - crea un nuevo mundo y copia toda la información del mapa en él."
+  ctwsetup-mapconfig:
+    description: "&7Usa este sub-comando para configurar el mapa."
+    help-1: "&7Los parámetros posibles son:"
+    help-2: "&5/ctwsetup mapconfig spawn&7 - establece el punto de aparición del mapa."
+    help-3: "&5/ctwsetup mapconfig redspawn&7 - establece el punto de aparición del equipo rojo."
+    help-4: "&5/ctwsetup mapconfig bluespawn&7 - establece el punto de aparición del equipo azul."
+    help-5: "&5/ctwsetup mapconfig maxplayers [num > 1]&7 - establece el número máximo de jugadores para el mapa."
+    help-6: "&5/ctwsetup mapconfig redwinwool&7 - establece los puntos de captura del equipo rojo."
+    help-7: "&5/ctwsetup mapconfig bluewinwool&7 - establece los puntos de captura del equipo azul."
+    help-8: "&5/ctwsetup mapconfig rednoaccess&7 - establece las áreas prohibidas para el equipo rojo."
+    help-9: "&5/ctwsetup mapconfig bluenoaccess&7 - establece las áreas prohibidas para el equipo azul."
+    help-10: "&5/ctwsetup mapconfig protected&7 - establece las áreas protegidas."
+    help-11: "&5/ctwsetup mapconfig weather [fixed=[storm|sun]|random]&7 - establece el clima del mapa."
+    help-12: "&5/ctwsetup mapconfig woolspawner&7 - añade generadores de lana al mapa."
+    help-14: "&5/ctwsetup mapconfig restore&7 - establece el área de restauración del mapa."
+    help-15: "&5/ctwsetup mapconfig toggleleather&7 - habilita/deshabilita la armadura por defecto."
+    help-16: "&5/ctwsetup mapconfig removeregion&7 - elimina la región sobre la que se está parado."
+    help-17: "&5/ctwsetup mapconfig no-drop&7 - establece los materiales que no serán soltados."
+    help-18: "&7Also, you can use the &b&lArena Editor&7 with &5/ctwsetup map add"
+  ctwsetup-room:
+    description: "&7Usa este sub-comando para configurar las salas de juego."
+    help-1: "&7Los parámetros posibles son:"
+    help-2: "&5/ctwsetup room add [sala]&7 - crea una nueva sala de juego."
+    help-3: "&5/ctwsetup room remove [sala]&7 - elimina una sala de juego."
+    help-4: "&5/ctwsetup room list&7 - lista las salas de juego existentes."
+    help-5: "&5/ctwsetup room enable [sala]&7 - habilita una sala de juego."
+    help-6: "&5/ctwsetup room disable [sala]&7 - deshabilita una sala de juego."
+    help-7: "&5/ctwsetup room addmap [sala] [mapa]&7 - añade un mapa a una sala de juego."
+    help-8: "&5/ctwsetup room removemap [sala] [mapa]&7 - elimina un mapa de una sala de juego."
+  ctwsetup-kit:
+    description: "&7Usa este sub-comando para configurar el /kit"
+    help-1: "&7Los parámetros posibles son:"
+    help-2: "&5/ctwsetup kit create [kit]&7 - crea un nuevo kit."
+    help-3: "&5/ctwsetup kit edit [kit]&7 - edita un kit."
+    help-4: "&5/ctwsetup kit delete [kit]&7 - elimina un kit."
+  ctw:
+    description: "&7Este comando es para aspectos administrativos del plugin."
+    usage: "&7Uso: /ctw [save|reload|mapcycle]"
+help-menu-item:
+  title: "&3&oSelecciona un Equipo"
+help-book:
+  author: "Mauccio's CTW"
+  title: "&5&oReglas del Juego"
+  pages:
+    1:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o   Comandos del juego"
+      3: ""
+      4: "&4/g&0 Chat Global"
+      5: "&4/join&0 Unirse a un equipo"
+      6: "&4/report&0 Reportar al staff"
+      7: ""
+      8: "&4/toggle blood&0 Ver sangre"
+      9: "&4/toggle obs&0 Ver otros"
+      10: "&4/toggle dms&0 Ver muertes"
+    2:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o           Chat"
+      3: ""
+      4: "&0Cuando escribes en el chat"
+      5: "solo tu equipo puede leer."
+      6: "Si quieres hablar con"
+      7: "todos los jugadores debes"
+      8: "usar &c/g&0 antes de"
+      9: "tu mensaje."
+      10: "Con &c/g&0 todos"
+      11: "en la partida leerán"
+      12: "lo que escribas."
+    3:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o Entrando a una partida"
+      3: ""
+      4: "&0La forma más fácil de"
+      5: "entrar a una partida es"
+      6: "usando el otro libro"
+      7: "que tienes en tu"
+      8: "inventario. Solo"
+      9: "selecciona el equipo y"
+      10: "comenzarás a jugar."
+    4:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o        Objetivos"
+      3: ""
+      4: "&0El objetivo de este"
+      5: "juego es traer las"
+      6: "lanas desde la base"
+      7: "enemiga. En tu base"
+      8: "encontrarás algunos puntos"
+      9: "para colocar las lanas"
+      10: "capturadas. Solo coloca"
+      11: "las lanas en el lugar"
+      12: "correcto antes que el"
+      13: "otro equipo."
+      14: "Construir y romper..."
+    5:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o        Objetivos"
+      3: ""
+      4: "&0...bloques está permitido"
+      5: "Piensa una buena estrategia"
+      6: "Recuerda atacar rápido"
+      7: "y defender con inteligencia."
+      8: "Este es un juego en equipo"
+      9: "así que ayuda a tu"
+      10: "equipo a ganar!"
+    6:
+      1: "&1   Cómo jugar CTW"
+      2: "&7&o    Gracias"
+      3: ""
+      4: "&7El staff de Mauccio's CTW &0"
+      5: "quiere agradecerte por"
+      6: "jugar este plugin."
+      7: "Trabajamos duro cada día"
+      8: "para brindar mejoras"
+      9: "a la comunidad de MC."
+      10: ""
+      11: "&5&o   ¡Gracias!"
+scoreboard:
+  title: '&6&lCAPTURA LA LANAf'
+  blue-team-name: '&9Equipo Azul &f'
+  red-team-name: '&cEquipo Rojo &f'
+  lines:
+  # Placeholders del Scoreboard del juego:
+  # %BLUE_TEAM_NAME% y %RED_TEAM_NAME% : Nombres de equipo
+  # %BLUE_PLAYERS% y %RED_PLAYERS% : Jugadores por equipo
+  # %SERVER_IP5 : IP del Servidor (path: server-ip)
+  # %ROOM_NAME% : Nombre de la Sala
+  # %MAP_NAME% : Nombre del Mapa Actual
+  # %PLAYERS% : Cantidad de jugadores en juego.
+  # %MAX_PLAYERS% : Cantidad máxima de jugadores de la sala
+  # %TIME_ELAPSED% : Displays game time.
+    - '&7&l'
+    - '&eMapa: &f%MAP_NAME%'
+    - '&aSala: &f%ROOM_NAME%'
+    - '&a'
+    - '&9%BLUE_TEAM_NAME% &7(%BLUE_PLAYERS%)'
+    - '%BLUE_WOOLS%'
+    - '&r'
+    - '&c%RED_TEAM_NAME% &7(%RED_PLAYERS%)'
+    - '%RED_WOOLS%'
+    - '&7'
+    - '&7%SERVER_IP%'
+lobby-scoreboard:
+  title: "&6Lobby&f"
+  lines:
+  # Placeholders del Scoreboard del lobby:
+  # %SERVER_IP5 : IP del Servidor (path: server-ip)
+  # %PLAYERS% : Cantidad de jugadores en el server.
+  # %MAX_PLAYERS% : Cantidad máxima de jugadores del server.
+  # %ACTIVE_ROOMS% : Cantidad de salas activas.
+  # %ROOMS% : Total de salas.
+    - "&7&m----------------&r"
+    - "&aSalas: &f%ACTIVE_ROOMS%/%ROOMS%"
+    - "&aJugadores: &f%PLAYERS%/%MAX_PLAYERS%"
+    - "&7&m----------------"
+    - "&7%SERVER_IP%"
+chars:
+  wool:
+    placed: "⬛"
+    not-placed: "⬜"
+death-events:
+  by-player:
+    message: "%KILLED_COLOR%%KILLED%&7 fue asesinado por %KILLER_COLOR%%KILLER%&7 %HOW%"
+    melee:
+      DIAMOND_SWORD: "con una afilada espada de diamante."
+      IRON_SWORD: "con su pesada espada de hierro."
+      AIR: "con sus propias manos."
+      PULL: "arrastrándolo fuera de este mundo."
+      _OTHER_: "brutalmente."
+    range:
+      HEADSHOT: "recibiendo un flechazo en la cabeza (%DISTANCE% bloques)"
+      BODYSHOT: "con una flecha (%DISTANCE% bloques)"
+  natural:
+    message: "%KILLED_COLOR%%KILLED%&7 %HOW%"
+    cause:
+      BLOCK_EXPLOSION: "ha volado a todas partes."
+      CONTACT: "murió pinchado por un peligroso cáctus."
+      DROWNING: "murió por no saber nadar."
+      FALL: "murió al impactar el suelo."
+      FIRE: "fue incinerado."
+      FIRE_TICK: "murió quemado."
+      LAVA: "murió intentando nadar en lava."
+      LIGHTNING: "murió por las fuerzas de Zeus."
+      STARVATION: "murió extrañamente de hambre."
+      POISON: "fue envenenado."
+      _OTHER_: "murió."
+player-messages:
+  type: "ACTIONBAR" # MESSAGE OR ACTIONBAR
+  add-points: "&e+1 &7punto"
+  add-points-capture: "&6+10 &7puntos"
+  remove-points: "&c-1 &7punto"
+  add-coins:
+    capture: "&a+5 &6monedas"
+    kill: " &7| &a+1 &6moneda"
+wool-names:
+  WHITE: "Blanca"
+  RED: "Roja"
+  BLUE: "Azul"
+  GREEN: "Verde"
+  YELLOW: "Amarilla"
+  BLACK: "Negra"
+  ORANGE: "Naranja"
+  MAGENTA: "Magenta"
+  LIGHT_BLUE: "Celeste"
+  LIME: "Lima"
+  PINK: "Rosa"
+  GRAY: "Gris"
+  SILVER: "Plateada"
+  CYAN: "Cian"
+  PURPLE: "Morada"
+  BROWN: "Marrón"
+sign-format: # Máx 16 caracteres.
+  disabled: "&4Deshabilitado"
+  invalid-map: "&4Mapa Inválido"
+  invalid-room: "&4Sala Inválida"
+  1: "&4CapturaLaLana"
+  2: "&0%ROOM%"
+  3: "&a%CURRENT_MAP%"
+  4: "&0%CURRENT_PLAYERS%/%MAX_PLAYERS%"
+# Experimental
+tablist:
+  header: "&c&lCaptura La Lana &7| &a%ROOM_NAME% &7| &e%MAP_NAME%"
+  footer: "&fIP: &e%SERVER_IP%"
+map-editor-gui:
+  title: "&b&lEditor de Mapas &7| &9%MAP_NAME%"
+  enter-value: "&eIngresa valor para: %VALUE%" # %VALUE% : max-players-value o weather-value
+  max-players-value: "&eMáx. Jugadores"
+  weather-value: "&eClima"
+  setted: "&a¡Establecido!"
+  empty: "&4No establecido!"
+  no-areas: "&4No se añadieron áreas!"
+  areas-can-be-removed: "&aÁreas detectadas: &e%COUNT%"
+  no-wools: "&4No se añadieron puntos de lana!"
+  no-spawners: "&4No se añadieron generadores de lana!"
+  areas-count: "&eÁreas añadidas: &a%COUNT%"
+  max-players-count: "&eMáx. Jugadores: &a%COUNT%"
+  weather-type: "&eClima: %WEATHER%"
+  sun: "&6Soleado"
+  storm: "&8Tormentoso"
+  red-win-wool-count: "&ePuntos de Lana Roja: &a%COUNT%"
+  blue-win-wool-count: "&ePuntos de Lana Azul: &a%COUNT%"
+  wool-spawners-count: "&eGeneradores de Lana: &a%COUNT%"
+  turn-on: "&aENCENDIDO"
+  turn-off: "&cAPAGADO"
+  item:
+    name: "&b&lEditor de Mapas"
+    lore:
+    - "&7Edita la configuración del mapa."
+    - "&eHaz clic para abrir."
+  continue:
+    name: "&6&lContinuar Configuración"
+    lore:
+    - "&7Continúa configurando el mapa."
+    - "&eHaz clic para continuar."
+  red-spawn:
+    name: "&cEstablecer Spawn Equipo Rojo"
+    lore:
+    - "&7Establece el punto de aparición del equipo &cROJO&7."
+    - "&eHaz clic para establecer."
+  blue-spawn:
+    name: "&9Establecer Spawn Equipo Azul"
+    lore:
+    - "&7Establece el punto de aparición del equipo &9AZUL&7."
+    - "&eHaz clic para establecer."
+  map-spawn:
+    name: "&eEstablecer Spawn del Mapa"
+    lore:
+    - "&7Establece el punto de aparición del mapa."
+    - "&eHaz clic para establecer."
+  max-players:
+    name: "&aEstablecer Máx. Jugadores"
+    lore:
+    - "&7Establece el número máximo de jugadores para este mapa."
+    - "&eHaz clic para establecer."
+  red-wool-winpoint:
+    name: "&cEstablecer Puntos de Lana Roja"
+    lore:
+    - "&7Establece los puntos de captura para el equipo &cROJO&7."
+    - "&eHaz clic para establecer."
+  blue-wool-winpoint:
+    name: "&9Establecer Puntos de Lana Azul"
+    lore:
+    - "&7Establece los puntos de captura para el equipo &9AZUL&7."
+    - "&eHaz clic para establecer."
+  red-noaccess-areas:
+    name: "&cAñadir Áreas Prohibidas Rojo"
+    lore:
+    - "&7Añade áreas prohibidas para el equipo &cROJO&7."
+    - "&eHaz clic para añadir."
+  blue-noaccess-areas:
+    name: "&9Añadir Áreas Prohibidas Azul"
+    lore:
+    - "&7Añade áreas prohibidas para el equipo &9AZUL&7."
+    - "&eHaz clic para añadir."
+  protected-areas:
+    name: "&5Añadir Áreas Protegidas"
+    lore:
+    - "&7Añade áreas protegidas donde nadie puede editar."
+    - "&eHaz clic para añadir."
+  weather:
+    name: "&6Establecer Clima"
+    lore:
+      - "&7Establece el clima para este mapa."
+      - "&eHaz clic para establecer."
+  wool-spawners:
+    name: "&aAñadir Generadores de Lana"
+    lore:
+      - "&7Añade generadores de lana al mapa."
+      - "&eHaz clic para añadir."
+  restauration-area:
+    name: "&6Establecer Área de Restauración"
+    lore:
+    - "&7Establece el área de restauración para este mapa."
+    - "&eHaz clic para establecer."
+  use-armor:
+    name: "&dAlternar Armadura Predeterminada"
+    lore:
+      - "&7Habilita/Deshabilita la armadura predeterminada para los jugadores."
+      - "&eHaz clic para alternar."
+  remove-region:
+    name: "&4Eliminar Región"
+    lore:
+      - "&7Elimina la región en la que estás parado."
+      - "&eHaz clic para eliminar."
+  global-kit:
+    name: "&bEditar Kit Global"
+    lore:
+      - "&7Edita el kit global para todos los jugadores."
+      - "&eHaz clic para editar."
