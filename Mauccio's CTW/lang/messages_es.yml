@@ -1,7 +1,7 @@
-# Mauccio's CTW Messages File | v1.4 Release 3
+# Mauccio's CTW Archivo de Idioma | v1.4 Release 3
 message-prefix: "&7[&4CTW&7]"
 alert-prefix: "&7[&4Alerta&7] &e"
-chat-format: "&7>> &f" # Next to player's name.
+chat-format: "&7>> &f" # Al lado del nombre del jugador.
 RED-TEAM: "EQUIPO ROJO"
 BLUE-TEAM: "EQUIPO AZUL"
 SPECTATOR: "ESPECTADOR"
