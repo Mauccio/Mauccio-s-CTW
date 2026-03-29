@@ -90,13 +90,13 @@ public class CommandManager implements CommandExecutor {
                 }
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            plugin.getLogger().severe("No se pudo desregistrar el comando: " + e.getMessage());
+            plugin.getLogger().severe(plugin.getLangManager().getText("command-not-unregistered") + e.getMessage()); // plugin.getLogger().severe("No se pudo desregistrar el comando: " + e.getMessage());
         }
     }
 
     private Player getPlayerOrNotify(CommandSender cs) {
         if (cs instanceof Player) return (Player) cs;
-        plugin.getLogger().info("Este comando es de jugador.");
+        plugin.getLogger().info(plugin.getLangManager().getText("not-a-player")); // plugin.getLogger().info("Este comando es de jugador.");
         return null;
     }
 
